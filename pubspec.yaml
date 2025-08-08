@@ -1,0 +1,14 @@
+name: chatgpt_webview_poc
+description: PoC to log into chatgpt.com in a WebView and fetch conversations
+publish_to: "none"
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_inappwebview: ^6.0.0
+
+flutter:
+  uses-material-design: true
