@@ -1,3 +1,131 @@
+#
+# Global .gitignore for Flutter/Dart multi-app workspace
+# Covers: ChatFetcher, ZaMariju and any future Flutter packages/apps
+#
+
+########################
+# OS / Editor clutter  #
+########################
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.temp
+*.orig
+*.rej
+*.swp
+*.swo
+*.bak
+
+# IDEs
+**/.idea/
+*.iml
+**/.vscode/
+*.code-workspace
+**/.fleet/
+**/.history/
+
+###############
+# Secrets     #
+###############
+.env
+.env.*
+!.env.example
+**/google-services.json
+**/GoogleService-Info.plist
+
+#########################
+# Flutter / Dart / Pub  #
+#########################
+**/.dart_tool/
+**/.packages
+**/.pub/
+**/.pub-cache/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.flutter-version
+**/.metadata
+**/coverage/
+**/doc/api/
+**/.fvm/
+
+# Build outputs (all apps/packages)
+build/
+**/build/
+
+# Web (generated)
+**/lib/generated_plugin_registrant.dart
+
+################
+# Android      #
+################
+**/android/.gradle/
+**/android/local.properties
+**/android/**/.cxx/
+**/android/**/captures/
+**/android/**/generated/
+**/android/**/intermediates/
+**/android/**/outputs/
+**/android/**/release/
+**/android/**/debug/
+**/android/**/profile/
+**/android/**/key.properties
+**/android/**/keystore.properties
+**/*.jks
+**/*.keystore
+**/*.keystore.lock
+
+# Android releases/artifacts
+**/*.apk
+**/*.aab
+
+############
+# iOS      #
+############
+**/ios/Flutter/.last_build_id
+**/ios/Flutter/ephemeral/
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/Flutter/Generated.xcconfig
+**/ios/.symlinks/
+**/ios/Pods/
+**/ios/build/
+**/ios/**/*-device.json
+
+# Xcode user data / derived
+**/*.xcuserstate
+**/*.xcworkspace/xcuserdata/
+**/*.xcodeproj/project.xcworkspace/xcuserdata/
+**/*.xcodeproj/xcuserdata/
+**/*_CodeSignature
+**/*.dSYM
+**/*.ipa
+
+##############
+# macOS      #
+##############
+**/macos/Flutter/ephemeral/
+**/macos/.symlinks/
+**/macos/Pods/
+**/macos/build/
+
+################
+# Windows     #
+################
+# Build outputs handled by build/ above; keep source files tracked
+
+#############
+# Linux     #
+#############
+# Build outputs handled by build/ above; keep source files tracked
+
+################
+# Fastlane   #
+################
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/
+fastlane/test_output/
+
 # Miscellaneous
 *.class
 *.log
