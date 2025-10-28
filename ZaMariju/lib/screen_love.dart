@@ -199,11 +199,11 @@ class _LoveCountWrappedScreenState extends State<LoveCountWrappedScreen>
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
                         child: Text(
-                          'El amor cobra sentido cuando se expresa: '
-                          '¿qué crees que ha brindado más el "Te amo"?',
+                          'Love makes sense when expressed: '
+                          'what do you think has given more of the "I love you"?',
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.95),
+                            color: Colors.white.withValues(alpha: 0.95),
                             fontSize: (w * 0.04).clamp(13.0, 18.0),
                             height: 1.25,
                             fontWeight: FontWeight.w600,
@@ -271,8 +271,8 @@ class _TopDashes extends StatelessWidget {
                 margin: const EdgeInsets.symmetric(horizontal: 4),
                 decoration: BoxDecoration(
                   color: isActive
-                      ? Colors.white.withOpacity(0.95)
-                      : Colors.white.withOpacity(0.35),
+                      ? Colors.white.withValues(alpha: 0.95)
+                      : Colors.white.withValues(alpha: 0.35),
                   borderRadius: BorderRadius.circular(12),
                 ),
               );
@@ -385,7 +385,7 @@ class _AnimatedBar extends StatelessWidget {
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            primaryColor.withOpacity(0.92),
+                            primaryColor.withValues(alpha: 0.92),
                             primaryColor,
                           ],
                         ),
@@ -395,7 +395,7 @@ class _AnimatedBar extends StatelessWidget {
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: primaryColor.withOpacity(0.35),
+                            color: primaryColor.withValues(alpha: 0.35),
                             offset: const Offset(0, 10),
                             blurRadius: 30,
                             spreadRadius: 0,
