@@ -71,6 +71,11 @@ class ChatStats {
   final DateTime? lastChatDate;
   final int totalConversations;
   final int totalMessages;
+  final int? mostUsedWordCount; // Count of most used word
+  final int? totalDays; // Total unique days with chats
+  final int? yearPercentage; // Percentage of year with chats
+  final double? averageResponseTime; // Average response time in seconds
+  final String? speedLabel; // Speed label: 'lightning-fast', 'quick', 'thoughtful', 'patient'
 
   ChatStats({
     required this.totalHours,
@@ -85,6 +90,11 @@ class ChatStats {
     this.lastChatDate,
     required this.totalConversations,
     required this.totalMessages,
+    this.mostUsedWordCount,
+    this.totalDays,
+    this.yearPercentage,
+    this.averageResponseTime,
+    this.speedLabel,
   });
 
   factory ChatStats.empty() {
@@ -97,6 +107,11 @@ class ChatStats {
       peakHour: 23,
       totalConversations: 0,
       totalMessages: 0,
+      mostUsedWordCount: 0,
+      totalDays: 0,
+      yearPercentage: 0,
+      averageResponseTime: 0.0,
+      speedLabel: 'thoughtful',
     );
   }
 

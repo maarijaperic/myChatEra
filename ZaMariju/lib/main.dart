@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:gpt_wrapped2/screen_login.dart';
 import 'package:gpt_wrapped2/screen_intro.dart';
 import 'package:gpt_wrapped2/card_navigator.dart';
+import 'package:gpt_wrapped2/screen_analyzing_loading.dart';
 import 'package:gpt_wrapped2/screen_chat_era.dart';
 import 'package:gpt_wrapped2/screen_daily_dose.dart';
 import 'package:gpt_wrapped2/screen_first_message.dart';
@@ -21,7 +23,6 @@ import 'package:gpt_wrapped2/screen_past_life_persona.dart';
 import 'package:gpt_wrapped2/screen_mbti_personality.dart';
 import 'package:gpt_wrapped2/screen_wrapped.dart';
 import 'package:gpt_wrapped2/screen_comparison.dart';
-import 'package:gpt_wrapped2/screen_roast.dart';
 import 'package:gpt_wrapped2/screen_subscription.dart';
 import 'package:gpt_wrapped2/screen_social_sharing.dart';
 // Temporarily disabled data storage - requires Developer Mode on Windows
@@ -98,6 +99,40 @@ class _GPTWrappedHomeState extends State<GPTWrappedHome> {
     );
   }
 
+  Future<void> _onLoginSuccess(List<dynamic>? conversations) async {
+    // After login, analyze conversations and show loading screen
+    final navigatorContext = Navigator.of(context);
+    
+    // Show analyzing screen while processing
+    navigatorContext.pushReplacement(
+      MaterialPageRoute(
+        builder: (context) => AnalyzingLoadingScreen(
+          onAnalysisComplete: (stats) {
+            // After analysis, show intro screen with real stats
+            navigatorContext.pushReplacement(
+              MaterialPageRoute(
+                builder: (newContext) => IntroScreen(
+                  onStart: () {
+                    // Navigate to wrapped screens with analyzed stats
+                    navigatorContext.push(
+                      MaterialPageRoute(
+                        builder: (context) => _FreeWrappedNavigator(
+                          onPremiumTap: _startPremiumWrapped,
+                          stats: stats, // Use real analyzed stats
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            );
+          },
+          conversations: conversations,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // if (_isLoading) {
@@ -107,7 +142,7 @@ class _GPTWrappedHomeState extends State<GPTWrappedHome> {
     //     ),
     //   );
     // }
-    return IntroScreen(onStart: _startFreeWrapped);
+    return LoginScreen(onLoginSuccess: _onLoginSuccess);
   }
 }
 
@@ -127,13 +162,13 @@ class _FreeWrappedNavigator extends StatelessWidget {
     final minutes = stats?.totalMinutes ?? 42;
     final messagesPerDay = stats?.messagesPerDay ?? 47;
     final streakDays = stats?.longestStreak ?? 14;
-    final peakTime = stats?.peakTime ?? 'night';
-    final peakHour = stats?.peakHour ?? 23;
+    final actualPeakTime = stats?.peakTime ?? 'night';
+    final actualPeakHour = stats?.peakHour ?? 23;
     
-    // Get time emoji based on peak time
+    // Get time emoji and description based on actual peak time from stats
     String timeEmoji;
     String timeDescription;
-    switch (peakTime) {
+    switch (actualPeakTime) {
       case 'morning':
         timeEmoji = '🌅';
         timeDescription = 'in the morning';
@@ -163,32 +198,33 @@ class _FreeWrappedNavigator extends StatelessWidget {
           totalMinutes: minutes,
         ),
         // Index 2 - Where It All Began (First Message)
-        const FirstMessageScreen(
-          firstMessage: 'How do I stop procrastinating?',
+        FirstMessageScreen(
+          firstMessage: stats?.randomQuestion ?? 'How do I stop procrastinating?',
+          lastChatDate: stats?.lastChatDate,
         ),
         // Index 3 - Your Signature Word (Most Used Word)
-        const MostUsedWordScreen(
-          mostUsedWord: 'literally',
-          wordCount: 247,
+        MostUsedWordScreen(
+          mostUsedWord: stats?.mainTopic ?? 'literally',
+          wordCount: stats?.mostUsedWordCount ?? 247,
         ),
         // Index 4 - Chat Days Tracker
-        const ChatDaysTrackerScreen(
-          totalDays: 102,
-          yearPercentage: 28,
+        ChatDaysTrackerScreen(
+          totalDays: stats?.totalDays ?? 102,
+          yearPercentage: stats?.yearPercentage ?? 28,
         ),
         // Index 5 - Your Longest Chat Streak
         ChatStreakScreen(
           streakDays: streakDays,
         ),
         // Index 6 - Speed of Response (Average Response Time)
-        const CuriosityIndexScreen(
-          averageResponseTime: 3.2,
-          speedLabel: 'lightning-fast',
+        CuriosityIndexScreen(
+          averageResponseTime: stats?.averageResponseTime ?? 3.2,
+          speedLabel: stats?.speedLabel ?? 'thoughtful',
         ),
         // Index 7 - GPT O'Clock (Your Peak Time)
         GptOClockScreen(
-          peakTime: peakTime,
-          peakHour: peakHour,
+          peakTime: actualPeakTime,
+          peakHour: actualPeakHour,
           timeDescription: timeDescription,
           timeEmoji: timeEmoji,
         ),

@@ -193,7 +193,7 @@ class ChatAnalyzer {
   static String? getMostUsedWord(List<MessageData> messages) {
     final wordCounts = <String, int>{};
     
-    // Common words to ignore
+    // Extended list of common words to ignore
     final stopWords = {
       'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
       'of', 'with', 'by', 'from', 'as', 'is', 'was', 'are', 'were', 'be',
@@ -202,19 +202,37 @@ class ChatAnalyzer {
       'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them',
       'my', 'your', 'his', 'hers', 'its', 'our', 'their', 'this', 'that',
       'these', 'those', 'what', 'which', 'who', 'when', 'where', 'why', 'how',
+      'all', 'any', 'both', 'each', 'few', 'more', 'most', 'other', 'some',
+      'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too',
+      'very', 'just', 'now', 'then', 'here', 'there', 'about', 'into', 'through',
+      'during', 'before', 'after', 'above', 'below', 'up', 'down', 'out', 'off',
+      'over', 'under', 'again', 'further', 'once', 'also', 'back', 'well',
+      'get', 'got', 'go', 'went', 'come', 'came', 'see', 'saw', 'know', 'knew',
+      'think', 'thought', 'take', 'took', 'give', 'gave', 'make', 'made',
+      'say', 'said', 'tell', 'told', 'ask', 'asked', 'want', 'wanted', 'need',
+      'needed', 'try', 'tried', 'use', 'used', 'work', 'worked', 'help', 'helped',
+      'like', 'liked', 'look', 'looked', 'find', 'found', 'feel', 'felt',
+      'chat', 'gpt', 'chatgpt', 'ai', 'message', 'messages', 'conversation',
+      'conversations', 'thanks', 'thank', 'please', 'sorry', 'yeah', 'yes',
     };
 
     // Only analyze user messages
     for (var message in messages) {
-      if (message.isUser) {
+      if (message.isUser && message.content.trim().isNotEmpty) {
         // Split into words and count
-        final words = message.content
+        final cleaned = message.content
             .toLowerCase()
-            .replaceAll(RegExp(r'[^\w\s]'), '')
-            .split(RegExp(r'\s+'));
+            .replaceAll(RegExp(r'[^\w\s]'), ' '); // Remove punctuation
+        
+        final words = cleaned
+            .split(RegExp(r'\s+'))
+            .where((w) => w.isNotEmpty && w.length > 2)
+            .toList();
         
         for (var word in words) {
-          if (word.length > 3 && !stopWords.contains(word)) {
+          // Only count meaningful words (not a stop word, not a number)
+          if (!stopWords.contains(word) && 
+              !RegExp(r'^\d+$').hasMatch(word)) {
             wordCounts[word] = (wordCounts[word] ?? 0) + 1;
           }
         }
@@ -223,16 +241,26 @@ class ChatAnalyzer {
 
     if (wordCounts.isEmpty) return null;
 
-    // Find most common word
+    // Find most common word (must appear at least 3 times to be significant)
     String? mostUsedWord;
     int maxCount = 0;
     
     wordCounts.forEach((word, count) {
-      if (count > maxCount) {
+      if (count >= 3 && count > maxCount) {
         maxCount = count;
         mostUsedWord = word;
       }
     });
+
+    // If no word appears 3+ times, return the most common one anyway
+    if (mostUsedWord == null && wordCounts.isNotEmpty) {
+      wordCounts.forEach((word, count) {
+        if (count > maxCount) {
+          maxCount = count;
+          mostUsedWord = word;
+        }
+      });
+    }
 
     return mostUsedWord;
   }
@@ -243,11 +271,20 @@ class ChatAnalyzer {
 
     final responseTimes = <Duration>[];
     
-    for (int i = 0; i < messages.length - 1; i++) {
+    // Sort messages by timestamp to ensure correct order
+    final sortedMessages = List<MessageData>.from(messages)
+      ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
+    
+    for (int i = 0; i < sortedMessages.length - 1; i++) {
       // If current is user and next is assistant, calculate response time
-      if (messages[i].isUser && messages[i + 1].isAssistant) {
-        final responseTime = messages[i + 1].timestamp.difference(messages[i].timestamp);
-        responseTimes.add(responseTime);
+      if (sortedMessages[i].isUser && sortedMessages[i + 1].isAssistant) {
+        final responseTime = sortedMessages[i + 1].timestamp.difference(sortedMessages[i].timestamp);
+        
+        // Only count reasonable response times (between 1 second and 1 hour)
+        // This filters out cases where user sent multiple messages before getting a response
+        if (responseTime.inSeconds >= 1 && responseTime.inHours < 1) {
+          responseTimes.add(responseTime);
+        }
       }
     }
 
@@ -255,7 +292,10 @@ class ChatAnalyzer {
 
     // Calculate average in seconds
     final totalSeconds = responseTimes.fold<int>(0, (sum, duration) => sum + duration.inSeconds);
-    return totalSeconds / responseTimes.length;
+    final average = totalSeconds / responseTimes.length;
+    
+    // Round to 1 decimal place
+    return (average * 10).round() / 10;
   }
 
   /// Get speed label based on average response time
@@ -278,8 +318,24 @@ class ChatAnalyzer {
 
   /// Calculate percentage of year with chats
   static int calculateYearPercentage(List<MessageData> messages) {
+    if (messages.isEmpty) return 0;
+    
     final uniqueDays = countUniqueDays(messages);
-    return ((uniqueDays / 365) * 100).round();
+    if (uniqueDays == 0) return 0;
+    
+    // Calculate actual date range
+    final sortedMessages = List<MessageData>.from(messages)
+      ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
+    
+    final firstDate = sortedMessages.first.timestamp;
+    final lastDate = sortedMessages.last.timestamp;
+    final totalDaysInRange = lastDate.difference(firstDate).inDays + 1;
+    
+    // If range is less than a year, use actual range
+    // If range is more than a year, use 365 days
+    final denominator = totalDaysInRange > 365 ? 365 : totalDaysInRange;
+    
+    return ((uniqueDays / denominator) * 100).round().clamp(0, 100);
   }
 
   /// Get word count for most used word

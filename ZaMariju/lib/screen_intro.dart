@@ -108,7 +108,10 @@ class _IntroScreenState extends State<IntroScreen>
                     height: (screenHeight * 0.07).clamp(48.0, 64.0),
                     child: CupertinoButton(
                       padding: EdgeInsets.zero,
-                      onPressed: widget.onStart,
+                      onPressed: () {
+                        // Use the IntroScreen's context for navigation
+                        widget.onStart();
+                      },
                       child: Container(
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(

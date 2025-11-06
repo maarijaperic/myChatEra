@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:async';
+import 'package:gpt_wrapped2/services/data_processor.dart';
+import 'package:gpt_wrapped2/models/chat_data.dart';
 
 class AnalyzingLoadingScreen extends StatefulWidget {
-  final VoidCallback onComplete;
+  final Function(ChatStats) onAnalysisComplete;
+  final List<dynamic>? conversations;
 
   const AnalyzingLoadingScreen({
     super.key,
-    required this.onComplete,
+    required this.onAnalysisComplete,
+    this.conversations,
   });
 
   @override
@@ -50,26 +54,73 @@ class _AnalyzingLoadingScreenState extends State<AnalyzingLoadingScreen>
   Future<void> _startLoading() async {
     _fadeController.forward();
 
-    // Simulate loading steps
-    for (int i = 0; i < _loadingSteps.length; i++) {
-      if (!mounted) return;
-      
+    ChatStats? analyzedStats;
+
+    // Step 1: Connecting
+    setState(() {
+      _statusText = _loadingSteps[0];
+    });
+    await _animateProgress(0.0, 0.15);
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    // Step 2: Fetching (already done, but show status)
+    if (widget.conversations != null && widget.conversations!.isNotEmpty) {
       setState(() {
-        _statusText = _loadingSteps[i];
+        _statusText = 'Found ${widget.conversations!.length} conversations';
       });
-
-      // Animate progress
-      final targetProgress = (i + 1) / _loadingSteps.length;
-      await _animateProgress(_progress, targetProgress);
-
-      // Wait between steps
-      await Future.delayed(const Duration(milliseconds: 800));
+    } else {
+      setState(() {
+        _statusText = _loadingSteps[1];
+      });
     }
+    await _animateProgress(0.15, 0.35);
+    await Future.delayed(const Duration(milliseconds: 500));
 
-    // Complete
+    // Step 3: Analyzing messages
+    setState(() {
+      _statusText = _loadingSteps[2];
+    });
+    await _animateProgress(0.35, 0.55);
+    
+    // Actually process the conversations
+    if (widget.conversations != null && widget.conversations!.isNotEmpty) {
+      try {
+        analyzedStats = await DataProcessor.processConversationsFromJson(widget.conversations!);
+      } catch (e) {
+        print('Error analyzing conversations: $e');
+        // Use empty stats if analysis fails
+        analyzedStats = ChatStats.empty();
+      }
+    } else {
+      // No conversations, use empty stats
+      analyzedStats = ChatStats.empty();
+    }
+    await Future.delayed(const Duration(milliseconds: 800));
+
+    // Step 4: Calculating statistics
+    setState(() {
+      _statusText = _loadingSteps[3];
+    });
+    await _animateProgress(0.55, 0.75);
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    // Step 5: Discovering insights
+    setState(() {
+      _statusText = _loadingSteps[4];
+    });
+    await _animateProgress(0.75, 0.90);
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    // Step 6: Preparing wrapped
+    setState(() {
+      _statusText = _loadingSteps[5];
+    });
+    await _animateProgress(0.90, 1.0);
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    // Complete with analyzed stats (or empty if no data)
     if (mounted) {
-      await Future.delayed(const Duration(milliseconds: 300));
-      widget.onComplete();
+      widget.onAnalysisComplete(analyzedStats);
     }
   }
 

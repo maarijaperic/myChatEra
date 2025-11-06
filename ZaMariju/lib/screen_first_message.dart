@@ -5,10 +5,12 @@ import 'package:gpt_wrapped2/widgets/share_button.dart';
 
 class FirstMessageScreen extends StatefulWidget {
   final String firstMessage;
+  final DateTime? lastChatDate;
 
   const FirstMessageScreen({
     super.key,
     required this.firstMessage,
+    this.lastChatDate,
   });
 
   @override
@@ -40,6 +42,19 @@ class _FirstMessageScreenState extends State<FirstMessageScreen>
   Future<void> _startAnimations() async {
     await Future.delayed(const Duration(milliseconds: 300));
     _fadeController.forward();
+  }
+
+  String _formatDate(DateTime? date) {
+    if (date == null) {
+      return DateTime.now().toString().split(' ')[0]; // Fallback to today
+    }
+    
+    final months = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    
+    return '${months[date.month - 1]} ${date.day}, ${date.year}';
   }
 
   @override
@@ -142,9 +157,9 @@ class _FirstMessageScreenState extends State<FirstMessageScreen>
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            // Date display - centered
+                            // Date display - centered (showing last conversation date)
                             Text(
-                              'March 15, 2024',
+                              _formatDate(widget.lastChatDate),
                               textAlign: TextAlign.center,
                               style: GoogleFonts.inter(
                                 color: const Color(0xFFFF6B35),

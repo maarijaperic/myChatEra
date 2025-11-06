@@ -54,6 +54,9 @@ class StatsCalculator {
       lastChatDate: lastDate,
       totalConversations: totalConversations,
       totalMessages: totalConversations * 8, // Rough estimate: ~8 messages per conversation
+      mostUsedWordCount: null, // Can't calculate without messages
+      totalDays: totalDays,
+      yearPercentage: ((totalDays / 365) * 100).round(),
     );
   }
 
