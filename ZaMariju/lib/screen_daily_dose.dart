@@ -129,20 +129,14 @@ class _DailyDoseScreenState extends State<DailyDoseScreen>
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            'Daily Dose ',
+                            'Daily Dose',
                             textAlign: TextAlign.center,
                             style: GoogleFonts.inter(
                               color: Colors.black,
-                              fontSize: (screenWidth * 0.08).clamp(28.0, 36.0),
+                              fontSize: (screenWidth * 0.075).clamp(22.0, 32.0),
                               fontWeight: FontWeight.w700,
                               letterSpacing: 0.8,
                               height: 1.1,
-                            ),
-                          ),
-                          Text(
-                            '💬',
-                            style: TextStyle(
-                              fontSize: (screenWidth * 0.08).clamp(28.0, 36.0),
                             ),
                           ),
                         ],
@@ -156,7 +150,7 @@ class _DailyDoseScreenState extends State<DailyDoseScreen>
                       controller: _fadeController,
                       delay: 0.2,
                       child: Container(
-                        padding: const EdgeInsets.all(32),
+                        padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(24),
@@ -247,7 +241,7 @@ class _DailyDoseScreenState extends State<DailyDoseScreen>
                       controller: _fadeController,
                       delay: 0.4,
                       child: Container(
-                        padding: const EdgeInsets.all(24),
+                        padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(20),
@@ -260,7 +254,7 @@ class _DailyDoseScreenState extends State<DailyDoseScreen>
                           ],
                         ),
                         child: Text(
-                          "On average, you send ${widget.messagesPerDay} messages/day — a healthy addiction, if you ask GPT. Your main character moment: choosing GPT over small talk. While others need coffee, you need your daily GPT hit. Pure productivity and consistency. ☕✨💅😅",
+                          "On average, you send ${widget.messagesPerDay} messages/day — a healthy addiction, if you ask GPT. Your main character moment: choosing GPT over small talk. While others need coffee, you need your daily GPT hit. Pure productivity and consistency. Every message is a step toward your goals, and you're not slowing down. Consistency is the key to unlocking your potential 🌟 ☕✨💅😅",
                           textAlign: TextAlign.center,
                           style: GoogleFonts.inter(
                             color: const Color(0xFF555555),

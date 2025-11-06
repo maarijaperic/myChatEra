@@ -100,25 +100,32 @@ class _LoveCountWrappedScreenState extends State<LoveCountWrappedScreen>
               builder: (context, constraints) {
                 final h = constraints.maxHeight;
                 final w = constraints.maxWidth;
+                final isLargeScreen = w > 600;
                 final barMaxHeight = h * 0.38;
-                final double barWidth = (w * 0.18).clamp(56.0, 88.0);
+                final double barWidth = (w * 0.18).clamp(56.0, isLargeScreen ? 120.0 : 88.0);
+                
+                // Responsive padding
+                final horizontalPadding = (w * 0.06).clamp(16.0, 32.0);
+                final barSpacing = (w * 0.07).clamp(20.0, 36.0);
+                final topSpacing = (h * 0.01).clamp(6.0, 12.0);
+                final bottomPadding = (h * 0.03).clamp(20.0, 32.0);
 
                 return Column(
                   children: [
                     _TopDashes(controller: _dashCtrl),
-                    const SizedBox(height: 8),
+                    SizedBox(height: topSpacing),
                     // Header
                     _SlideFadeIn(
                       controller: _headerCtrl,
                       beginOffset: const Offset(0, -0.1),
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                        padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
                         child: Text(
                           widget.title,
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: (w * 0.07).clamp(24.0, 34.0),
+                            fontSize: (w * 0.07).clamp(20.0, isLargeScreen ? 40.0 : 36.0),
                             height: 1.15,
                             fontWeight: FontWeight.w800,
                             letterSpacing: 0.2,
@@ -132,7 +139,7 @@ class _LoveCountWrappedScreenState extends State<LoveCountWrappedScreen>
                     Expanded(
                       child: Center(
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                          padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
@@ -160,7 +167,7 @@ class _LoveCountWrappedScreenState extends State<LoveCountWrappedScreen>
                                   label: widget.leftName,
                                 ),
                               ),
-                              const SizedBox(width: 28),
+                              SizedBox(width: barSpacing),
                               // Right bar (staggered)
                               Expanded(
                                 child: _AnimatedBar(
@@ -197,14 +204,19 @@ class _LoveCountWrappedScreenState extends State<LoveCountWrappedScreen>
                       controller: _footerCtrl,
                       beginOffset: const Offset(0, 0.08),
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                        padding: EdgeInsets.fromLTRB(
+                          horizontalPadding,
+                          0,
+                          horizontalPadding,
+                          bottomPadding,
+                        ),
                         child: Text(
                           'Love makes sense when expressed: '
                           'what do you think has given more of the "I love you"?',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.95),
-                            fontSize: (w * 0.04).clamp(13.0, 18.0),
+                            fontSize: (w * 0.04).clamp(12.0, isLargeScreen ? 22.0 : 20.0),
                             height: 1.25,
                             fontWeight: FontWeight.w600,
                           ),
@@ -426,7 +438,7 @@ class _AnimatedBar extends StatelessWidget {
             );
           },
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: (barWidth * 0.15).clamp(10.0, 16.0)),
         // Label
         Text(
           label,
@@ -436,7 +448,7 @@ class _AnimatedBar extends StatelessWidget {
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.w800,
-            fontSize: (barWidth * 0.28).clamp(14.0, 20.0),
+            fontSize: (barWidth * 0.28).clamp(12.0, 24.0),
           ),
         ),
       ],

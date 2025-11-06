@@ -72,6 +72,15 @@ class _IntrovertExtrovertScreenState extends State<IntrovertExtrovertScreen>
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
+    final isLargeScreen = screenWidth > 600;
+    
+    // Responsive padding
+    final horizontalPadding = (screenWidth * 0.06).clamp(16.0, 32.0);
+    final verticalPadding = (screenHeight * 0.025).clamp(16.0, 24.0);
+    
+    // Responsive spacing
+    final topSpacing = (screenHeight * 0.06).clamp(20.0, 48.0);
+    final sectionSpacing = (screenHeight * 0.04).clamp(16.0, 32.0);
     
     return Scaffold(
       body: Stack(
@@ -110,39 +119,48 @@ class _IntrovertExtrovertScreenState extends State<IntrovertExtrovertScreen>
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+                padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
                 child: Column(
                   children: [
-                    SizedBox(height: screenHeight * 0.06),
+                    SizedBox(height: topSpacing),
                     
                     // Main heading
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.0,
-                      child: Text(
-                        'Are you an Introvert or an Extrovert?',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.inter(
-                          color: Colors.black,
-                          fontSize: (screenWidth * 0.065).clamp(24.0, 28.0),
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.3,
-                          height: 1.3,
-                        ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              'Are you an Introvert or an Extrovert?',
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.inter(
+                                color: Colors.black,
+                                fontSize: (screenWidth * 0.065).clamp(18.0, isLargeScreen ? 32.0 : 28.0),
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.8,
+                                height: 1.1,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 2,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.04),
+                    SizedBox(height: sectionSpacing),
                     
                     // Circular Progress Charts Card
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.2,
                       child: Container(
-                        padding: const EdgeInsets.all(24),
+                        padding: EdgeInsets.all((screenWidth * 0.035).clamp(12.0, 20.0)),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(24),
+                          borderRadius: BorderRadius.circular((screenWidth * 0.06).clamp(20.0, 28.0)),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.08),
@@ -182,11 +200,14 @@ class _IntrovertExtrovertScreenState extends State<IntrovertExtrovertScreen>
                               ],
                             ),
                             
-                            const SizedBox(height: 24),
+                            SizedBox(height: (screenHeight * 0.015).clamp(10.0, 16.0)),
                             
                             // Personality Type Result
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: (screenWidth * 0.04).clamp(14.0, 20.0),
+                                vertical: (screenHeight * 0.012).clamp(8.0, 14.0),
+                              ),
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
                                   colors: widget.personalityType == 'AMBIVERT'
@@ -195,13 +216,13 @@ class _IntrovertExtrovertScreenState extends State<IntrovertExtrovertScreen>
                                           ? [const Color(0xFF667eea), const Color(0xFF8B9AFF)]
                                           : [const Color(0xFFFF6B9D), const Color(0xFFFF8E9E)],
                                 ),
-                                borderRadius: BorderRadius.circular(20),
+                                borderRadius: BorderRadius.circular((screenWidth * 0.05).clamp(18.0, 24.0)),
                               ),
                               child: Text(
                                 widget.personalityType,
                                 style: GoogleFonts.inter(
                                   color: Colors.white,
-                                  fontSize: (screenWidth * 0.055).clamp(20.0, 24.0),
+                                  fontSize: (screenWidth * 0.055).clamp(18.0, isLargeScreen ? 28.0 : 26.0),
                                   fontWeight: FontWeight.w700,
                                   letterSpacing: 0.5,
                                 ),
@@ -212,17 +233,17 @@ class _IntrovertExtrovertScreenState extends State<IntrovertExtrovertScreen>
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.04),
+                    SizedBox(height: (screenHeight * 0.03).clamp(12.0, 24.0)),
                     
                     // Explanation Card
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.4,
                       child: Container(
-                        padding: const EdgeInsets.all(24),
+                        padding: EdgeInsets.all((screenWidth * 0.035).clamp(12.0, 20.0)),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular((screenWidth * 0.05).clamp(18.0, 24.0)),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.06),
@@ -236,7 +257,7 @@ class _IntrovertExtrovertScreenState extends State<IntrovertExtrovertScreen>
                           textAlign: TextAlign.center,
                           style: GoogleFonts.inter(
                             color: const Color(0xFF555555),
-                            fontSize: (screenWidth * 0.038).clamp(14.0, 16.0),
+                            fontSize: (screenWidth * 0.038).clamp(13.0, isLargeScreen ? 18.0 : 16.0),
                             fontWeight: FontWeight.w400,
                             height: 1.6,
                             letterSpacing: 0.2,
@@ -245,7 +266,7 @@ class _IntrovertExtrovertScreenState extends State<IntrovertExtrovertScreen>
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.03),
+                    SizedBox(height: (screenHeight * 0.03).clamp(12.0, 24.0)),
                     
                     // Subtitle
                     _AnimatedFade(
@@ -256,7 +277,7 @@ class _IntrovertExtrovertScreenState extends State<IntrovertExtrovertScreen>
                         textAlign: TextAlign.center,
                         style: GoogleFonts.inter(
                           color: const Color(0xFF777777),
-                          fontSize: (screenWidth * 0.035).clamp(13.0, 15.0),
+                          fontSize: (screenWidth * 0.035).clamp(12.0, isLargeScreen ? 18.0 : 16.0),
                           fontWeight: FontWeight.w500,
                           fontStyle: FontStyle.italic,
                           letterSpacing: 0.3,
@@ -264,7 +285,7 @@ class _IntrovertExtrovertScreenState extends State<IntrovertExtrovertScreen>
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.05),
+                    SizedBox(height: (screenHeight * 0.02).clamp(8.0, 16.0)),
                     
                     // Share button - floating outside of cards
                     _AnimatedFade(
@@ -308,7 +329,13 @@ class _CircularProgressChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final chartSize = (screenWidth * 0.25).clamp(100.0, 120.0);
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isLargeScreen = screenWidth > 600;
+    final chartSize = (screenWidth * 0.22).clamp(80.0, isLargeScreen ? 140.0 : 120.0);
+    final strokeWidth = (chartSize * 0.07).clamp(5.0, 9.0);
+    final iconSize = (chartSize * 0.22).clamp(16.0, isLargeScreen ? 28.0 : 24.0);
+    final percentageFontSize = (chartSize * 0.16).clamp(14.0, isLargeScreen ? 24.0 : 20.0);
+    final labelFontSize = (chartSize * 0.12).clamp(10.0, isLargeScreen ? 16.0 : 14.0);
     
     return AnimatedBuilder(
       animation: controller,
@@ -340,7 +367,7 @@ class _CircularProgressChart extends StatelessWidget {
                     height: chartSize,
                     child: CircularProgressIndicator(
                       value: controller.value * (percentage / 100),
-                      strokeWidth: 8,
+                      strokeWidth: strokeWidth,
                       backgroundColor: Colors.transparent,
                       valueColor: AlwaysStoppedAnimation<Color>(color),
                       strokeCap: StrokeCap.round,
@@ -354,14 +381,14 @@ class _CircularProgressChart extends StatelessWidget {
                       Icon(
                         icon,
                         color: color,
-                        size: 24,
+                        size: iconSize,
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: (chartSize * 0.03).clamp(2.0, 6.0)),
                       Text(
                         '$animatedPercentage%',
                         style: GoogleFonts.inter(
                           color: color,
-                          fontSize: 18,
+                          fontSize: percentageFontSize,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -371,14 +398,14 @@ class _CircularProgressChart extends StatelessWidget {
               ),
             ),
             
-            const SizedBox(height: 12),
+            SizedBox(height: (screenHeight * 0.012).clamp(8.0, 14.0)),
             
             // Label
             Text(
               label,
               style: GoogleFonts.inter(
                 color: const Color(0xFF555555),
-                fontSize: 14,
+                fontSize: labelFontSize,
                 fontWeight: FontWeight.w500,
                 letterSpacing: 0.3,
               ),

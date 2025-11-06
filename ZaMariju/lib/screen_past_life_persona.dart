@@ -67,17 +67,17 @@ class _PastLifePersonaScreenState extends State<PastLifePersonaScreen>
     return Scaffold(
       body: Stack(
         children: [
-          // Light pink gradient background
+          // Pastel brown gradient background
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Color(0xFFFFF0F5), // Very light pink
-                  Color(0xFFFFE4E9), // Light pink
-                  Color(0xFFFFD1DC), // Soft pink
-                  Color(0xFFFFB6C1), // Light pink
+                  Color(0xFFF5E6D3), // Very light pastel brown
+                  Color(0xFFE8D5C4), // Light pastel brown
+                  Color(0xFFDCC9B5), // Soft pastel brown
+                  Color(0xFFD0BDA6), // Pastel brown
                 ],
                 stops: [0.0, 0.3, 0.7, 1.0],
               ),
@@ -114,10 +114,10 @@ class _PastLifePersonaScreenState extends State<PastLifePersonaScreen>
                         textAlign: TextAlign.center,
                         style: GoogleFonts.inter(
                           color: Colors.black,
-                          fontSize: (screenWidth * 0.065).clamp(24.0, 28.0),
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.3,
-                          height: 1.3,
+                          fontSize: (screenWidth * 0.058).clamp(16.0, screenWidth > 600 ? 28.0 : 26.0),
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.8,
+                          height: 1.1,
                         ),
                       ),
                     ),
@@ -129,48 +129,90 @@ class _PastLifePersonaScreenState extends State<PastLifePersonaScreen>
                       controller: _fadeController,
                       delay: 0.2,
                       child: Container(
-                        padding: const EdgeInsets.all(32),
+                        margin: EdgeInsets.symmetric(horizontal: (screenWidth * 0.04).clamp(12.0, 16.0)),
+                        padding: EdgeInsets.all((screenWidth * 0.045).clamp(16.0, 20.0)),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(24),
+                          borderRadius: BorderRadius.circular((screenWidth * 0.06).clamp(20.0, 28.0)),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.08),
-                              blurRadius: 20,
-                              offset: const Offset(0, 8),
-                            ),
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.04),
-                              blurRadius: 40,
-                              offset: const Offset(0, 16),
+                              color: Colors.black.withOpacity(0.06),
+                              blurRadius: 15,
+                              offset: const Offset(0, 6),
                             ),
                           ],
                         ),
                         child: Column(
                           children: [
-                            // Persona Title
-                            Text(
-                              widget.personaTitle,
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.inter(
-                                color: const Color(0xFF8B4513),
-                                fontSize: (screenWidth * 0.08).clamp(24.0, 32.0),
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -0.5,
-                                height: 0.9,
+                            // Top Label (Tag) - A PAST LIFE PERSONA
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: (screenWidth * 0.035).clamp(10.0, 14.0),
+                                vertical: (screenWidth * 0.012).clamp(4.0, 6.0),
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF6E9DA),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                'A PAST LIFE PERSONA',
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.inter(
+                                  color: const Color(0xFF8B7E74),
+                                  fontSize: (screenWidth * 0.03).clamp(11.0, 12.0),
+                                  fontWeight: FontWeight.w500,
+                                  letterSpacing: 0.5,
+                                ),
                               ),
                             ),
-                            const SizedBox(height: 16),
-                            // Era
+                            
+                            SizedBox(height: (screenHeight * 0.01).clamp(8.0, 12.0)),
+                            
+                            // Subheader Line - Era
                             Text(
                               widget.era,
                               textAlign: TextAlign.center,
                               style: GoogleFonts.inter(
-                                color: const Color(0xFF555555),
-                                fontSize: (screenWidth * 0.035).clamp(12.0, 15.0),
+                                color: const Color(0xFFC08A58),
+                                fontSize: (screenWidth * 0.035).clamp(13.0, 14.0),
                                 fontWeight: FontWeight.w500,
-                                letterSpacing: 0.3,
+                                letterSpacing: 1.2,
                                 height: 1.2,
+                              ),
+                            ),
+                            
+                            SizedBox(height: (screenHeight * 0.015).clamp(10.0, 16.0)),
+                            
+                            // Main Title - Persona Title with clock emoji
+                            Text(
+                              '${widget.personaTitle} 🕐',
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.inter(
+                                color: const Color(0xFF3C2F25),
+                                fontSize: (screenWidth * 0.048).clamp(18.0, 20.0),
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.3,
+                                height: 1.3,
+                              ),
+                            ),
+                            
+                            SizedBox(height: (screenHeight * 0.02).clamp(12.0, 20.0)),
+                            
+                            // Body Text
+                            Container(
+                              constraints: BoxConstraints(
+                                maxWidth: screenWidth * 0.9,
+                              ),
+                              child: Text(
+                                widget.description,
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.inter(
+                                  color: const Color(0xFF4A4A4A),
+                                  fontSize: (screenWidth * 0.038).clamp(14.0, 15.0),
+                                  fontWeight: FontWeight.w400,
+                                  height: 1.5,
+                                  letterSpacing: 0.2,
+                                ),
                               ),
                             ),
                           ],

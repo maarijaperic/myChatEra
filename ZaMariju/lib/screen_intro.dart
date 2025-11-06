@@ -55,6 +55,13 @@ class _IntroScreenState extends State<IntroScreen>
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isLargeScreen = screenWidth > 600;
+    
+    // Responsive padding
+    final horizontalPadding = (screenWidth * 0.1).clamp(24.0, 48.0);
+    
     return Scaffold(
       backgroundColor: const Color(0xFFFFFDF5), // Off-white
       body: SafeArea(
@@ -63,30 +70,30 @@ class _IntroScreenState extends State<IntroScreen>
           child: SlideTransition(
             position: _slideAnimation,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 40.0),
+              padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
               child: Column(
                 children: [
                   const Spacer(flex: 3),
 
                   // App Name
-                  const Text(
+                  Text(
                     'MyChatEra',
                     style: TextStyle(
-                      fontSize: 48,
+                      fontSize: (screenWidth * 0.12).clamp(36.0, isLargeScreen ? 64.0 : 56.0),
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF2D2D2D),
+                      color: const Color(0xFF2D2D2D),
                       letterSpacing: -1.0,
                     ),
                   ),
 
-                  const SizedBox(height: 12),
+                  SizedBox(height: (screenHeight * 0.015).clamp(10.0, 16.0)),
 
                   // Tagline
                   Text(
                     'Discover your year in AI',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: (screenWidth * 0.045).clamp(16.0, isLargeScreen ? 24.0 : 22.0),
                       color: const Color(0xFF2D2D2D).withOpacity(0.5),
                       fontWeight: FontWeight.w500,
                       letterSpacing: 0.3,
@@ -98,7 +105,7 @@ class _IntroScreenState extends State<IntroScreen>
                   // Main CTA Button
                   SizedBox(
                     width: double.infinity,
-                    height: 56,
+                    height: (screenHeight * 0.07).clamp(48.0, 64.0),
                     child: CupertinoButton(
                       padding: EdgeInsets.zero,
                       onPressed: widget.onStart,
@@ -110,7 +117,7 @@ class _IntroScreenState extends State<IntroScreen>
                               Color(0xFFFFB4A2),
                             ],
                           ),
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular((screenWidth * 0.04).clamp(14.0, 20.0)),
                           boxShadow: [
                             BoxShadow(
                               color: const Color(0xFFFF6B9D).withOpacity(0.3),
@@ -119,12 +126,12 @@ class _IntroScreenState extends State<IntroScreen>
                             ),
                           ],
                         ),
-                        child: const Center(
+                        child: Center(
                           child: Text(
                             'Analyze Your Chats Now',
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 17,
+                              fontSize: (screenWidth * 0.042).clamp(15.0, isLargeScreen ? 22.0 : 20.0),
                               fontWeight: FontWeight.w600,
                               letterSpacing: 0.3,
                             ),

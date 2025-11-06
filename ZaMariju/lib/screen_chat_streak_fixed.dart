@@ -72,6 +72,16 @@ class _ChatStreakScreenState extends State<ChatStreakScreen>
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
+    final isLargeScreen = screenWidth > 600;
+    
+    // Responsive padding
+    final horizontalPadding = (screenWidth * 0.06).clamp(16.0, 32.0);
+    final verticalPadding = (screenHeight * 0.025).clamp(16.0, 24.0);
+    
+    // Responsive spacing
+    final topSpacing = (screenHeight * 0.08).clamp(20.0, 60.0);
+    final sectionSpacing = (screenHeight * 0.04).clamp(16.0, 32.0);
+    final largeSpacing = (screenHeight * 0.06).clamp(20.0, 48.0);
     
     return Scaffold(
       body: Container(
@@ -110,51 +120,49 @@ class _ChatStreakScreenState extends State<ChatStreakScreen>
               child: Center(
                 child: SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.all(24.0),
+                  padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const SizedBox(height: 40),
+                      SizedBox(height: topSpacing),
                       
-                      // Main headline with fire emoji
+                      // Main headline
                       _AnimatedFade(
                         controller: _fadeController,
                         delay: 0.0,
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(
-                              'Your Longest Chat Streak ',
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.inter(
-                                color: Colors.white,
-                                fontSize: (screenWidth * 0.08).clamp(28.0, 36.0),
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.8,
-                                height: 1.1,
-                              ),
-                            ),
-                            Text(
-                              '🔥',
-                              style: TextStyle(
-                                fontSize: (screenWidth * 0.08).clamp(28.0, 36.0),
+                            Flexible(
+                              child: Text(
+                                'Your Longest Chat Streak',
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.inter(
+                                  color: Colors.black,
+                                  fontSize: (screenWidth * 0.065).clamp(18.0, isLargeScreen ? 32.0 : 28.0),
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.8,
+                                  height: 1.1,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
                               ),
                             ),
                           ],
                         ),
                       ),
                       
-                      const SizedBox(height: 40),
+                      SizedBox(height: largeSpacing),
                       
                       // Streak Display Card with Loading Bar
                       _AnimatedFade(
                         controller: _fadeController,
                         delay: 0.2,
                         child: Container(
-                          padding: const EdgeInsets.all(32),
+                          padding: EdgeInsets.all((screenWidth * 0.05).clamp(16.0, 24.0)),
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(24),
+                            borderRadius: BorderRadius.circular((screenWidth * 0.06).clamp(20.0, 28.0)),
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black.withOpacity(0.08),
@@ -171,6 +179,7 @@ class _ChatStreakScreenState extends State<ChatStreakScreen>
                           child: AnimatedBuilder(
                             animation: _counterController,
                             builder: (context, child) {
+                              final progressBarHeight = (screenHeight * 0.015).clamp(10.0, 14.0);
                               return Column(
                                 children: [
                                   // Days display
@@ -178,32 +187,32 @@ class _ChatStreakScreenState extends State<ChatStreakScreen>
                                     '$_displayedDays',
                                     style: GoogleFonts.inter(
                                       color: const Color(0xFFFF6B35),
-                                      fontSize: (screenWidth * 0.12).clamp(40.0, 52.0),
+                                      fontSize: (screenWidth * 0.12).clamp(36.0, isLargeScreen ? 64.0 : 56.0),
                                       fontWeight: FontWeight.w800,
                                       letterSpacing: -0.5,
                                       height: 0.9,
                                     ),
                                   ),
-                                  const SizedBox(height: 8),
+                                  SizedBox(height: (screenHeight * 0.01).clamp(6.0, 12.0)),
                                   Text(
                                     'days in a row',
                                     style: GoogleFonts.inter(
                                       color: const Color(0xFF555555),
-                                      fontSize: (screenWidth * 0.035).clamp(12.0, 15.0),
+                                      fontSize: (screenWidth * 0.035).clamp(11.0, isLargeScreen ? 18.0 : 16.0),
                                       fontWeight: FontWeight.w500,
                                       letterSpacing: 0.3,
                                       height: 1.2,
                                     ),
                                   ),
-                                  const SizedBox(height: 24),
+                                  SizedBox(height: (screenHeight * 0.03).clamp(16.0, 28.0)),
                                   
                                   // Progress bar
                                   Container(
                                     width: double.infinity,
-                                    height: 12,
+                                    height: progressBarHeight,
                                     decoration: BoxDecoration(
                                       color: const Color(0xFFFF6B35).withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(6),
+                                      borderRadius: BorderRadius.circular(progressBarHeight / 2),
                                     ),
                                     child: FractionallySizedBox(
                                       alignment: Alignment.centerLeft,
@@ -213,17 +222,17 @@ class _ChatStreakScreenState extends State<ChatStreakScreen>
                                           gradient: const LinearGradient(
                                             colors: [Color(0xFFFF6B35), Color(0xFFFF8E53)],
                                           ),
-                                          borderRadius: BorderRadius.circular(6),
+                                          borderRadius: BorderRadius.circular(progressBarHeight / 2),
                                         ),
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(height: 12),
+                                  SizedBox(height: (screenHeight * 0.015).clamp(10.0, 16.0)),
                                   Text(
                                     'Streak Progress',
                                     style: GoogleFonts.inter(
                                       color: const Color(0xFF777777),
-                                      fontSize: (screenWidth * 0.032).clamp(11.0, 14.0),
+                                      fontSize: (screenWidth * 0.032).clamp(10.0, isLargeScreen ? 16.0 : 14.0),
                                       fontWeight: FontWeight.w500,
                                       letterSpacing: 0.3,
                                     ),
@@ -235,17 +244,17 @@ class _ChatStreakScreenState extends State<ChatStreakScreen>
                         ),
                       ),
                       
-                      const SizedBox(height: 24),
+                      SizedBox(height: sectionSpacing),
                       
                       // Explanation Card
                       _AnimatedFade(
                         controller: _fadeController,
                         delay: 0.4,
                         child: Container(
-                          padding: const EdgeInsets.all(24),
+                          padding: EdgeInsets.all((screenWidth * 0.06).clamp(16.0, 28.0)),
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular((screenWidth * 0.05).clamp(18.0, 24.0)),
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black.withOpacity(0.06),
@@ -259,7 +268,7 @@ class _ChatStreakScreenState extends State<ChatStreakScreen>
                             textAlign: TextAlign.center,
                             style: GoogleFonts.inter(
                               color: const Color(0xFF555555),
-                              fontSize: (screenWidth * 0.038).clamp(14.0, 16.0),
+                              fontSize: (screenWidth * 0.038).clamp(13.0, isLargeScreen ? 18.0 : 16.0),
                               fontWeight: FontWeight.w400,
                               height: 1.6,
                               letterSpacing: 0.2,
@@ -268,7 +277,7 @@ class _ChatStreakScreenState extends State<ChatStreakScreen>
                         ),
                       ),
                       
-                      SizedBox(height: screenHeight * 0.05),
+                      SizedBox(height: (screenHeight * 0.05).clamp(20.0, 40.0)),
                       
                       // Share button - floating outside of cards
                       _AnimatedFade(
@@ -281,7 +290,7 @@ class _ChatStreakScreenState extends State<ChatStreakScreen>
                         ),
                       ),
                       
-                      SizedBox(height: screenHeight * 0.04),
+                      SizedBox(height: sectionSpacing),
                     ],
                   ),
                 ),
@@ -361,6 +370,7 @@ class _SparklePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
+
 
 
 

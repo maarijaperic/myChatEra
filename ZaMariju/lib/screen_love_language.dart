@@ -59,63 +59,75 @@ class _LoveLanguageScreenState extends State<LoveLanguageScreen>
   }
 
   Widget _buildCircularChart(String label, int percentage, Color color) {
-    return Column(
-      children: [
-        SizedBox(
-          width: 60,
-          height: 60,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              // Background circle
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: color.withOpacity(0.1),
-                ),
-              ),
-              
-              // Progress circle
-              SizedBox(
-                width: 60,
-                height: 60,
-                child: CircularProgressIndicator(
-                  value: percentage / 100,
-                  strokeWidth: 6,
-                  backgroundColor: Colors.transparent,
-                  valueColor: AlwaysStoppedAnimation<Color>(color),
-                  strokeCap: StrokeCap.round,
-                ),
-              ),
-              
-              // Center percentage
-              Text(
-                '$percentage%',
-                style: GoogleFonts.inter(
-                  color: color,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-        ),
+    return Builder(
+      builder: (context) {
+        final screenWidth = MediaQuery.of(context).size.width;
+        final screenHeight = MediaQuery.of(context).size.height;
+        final isLargeScreen = screenWidth > 600;
+        final chartSize = (screenWidth * 0.15).clamp(50.0, isLargeScreen ? 90.0 : 75.0);
+        final strokeWidth = (chartSize * 0.1).clamp(4.0, 8.0);
+        final percentageFontSize = (chartSize * 0.2).clamp(10.0, isLargeScreen ? 18.0 : 16.0);
+        final labelFontSize = (chartSize * 0.17).clamp(8.0, isLargeScreen ? 14.0 : 12.0);
         
-        const SizedBox(height: 8),
-        
-        // Label
-        Text(
-          label,
-          style: GoogleFonts.inter(
-            color: const Color(0xFF555555),
-            fontSize: 10,
-            fontWeight: FontWeight.w500,
-            letterSpacing: 0.3,
-          ),
-        ),
-      ],
+        return Column(
+          children: [
+            SizedBox(
+              width: chartSize,
+              height: chartSize,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // Background circle
+                  Container(
+                    width: chartSize,
+                    height: chartSize,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: color.withOpacity(0.1),
+                    ),
+                  ),
+                  
+                  // Progress circle
+                  SizedBox(
+                    width: chartSize,
+                    height: chartSize,
+                    child: CircularProgressIndicator(
+                      value: percentage / 100,
+                      strokeWidth: strokeWidth,
+                      backgroundColor: Colors.transparent,
+                      valueColor: AlwaysStoppedAnimation<Color>(color),
+                      strokeCap: StrokeCap.round,
+                    ),
+                  ),
+                  
+                  // Center percentage
+                  Text(
+                    '$percentage',
+                    style: GoogleFonts.inter(
+                      color: color,
+                      fontSize: percentageFontSize,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            SizedBox(height: (screenHeight * 0.01).clamp(6.0, 10.0)),
+            
+            // Label
+            Text(
+              label,
+              style: GoogleFonts.inter(
+                color: const Color(0xFF555555),
+                fontSize: labelFontSize,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 0.3,
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -156,11 +168,14 @@ class _LoveLanguageScreenState extends State<LoveLanguageScreen>
           // Main content
           SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
+              padding: EdgeInsets.symmetric(
+                horizontal: (MediaQuery.of(context).size.width * 0.06).clamp(16.0, 32.0),
+                vertical: (MediaQuery.of(context).size.height * 0.025).clamp(16.0, 24.0),
+              ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  SizedBox(height: MediaQuery.of(context).size.height * 0.04),
+                  SizedBox(height: (MediaQuery.of(context).size.height * 0.08).clamp(32.0, 60.0)),
                   
                   // Question
                   Text(
@@ -168,14 +183,14 @@ class _LoveLanguageScreenState extends State<LoveLanguageScreen>
                     textAlign: TextAlign.center,
                     style: GoogleFonts.inter(
                       color: Colors.black,
-                      fontSize: (MediaQuery.of(context).size.width * 0.065).clamp(20.0, 28.0),
+                      fontSize: (MediaQuery.of(context).size.width * 0.058).clamp(16.0, MediaQuery.of(context).size.width > 600 ? 28.0 : 26.0),
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.8,
                       height: 1.1,
                     ),
                   ),
                   
-                  SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                  SizedBox(height: (MediaQuery.of(context).size.height * 0.04).clamp(20.0, 32.0)),
                   
                   // Love Language Display Card with 4 Circular Bars
                   FadeTransition(
@@ -189,10 +204,10 @@ class _LoveLanguageScreenState extends State<LoveLanguageScreen>
                         curve: Curves.easeOutCubic,
                       )),
                       child: Container(
-                        padding: const EdgeInsets.all(20),
+                        padding: EdgeInsets.all((MediaQuery.of(context).size.width * 0.035).clamp(12.0, 20.0)),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(24),
+                          borderRadius: BorderRadius.circular((MediaQuery.of(context).size.width * 0.06).clamp(20.0, 28.0)),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.08),
@@ -219,22 +234,25 @@ class _LoveLanguageScreenState extends State<LoveLanguageScreen>
                               ],
                             ),
                             
-                            const SizedBox(height: 24),
+                            SizedBox(height: (MediaQuery.of(context).size.height * 0.012).clamp(8.0, 12.0)),
                             
                             // Primary Love Language
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: (MediaQuery.of(context).size.width * 0.04).clamp(14.0, 20.0),
+                                vertical: (MediaQuery.of(context).size.height * 0.012).clamp(8.0, 14.0),
+                              ),
                               decoration: BoxDecoration(
                                 gradient: const LinearGradient(
                                   colors: [Color(0xFFFF6B9D), Color(0xFFFF8E9E)],
                                 ),
-                                borderRadius: BorderRadius.circular(20),
+                                borderRadius: BorderRadius.circular((MediaQuery.of(context).size.width * 0.05).clamp(18.0, 24.0)),
                               ),
                               child: Text(
                                 widget.loveLanguage,
                                 style: GoogleFonts.inter(
                                   color: Colors.white,
-                                  fontSize: (MediaQuery.of(context).size.width * 0.055).clamp(20.0, 24.0),
+                                  fontSize: (MediaQuery.of(context).size.width * 0.055).clamp(18.0, MediaQuery.of(context).size.width > 600 ? 28.0 : 26.0),
                                   fontWeight: FontWeight.w700,
                                   letterSpacing: 0.5,
                                 ),
@@ -246,7 +264,7 @@ class _LoveLanguageScreenState extends State<LoveLanguageScreen>
                     ),
                   ),
                   
-                  SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                  SizedBox(height: (MediaQuery.of(context).size.height * 0.03).clamp(16.0, 24.0)),
                   
                   // Explanation Card
                   FadeTransition(
@@ -260,10 +278,10 @@ class _LoveLanguageScreenState extends State<LoveLanguageScreen>
                         curve: Curves.easeOutCubic,
                       )),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                        padding: EdgeInsets.all((MediaQuery.of(context).size.width * 0.035).clamp(12.0, 20.0)),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular((MediaQuery.of(context).size.width * 0.05).clamp(18.0, 24.0)),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.06),
@@ -277,7 +295,7 @@ class _LoveLanguageScreenState extends State<LoveLanguageScreen>
                           textAlign: TextAlign.center,
                           style: GoogleFonts.inter(
                             color: const Color(0xFF555555),
-                            fontSize: (MediaQuery.of(context).size.width * 0.038).clamp(14.0, 16.0),
+                            fontSize: (MediaQuery.of(context).size.width * 0.038).clamp(13.0, MediaQuery.of(context).size.width > 600 ? 18.0 : 16.0),
                             fontWeight: FontWeight.w400,
                             height: 1.4,
                             letterSpacing: 0.1,
@@ -287,7 +305,7 @@ class _LoveLanguageScreenState extends State<LoveLanguageScreen>
                     ),
                   ),
                   
-                  const SizedBox(height: 16),
+                  SizedBox(height: (MediaQuery.of(context).size.height * 0.012).clamp(8.0, 12.0)),
                   
                   // Subtitle
                   FadeTransition(
@@ -297,23 +315,25 @@ class _LoveLanguageScreenState extends State<LoveLanguageScreen>
                       textAlign: TextAlign.center,
                       style: GoogleFonts.inter(
                         color: Colors.white.withOpacity(0.8),
-                        fontSize: 14,
+                        fontSize: (MediaQuery.of(context).size.width * 0.035).clamp(12.0, MediaQuery.of(context).size.width > 600 ? 18.0 : 16.0),
                         fontStyle: FontStyle.italic,
                       ),
                     ),
                   ),
                   
-                  const SizedBox(height: 8),
+                  SizedBox(height: (MediaQuery.of(context).size.height * 0.006).clamp(3.0, 6.0)),
                   
                   // Share button
                   FadeTransition(
                     opacity: _mainController,
-                    child: ShareToStoryButton(
-                      shareText: 'My love language is ${widget.loveLanguage}! ${widget.languageEmoji} Love is spoken in many languages 💕 #ChatGPTWrapped',
+                    child: Center(
+                      child: ShareToStoryButton(
+                        shareText: 'My love language is ${widget.loveLanguage}! ${widget.languageEmoji} Love is spoken in many languages 💕 #ChatGPTWrapped',
+                      ),
                     ),
                   ),
                   
-                  SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                  SizedBox(height: (MediaQuery.of(context).size.height * 0.008).clamp(4.0, 8.0)),
                 ],
               ),
             ),

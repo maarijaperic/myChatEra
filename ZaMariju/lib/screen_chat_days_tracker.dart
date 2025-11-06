@@ -67,6 +67,17 @@ class _ChatDaysTrackerScreenState extends State<ChatDaysTrackerScreen>
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
+    final isSmallScreen = screenWidth < 360;
+    final isLargeScreen = screenWidth > 600;
+    
+    // Responsive padding
+    final horizontalPadding = (screenWidth * 0.06).clamp(16.0, 32.0);
+    final verticalPadding = (screenHeight * 0.025).clamp(16.0, 24.0);
+    
+    // Responsive spacing
+    final topSpacing = (screenHeight * 0.08).clamp(20.0, 60.0);
+    final sectionSpacing = (screenHeight * 0.04).clamp(16.0, 32.0);
+    final smallSpacing = (screenHeight * 0.02).clamp(8.0, 16.0);
     
     return Scaffold(
       body: Stack(
@@ -95,10 +106,10 @@ class _ChatDaysTrackerScreenState extends State<ChatDaysTrackerScreen>
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+                padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
                 child: Column(
                   children: [
-                    SizedBox(height: screenHeight * 0.08),
+                    SizedBox(height: topSpacing),
                     
                     // Main headline
                     _AnimatedFade(
@@ -107,28 +118,26 @@ class _ChatDaysTrackerScreenState extends State<ChatDaysTrackerScreen>
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            'Your GPT Days ',
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.inter(
-                              color: Colors.black,
-                              fontSize: (screenWidth * 0.08).clamp(28.0, 36.0),
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.8,
-                              height: 1.1,
-                            ),
-                          ),
-                          Text(
-                            '📅',
-                            style: TextStyle(
-                              fontSize: (screenWidth * 0.08).clamp(28.0, 36.0),
+                          Flexible(
+                            child: Text(
+                              'Your GPT Days',
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.inter(
+                                color: Colors.black,
+                                fontSize: (screenWidth * 0.065).clamp(18.0, isLargeScreen ? 32.0 : 28.0),
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.8,
+                                height: 1.1,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
                             ),
                           ),
                         ],
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.05),
+                    SizedBox(height: (screenHeight * 0.05).clamp(16.0, 40.0)),
                     
                     // Percentage Display Card with Circular Progress
                     _AnimatedFade(
@@ -136,10 +145,10 @@ class _ChatDaysTrackerScreenState extends State<ChatDaysTrackerScreen>
                       delay: 0.2,
                       child: Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.all(16),
+                        padding: EdgeInsets.all((screenWidth * 0.03).clamp(12.0, 20.0)),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(24),
+                          borderRadius: BorderRadius.circular((screenWidth * 0.06).clamp(20.0, 28.0)),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.08),
@@ -156,19 +165,25 @@ class _ChatDaysTrackerScreenState extends State<ChatDaysTrackerScreen>
                         child: AnimatedBuilder(
                           animation: _counterController,
                           builder: (context, child) {
+                            // Responsive circular progress size
+                            final progressSize = (screenWidth * 0.25).clamp(80.0, isLargeScreen ? 140.0 : 120.0);
+                            final strokeWidth = (progressSize * 0.08).clamp(6.0, 10.0);
+                            final percentageFontSize = (progressSize * 0.24).clamp(18.0, isLargeScreen ? 32.0 : 28.0);
+                            final labelFontSize = (progressSize * 0.12).clamp(10.0, 14.0);
+                            
                             return Column(
                               children: [
                                 // Circular progress chart
                                 SizedBox(
-                                  width: 100,
-                                  height: 100,
+                                  width: progressSize,
+                                  height: progressSize,
                                   child: Stack(
                                     alignment: Alignment.center,
                                     children: [
                                       // Background circle
                                       Container(
-                                        width: 100,
-                                        height: 100,
+                                        width: progressSize,
+                                        height: progressSize,
                                         decoration: BoxDecoration(
                                           shape: BoxShape.circle,
                                           color: const Color(0xFFf5576c).withOpacity(0.1),
@@ -177,11 +192,11 @@ class _ChatDaysTrackerScreenState extends State<ChatDaysTrackerScreen>
                                       
                                       // Progress circle
                                       SizedBox(
-                                        width: 100,
-                                        height: 100,
+                                        width: progressSize,
+                                        height: progressSize,
                                         child: CircularProgressIndicator(
                                           value: _counterController.value * (widget.yearPercentage / 100),
-                                          strokeWidth: 8,
+                                          strokeWidth: strokeWidth,
                                           backgroundColor: Colors.transparent,
                                           valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFf5576c)),
                                           strokeCap: StrokeCap.round,
@@ -196,16 +211,16 @@ class _ChatDaysTrackerScreenState extends State<ChatDaysTrackerScreen>
                                             '${(widget.yearPercentage * _counterController.value).round()}%',
                                             style: GoogleFonts.inter(
                                               color: const Color(0xFFf5576c),
-                                              fontSize: 24,
+                                              fontSize: percentageFontSize,
                                               fontWeight: FontWeight.w700,
                                             ),
                                           ),
-                                          const SizedBox(height: 4),
+                                          SizedBox(height: (progressSize * 0.04).clamp(2.0, 6.0)),
                                           Text(
                                             'of year',
                                             style: GoogleFonts.inter(
                                               color: const Color(0xFF555555),
-                                              fontSize: 12,
+                                              fontSize: labelFontSize,
                                               fontWeight: FontWeight.w500,
                                               letterSpacing: 0.3,
                                             ),
@@ -216,25 +231,25 @@ class _ChatDaysTrackerScreenState extends State<ChatDaysTrackerScreen>
                                   ),
                                 ),
                                 
-                                const SizedBox(height: 24),
+                                SizedBox(height: (screenHeight * 0.03).clamp(16.0, 28.0)),
                                 
                                 // Days Count
                                 Text(
                                   '${widget.totalDays}',
                                   style: GoogleFonts.inter(
                                     color: const Color(0xFFf5576c),
-                                    fontSize: (screenWidth * 0.12).clamp(40.0, 52.0),
+                                    fontSize: (screenWidth * 0.12).clamp(36.0, isLargeScreen ? 64.0 : 56.0),
                                     fontWeight: FontWeight.w800,
                                     letterSpacing: -0.5,
                                     height: 0.9,
                                   ),
                                 ),
-                                const SizedBox(height: 4),
+                                SizedBox(height: (screenHeight * 0.005).clamp(2.0, 6.0)),
                                 Text(
                                   'days visited',
                                   style: GoogleFonts.inter(
                                     color: const Color(0xFF555555),
-                                    fontSize: (screenWidth * 0.035).clamp(12.0, 15.0),
+                                    fontSize: (screenWidth * 0.035).clamp(11.0, isLargeScreen ? 18.0 : 16.0),
                                     fontWeight: FontWeight.w500,
                                     letterSpacing: 0.3,
                                     height: 1.2,
@@ -247,7 +262,7 @@ class _ChatDaysTrackerScreenState extends State<ChatDaysTrackerScreen>
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.04),
+                    SizedBox(height: sectionSpacing),
                     
                     // Days Text Card
                     _AnimatedFade(
@@ -255,10 +270,10 @@ class _ChatDaysTrackerScreenState extends State<ChatDaysTrackerScreen>
                       delay: 0.4,
                       child: Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.all(24),
+                        padding: EdgeInsets.all((screenWidth * 0.06).clamp(16.0, 28.0)),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(24),
+                          borderRadius: BorderRadius.circular((screenWidth * 0.06).clamp(20.0, 28.0)),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.08),
@@ -273,11 +288,11 @@ class _ChatDaysTrackerScreenState extends State<ChatDaysTrackerScreen>
                           ],
                         ),
                         child: Text(
-                          "You've visited GPT on ${widget.totalDays} days — that's ${widget.yearPercentage}% of your year. Consistency is key! Your dedication shows in every conversation. Some people have coffee habits, you have GPT habits. 📅✨",
+                          "You've visited GPT on ${widget.totalDays} days — that's ${widget.yearPercentage}% of your year. Consistency is key! Your dedication shows in every conversation. Some people have coffee habits, you have GPT habits. Every day you showed up, you invested in yourself and your growth. 📅✨",
                           textAlign: TextAlign.center,
                           style: GoogleFonts.inter(
                             color: const Color(0xFF555555),
-                            fontSize: (screenWidth * 0.038).clamp(14.0, 16.0),
+                            fontSize: (screenWidth * 0.038).clamp(13.0, isLargeScreen ? 18.0 : 16.0),
                             fontWeight: FontWeight.w400,
                             height: 1.6,
                             letterSpacing: 0.2,
@@ -286,10 +301,7 @@ class _ChatDaysTrackerScreenState extends State<ChatDaysTrackerScreen>
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.03),
-                    
-                    
-                    SizedBox(height: screenHeight * 0.05),
+                    SizedBox(height: sectionSpacing),
                     
                     // Share button - floating outside of cards
                     _AnimatedFade(
@@ -302,7 +314,7 @@ class _ChatDaysTrackerScreenState extends State<ChatDaysTrackerScreen>
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.04),
+                    SizedBox(height: sectionSpacing),
                   ],
                 ),
               ),

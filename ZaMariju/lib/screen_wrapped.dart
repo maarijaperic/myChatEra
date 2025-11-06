@@ -24,8 +24,53 @@ class WrappedStatsScreen extends StatefulWidget {
 class _WrappedStatsScreenState extends State<WrappedStatsScreen>
     with TickerProviderStateMixin {
   late AnimationController _fadeController;
-  late AnimationController _chartController;
   late AnimationController _particlesController;
+
+  // First 6 months (Jan-Jun)
+  final List<Map<String, dynamic>> monthlyObsessions = [
+    {
+      'month': 'JANUARY',
+      'obsession': 'Your Ex!',
+      'emoji': '💔',
+      'color': Color(0xFFFFE5E5),
+      'accentColor': Color(0xFFFF6B6B),
+    },
+    {
+      'month': 'FEBRUARY',
+      'obsession': 'Baking!',
+      'emoji': '🍰',
+      'color': Color(0xFFFFF0E5),
+      'accentColor': Color(0xFFFF8C42),
+    },
+    {
+      'month': 'MARCH',
+      'obsession': 'Self-Care',
+      'emoji': '🧘',
+      'color': Color(0xFFE5F5FF),
+      'accentColor': Color(0xFF4A90E2),
+    },
+    {
+      'month': 'APRIL',
+      'obsession': 'Career Goals',
+      'emoji': '💼',
+      'color': Color(0xFFF0E5FF),
+      'accentColor': Color(0xFF9B59B6),
+    },
+    {
+      'month': 'MAY',
+      'obsession': 'Travel Plans',
+      'emoji': '✈️',
+      'color': Color(0xFFE5FFE5),
+      'accentColor': Color(0xFF2ECC71),
+    },
+    {
+      'month': 'JUNE',
+      'obsession': 'Fitness',
+      'emoji': '💪',
+      'color': Color(0xFFFFF5E5),
+      'accentColor': Color(0xFFFFB84D),
+    },
+  ];
 
   @override
   void initState() {
@@ -34,11 +79,6 @@ class _WrappedStatsScreenState extends State<WrappedStatsScreen>
     _fadeController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
-    );
-
-    _chartController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2000),
     );
 
     _particlesController = AnimationController(
@@ -52,14 +92,11 @@ class _WrappedStatsScreenState extends State<WrappedStatsScreen>
   Future<void> _startAnimations() async {
     await Future.delayed(const Duration(milliseconds: 300));
     _fadeController.forward();
-    await Future.delayed(const Duration(milliseconds: 600));
-    _chartController.forward();
   }
 
   @override
   void dispose() {
     _fadeController.dispose();
-    _chartController.dispose();
     _particlesController.dispose();
     super.dispose();
   }
@@ -68,28 +105,23 @@ class _WrappedStatsScreenState extends State<WrappedStatsScreen>
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
+    final isLargeScreen = screenWidth > 600;
+    
+    // Responsive padding
+    final horizontalPadding = (screenWidth * 0.05).clamp(16.0, 24.0);
+    final verticalPadding = (screenHeight * 0.02).clamp(12.0, 20.0);
+    
+    // Responsive spacing
+    final topSpacing = (screenHeight * 0.04).clamp(20.0, 32.0);
+    final sectionSpacing = (screenHeight * 0.04).clamp(24.0, 36.0);
+    final cardSpacing = (screenWidth * 0.03).clamp(10.0, 16.0);
+    final bottomSpacing = (screenHeight * 0.04).clamp(20.0, 32.0);
     
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F5F7), // iOS-like light gray
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Soft beige gradient background
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFFF5F1E8), // Soft beige
-                  Color(0xFFF0E6D2), // Light cream
-                  Color(0xFFE8DCC6), // Warm beige
-                  Color(0xFFE0D2B8), // Soft tan
-                ],
-                stops: [0.0, 0.3, 0.7, 1.0],
-              ),
-            ),
-          ),
-          
           // Subtle animated particles
           AnimatedBuilder(
             animation: _particlesController,
@@ -106,10 +138,10 @@ class _WrappedStatsScreenState extends State<WrappedStatsScreen>
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               child: Padding(
-                padding: const EdgeInsets.all(24.0),
+                padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
                 child: Column(
                   children: [
-                    SizedBox(height: screenHeight * 0.02),
+                    SizedBox(height: topSpacing),
                     
                     // Header section
                     _AnimatedFade(
@@ -120,166 +152,87 @@ class _WrappedStatsScreenState extends State<WrappedStatsScreen>
                           // Title
                           Text(
                             'Your 2025 in Review',
-                          textAlign: TextAlign.center,
+                            textAlign: TextAlign.center,
                             style: GoogleFonts.inter(
-                              color: const Color(0xFF2D2D2D),
-                              fontSize: (screenWidth * 0.08).clamp(28.0, 36.0),
-                            fontWeight: FontWeight.w700,
-                              letterSpacing: 0.5,
+                              color: const Color(0xFF1D1D1F),
+                              fontSize: (screenWidth * 0.075).clamp(28.0, isLargeScreen ? 44.0 : 40.0),
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.5,
                               height: 1.1,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          SizedBox(height: (screenHeight * 0.015).clamp(8.0, 16.0)),
                           // Subtitle
                           Text(
-                            'A year of growth and discovery',
+                            'Monthly Obsessions',
                             textAlign: TextAlign.center,
                             style: GoogleFonts.inter(
-                              color: const Color(0xFF666666),
-                              fontSize: (screenWidth * 0.04).clamp(14.0, 16.0),
-                              fontWeight: FontWeight.w400,
-                            letterSpacing: 0.3,
+                              color: const Color(0xFF86868B),
+                              fontSize: (screenWidth * 0.042).clamp(14.0, isLargeScreen ? 20.0 : 18.0),
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: 0.2,
                             ),
                           ),
                         ],
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.06),
+                    SizedBox(height: sectionSpacing),
                     
-                    // Stats section (2x2 grid)
+                    // Monthly Obsessions Grid (3 rows x 2 columns)
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.2,
                       child: Column(
-                        children: [
-                          // Top row
-                          Row(
+                        children: List.generate(3, (rowIndex) {
+                          return Column(
                             children: [
-                              Expanded(
-                                child: _StatCard(
-                                  icon: '💬',
-                                  title: '2847',
-                                  subtitle: 'Total Messages',
-                                  color: const Color(0xFFE8F4FD),
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: _StatCard(
-                                  icon: '📅',
-                                  title: '312',
-                                  subtitle: 'Active Days',
-                                  color: const Color(0xFFF0F8E8),
-                                ),
+                              Row(
+                                children: List.generate(2, (colIndex) {
+                                  final index = rowIndex * 2 + colIndex;
+                                  final monthData = monthlyObsessions[index];
+                                  return Expanded(
+                                    child: Padding(
+                                      padding: EdgeInsets.only(
+                                        right: colIndex == 0 ? cardSpacing / 2 : 0,
+                                        left: colIndex == 1 ? cardSpacing / 2 : 0,
+                                        bottom: rowIndex < 2 ? cardSpacing : 0,
+                                      ),
+                                      child: _MonthObsessionCard(
+                                        month: monthData['month'],
+                                        obsession: monthData['obsession'],
+                                        emoji: monthData['emoji'],
+                                        color: monthData['color'],
+                                        accentColor: monthData['accentColor'],
+                                        delay: 0.3 + (index * 0.1),
+                                        fadeController: _fadeController,
+                                      ),
+                                    ),
+                                  );
+                                }),
                               ),
                             ],
-                          ),
-                          const SizedBox(height: 16),
-                          // Bottom row
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _StatCard(
-                                  icon: '🔥',
-                                  title: '23 days',
-                                  subtitle: 'Longest Streak',
-                                  color: const Color(0xFFFFF0E8),
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: _StatCard(
-                                  icon: '✅',
-                                  title: 'October',
-                                  subtitle: 'Top Month',
-                                  color: const Color(0xFFE8F8E8),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
+                          );
+                        }),
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.08),
-                    
-                    // Monthly Activity section
-                    _AnimatedFade(
-                      controller: _fadeController,
-                      delay: 0.4,
-                      child: Column(
-                        children: [
-                          // Title
-                          Text(
-                            'Monthly Activity',
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.inter(
-                              color: const Color(0xFF2D2D2D),
-                              fontSize: (screenWidth * 0.06).clamp(22.0, 26.0),
-                          fontWeight: FontWeight.w600,
-                              letterSpacing: 0.3,
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          // Bar chart
-                          _MonthlyBarChart(
-                            controller: _chartController,
-                            screenWidth: screenWidth,
-                          ),
-                        ],
-                      ),
-                    ),
-                    
-                    SizedBox(height: screenHeight * 0.06),
-                    
-                    // Poetic message
-                    _AnimatedFade(
-                      controller: _fadeController,
-                      delay: 0.6,
-                      child: Container(
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.06),
-                              blurRadius: 15,
-                              offset: const Offset(0, 6),
-                            ),
-                          ],
-                        ),
-                        child: Text(
-                          widget.poeticMessage,
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.inter(
-                            color: const Color(0xFF555555),
-                            fontSize: (screenWidth * 0.038).clamp(14.0, 16.0),
-                            fontWeight: FontWeight.w400,
-                            height: 1.6,
-                            letterSpacing: 0.2,
-                          ),
-                        ),
-                      ),
-                    ),
-                    
-                    SizedBox(height: screenHeight * 0.05),
+                    SizedBox(height: sectionSpacing),
                     
                     // Share button
                     _AnimatedFade(
                       controller: _fadeController,
-                      delay: 0.8,
+                      delay: 0.9,
                       child: Center(
                         child: ShareToStoryButton(
-                          shareText: 'My 2025 in Review: 2847 messages, 312 active days, 23-day streak! A year of growth and discovery 🎉 #ChatGPTWrapped',
-                          primaryColor: const Color(0xFFE8F4FD),
-                          secondaryColor: const Color(0xFFD1E7F5),
+                          shareText: 'My 2025 Monthly Obsessions: From your ex to baking to self-care! Check out my year in review 🎉 #ChatGPTWrapped',
+                          primaryColor: const Color(0xFF007AFF),
+                          secondaryColor: const Color(0xFF0051D5),
                         ),
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.04),
+                    SizedBox(height: bottomSpacing),
                   ],
                 ),
               ),
@@ -291,128 +244,93 @@ class _WrappedStatsScreenState extends State<WrappedStatsScreen>
   }
 }
 
-// Stat Card Widget
-class _StatCard extends StatelessWidget {
-  final String icon;
-  final String title;
-  final String subtitle;
+// Month Obsession Card Widget
+class _MonthObsessionCard extends StatelessWidget {
+  final String month;
+  final String obsession;
+  final String emoji;
   final Color color;
+  final Color accentColor;
+  final double delay;
+  final AnimationController fadeController;
 
-  const _StatCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
+  const _MonthObsessionCard({
+    required this.month,
+    required this.obsession,
+    required this.emoji,
     required this.color,
+    required this.accentColor,
+    required this.delay,
+    required this.fadeController,
   });
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isLargeScreen = screenWidth > 600;
     
-    return Container(
-      padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Text(
-            icon,
-            style: const TextStyle(fontSize: 32),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.inter(
-              color: const Color(0xFF2D2D2D),
-              fontSize: (screenWidth * 0.06).clamp(20.0, 24.0),
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.3,
+    return _AnimatedFade(
+      controller: fadeController,
+      delay: delay,
+      child: Container(
+        height: (screenHeight * 0.18).clamp(140.0, 200.0),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 20,
+              offset: const Offset(0, 4),
+              spreadRadius: 0,
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.inter(
-              color: const Color(0xFF666666),
-              fontSize: (screenWidth * 0.035).clamp(12.0, 14.0),
-              fontWeight: FontWeight.w500,
-              letterSpacing: 0.2,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// Monthly Bar Chart Widget
-class _MonthlyBarChart extends StatelessWidget {
-  final AnimationController controller;
-  final double screenWidth;
-
-  const _MonthlyBarChart({
-    required this.controller,
-    required this.screenWidth,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    final heights = [0.7, 0.8, 0.6, 0.9, 0.8, 0.7, 
-                    0.8, 0.9, 0.8, 1.0, 0.7, 0.6]; // October is highest
-    
-    return AnimatedBuilder(
-      animation: controller,
-      builder: (context, child) {
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: List.generate(12, (index) {
-            final animatedHeight = heights[index] * controller.value;
-            final barWidth = (screenWidth - 48 - 11 * 8) / 12; // Account for spacing
-            
-            return Column(
-              children: [
-                // Bar
-                Container(
-                  width: barWidth,
-                  height: 120 * animatedHeight,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      begin: Alignment.bottomCenter,
-                      end: Alignment.topCenter,
-                      colors: [Color(0xFFFF7A00), Color(0xFFFFB366)],
+          ],
+        ),
+        child: Padding(
+          padding: EdgeInsets.all((screenWidth * 0.04).clamp(16.0, 20.0)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Month label
+              Text(
+                month,
+                style: GoogleFonts.inter(
+                  color: const Color(0xFF86868B),
+                  fontSize: (screenWidth * 0.028).clamp(10.0, isLargeScreen ? 14.0 : 12.0),
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              
+              // Emoji and Obsession
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    emoji,
+                    style: TextStyle(
+                      fontSize: (screenWidth * 0.08).clamp(32.0, isLargeScreen ? 48.0 : 40.0),
                     ),
-                    borderRadius: BorderRadius.circular(8),
                   ),
-                ),
-                const SizedBox(height: 8),
-                // Month label
-                Text(
-                  months[index],
-                  style: GoogleFonts.inter(
-                    color: const Color(0xFF666666),
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
+                  SizedBox(height: (screenHeight * 0.01).clamp(6.0, 10.0)),
+                  Text(
+                    obsession,
+                    style: GoogleFonts.inter(
+                      color: const Color(0xFF1D1D1F),
+                      fontSize: (screenWidth * 0.045).clamp(16.0, isLargeScreen ? 22.0 : 20.0),
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.3,
+                      height: 1.2,
+                    ),
                   ),
-                ),
-              ],
-            );
-          }),
-        );
-      },
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -464,21 +382,21 @@ class _SubtleParticlesPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withOpacity(0.3)
+      ..color = Colors.black.withOpacity(0.02)
       ..style = PaintingStyle.fill;
 
     // Draw subtle floating dots
-    for (int i = 0; i < 15; i++) {
+    for (int i = 0; i < 12; i++) {
       final x = (i * 67.0) % size.width;
       final y = (i * 43.0) % size.height;
       final timeOffset = (animationValue * 2 * pi) + (i * 0.4);
       final float = 0.2 + 0.3 * sin(timeOffset);
-      final dotSize = 1.0 + (1.0 * float);
+      final dotSize = 1.5 + (1.5 * float);
 
       canvas.drawCircle(
         Offset(x, y),
         dotSize,
-        paint..color = Colors.white.withOpacity(float * 0.4),
+        paint..color = Colors.black.withOpacity(float * 0.03),
       );
     }
   }

@@ -74,22 +74,34 @@ class _TypeABPersonalityScreenState extends State<TypeABPersonalityScreen>
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
+    final isLargeScreen = screenWidth > 600;
+    
+    // Responsive padding
+    final horizontalPadding = (screenWidth * 0.06).clamp(16.0, 32.0);
+    final verticalPadding = (screenHeight * 0.025).clamp(16.0, 24.0);
+    
+    // Responsive spacing
+    final topSpacing = (screenHeight * 0.08).clamp(20.0, 60.0);
+    final sectionSpacing = (screenHeight * 0.04).clamp(16.0, 32.0);
+    final largeSpacing = (screenHeight * 0.06).clamp(20.0, 48.0);
+    final smallSpacing = (screenHeight * 0.02).clamp(8.0, 16.0);
+    final mediumSpacing = (screenHeight * 0.03).clamp(12.0, 24.0);
     
     return Scaffold(
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Light pink gradient background
+          // Light pastel blue gradient background
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Color(0xFFFFF0F5), // Very light pink
-                  Color(0xFFFFE4E9), // Light pink
-                  Color(0xFFFFD1DC), // Soft pink
-                  Color(0xFFFFB6C1), // Light pink
+                  Color(0xFFE0F2F7), // Very light blue
+                  Color(0xFFCCEEF5), // Light blue
+                  Color(0xFFB8E8F0), // Soft blue
+                  Color(0xFFA3E2EB), // Pastel blue
                 ],
                 stops: [0.0, 0.3, 0.7, 1.0],
               ),
@@ -112,39 +124,48 @@ class _TypeABPersonalityScreenState extends State<TypeABPersonalityScreen>
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+                padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
                 child: Column(
                   children: [
-                    SizedBox(height: screenHeight * 0.08),
+                    SizedBox(height: topSpacing),
                     
                     // Main heading
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.0,
-                      child: Text(
-                        'Are you Type A or Type B?',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.inter(
-                          color: const Color(0xFF555555),
-                          fontSize: (screenWidth * 0.065).clamp(24.0, 28.0),
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.3,
-                          height: 1.3,
-                        ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              'Are you Type A or Type B?',
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.inter(
+                                color: Colors.black,
+                                fontSize: (screenWidth * 0.065).clamp(18.0, isLargeScreen ? 32.0 : 28.0),
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.8,
+                                height: 1.1,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 2,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.06),
+                    SizedBox(height: largeSpacing),
                     
                     // Type A/B Progress Charts Card
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.2,
                       child: Container(
-                        padding: const EdgeInsets.all(32),
+                        padding: EdgeInsets.all((screenWidth * 0.035).clamp(12.0, 20.0)),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(24),
+                          borderRadius: BorderRadius.circular((screenWidth * 0.06).clamp(20.0, 28.0)),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.08),
@@ -184,24 +205,27 @@ class _TypeABPersonalityScreenState extends State<TypeABPersonalityScreen>
                               ],
                             ),
                             
-                            const SizedBox(height: 24),
+                            SizedBox(height: (screenHeight * 0.015).clamp(10.0, 16.0)),
                             
                             // Personality Type Result
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: (screenWidth * 0.04).clamp(14.0, 20.0),
+                                vertical: (screenHeight * 0.012).clamp(8.0, 14.0),
+                              ),
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
                                   colors: widget.typeAPercentage > widget.typeBPercentage
                                       ? [const Color(0xFFFF6B35), const Color(0xFFFF8A65)]
                                       : [const Color(0xFF4ECDC4), const Color(0xFF7EDDD6)],
                                 ),
-                                borderRadius: BorderRadius.circular(20),
+                                borderRadius: BorderRadius.circular((screenWidth * 0.05).clamp(18.0, 24.0)),
                               ),
                               child: Text(
                                 widget.personalityType,
                                 style: GoogleFonts.inter(
                                   color: Colors.white,
-                                  fontSize: (screenWidth * 0.055).clamp(20.0, 24.0),
+                                  fontSize: (screenWidth * 0.055).clamp(18.0, isLargeScreen ? 28.0 : 24.0),
                                   fontWeight: FontWeight.w700,
                                   letterSpacing: 0.5,
                                 ),
@@ -212,17 +236,17 @@ class _TypeABPersonalityScreenState extends State<TypeABPersonalityScreen>
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.04),
+                    SizedBox(height: mediumSpacing),
                     
                     // Explanation Card
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.4,
                       child: Container(
-                        padding: const EdgeInsets.all(24),
+                        padding: EdgeInsets.all((screenWidth * 0.035).clamp(12.0, 20.0)),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular((screenWidth * 0.05).clamp(18.0, 24.0)),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.06),
@@ -236,7 +260,7 @@ class _TypeABPersonalityScreenState extends State<TypeABPersonalityScreen>
                           textAlign: TextAlign.center,
                           style: GoogleFonts.inter(
                             color: const Color(0xFF555555),
-                            fontSize: (screenWidth * 0.038).clamp(14.0, 16.0),
+                            fontSize: (screenWidth * 0.038).clamp(13.0, isLargeScreen ? 18.0 : 16.0),
                             fontWeight: FontWeight.w400,
                             height: 1.6,
                             letterSpacing: 0.2,
@@ -245,7 +269,7 @@ class _TypeABPersonalityScreenState extends State<TypeABPersonalityScreen>
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.03),
+                    SizedBox(height: mediumSpacing),
                     
                     // Subtitle
                     _AnimatedFade(
@@ -256,7 +280,7 @@ class _TypeABPersonalityScreenState extends State<TypeABPersonalityScreen>
                         textAlign: TextAlign.center,
                         style: GoogleFonts.inter(
                           color: const Color(0xFF777777),
-                          fontSize: (screenWidth * 0.035).clamp(13.0, 15.0),
+                          fontSize: (screenWidth * 0.035).clamp(12.0, isLargeScreen ? 18.0 : 16.0),
                           fontWeight: FontWeight.w500,
                           fontStyle: FontStyle.italic,
                           letterSpacing: 0.3,
@@ -264,7 +288,7 @@ class _TypeABPersonalityScreenState extends State<TypeABPersonalityScreen>
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.05),
+                    SizedBox(height: smallSpacing),
                     
                     // Share button - floating outside of cards
                     _AnimatedFade(
@@ -277,7 +301,7 @@ class _TypeABPersonalityScreenState extends State<TypeABPersonalityScreen>
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.04),
+                    SizedBox(height: sectionSpacing),
                   ],
                 ),
               ),
@@ -308,7 +332,13 @@ class _CircularProgressChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final chartSize = (screenWidth * 0.25).clamp(100.0, 120.0);
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isLargeScreen = screenWidth > 600;
+    final chartSize = (screenWidth * 0.22).clamp(80.0, isLargeScreen ? 140.0 : 120.0);
+    final strokeWidth = (chartSize * 0.07).clamp(5.0, 9.0);
+    final iconSize = (chartSize * 0.22).clamp(16.0, isLargeScreen ? 28.0 : 24.0);
+    final percentageFontSize = (chartSize * 0.16).clamp(14.0, isLargeScreen ? 24.0 : 20.0);
+    final labelFontSize = (chartSize * 0.12).clamp(10.0, isLargeScreen ? 16.0 : 14.0);
     
     return AnimatedBuilder(
       animation: controller,
@@ -340,7 +370,7 @@ class _CircularProgressChart extends StatelessWidget {
                     height: chartSize,
                     child: CircularProgressIndicator(
                       value: controller.value * (percentage / 100),
-                      strokeWidth: 8,
+                      strokeWidth: strokeWidth,
                       backgroundColor: Colors.transparent,
                       valueColor: AlwaysStoppedAnimation<Color>(color),
                       strokeCap: StrokeCap.round,
@@ -354,14 +384,14 @@ class _CircularProgressChart extends StatelessWidget {
                       Icon(
                         icon,
                         color: color,
-                        size: 24,
+                        size: iconSize,
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: (chartSize * 0.03).clamp(2.0, 6.0)),
                       Text(
                         '$animatedPercentage%',
                         style: GoogleFonts.inter(
                           color: color,
-                          fontSize: 18,
+                          fontSize: percentageFontSize,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -371,14 +401,14 @@ class _CircularProgressChart extends StatelessWidget {
               ),
             ),
             
-            const SizedBox(height: 12),
+            SizedBox(height: (screenHeight * 0.012).clamp(8.0, 14.0)),
             
             // Label
             Text(
               label,
               style: GoogleFonts.inter(
                 color: const Color(0xFF555555),
-                fontSize: 14,
+                fontSize: labelFontSize,
                 fontWeight: FontWeight.w500,
                 letterSpacing: 0.3,
               ),

@@ -63,17 +63,17 @@ class _GptOClockScreenState extends State<GptOClockScreen>
     return Scaffold(
       body: Stack(
         children: [
-          // Light pink gradient background
+          // Light pastel blue gradient background
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Color(0xFFFFF0F5), // Very light pink
-                  Color(0xFFFFE4E9), // Light pink
-                  Color(0xFFFFD1DC), // Soft pink
-                  Color(0xFFFFB6C1), // Light pink
+                  Color(0xFFE0F2F7), // Very light blue
+                  Color(0xFFCCEEF5), // Light blue
+                  Color(0xFFB8E8F0), // Soft blue
+                  Color(0xFFA3E2EB), // Pastel blue
                 ],
                 stops: [0.0, 0.3, 0.7, 1.0],
               ),
@@ -108,21 +108,19 @@ class _GptOClockScreenState extends State<GptOClockScreen>
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            'Your Peak Time ',
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.inter(
-                              color: Colors.black,
-                              fontSize: (screenWidth * 0.08).clamp(28.0, 36.0),
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.8,
-                              height: 1.1,
-                            ),
-                          ),
-                          Text(
-                            widget.timeEmoji,
-                            style: TextStyle(
-                              fontSize: (screenWidth * 0.08).clamp(28.0, 36.0),
+                          Flexible(
+                            child: Text(
+                              'Your Peak Time',
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.inter(
+                                color: Colors.black,
+                                fontSize: (screenWidth * 0.065).clamp(20.0, 28.0),
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.8,
+                                height: 1.1,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
                             ),
                           ),
                         ],
@@ -136,20 +134,16 @@ class _GptOClockScreenState extends State<GptOClockScreen>
                       controller: _fadeController,
                       delay: 0.2,
                       child: Container(
-                        padding: const EdgeInsets.all(32),
+                        width: double.infinity,
+                        padding: EdgeInsets.all((screenWidth * 0.05).clamp(20.0, 28.0)),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(24),
+                          borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.08),
-                              blurRadius: 20,
-                              offset: const Offset(0, 8),
-                            ),
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.04),
-                              blurRadius: 40,
-                              offset: const Offset(0, 16),
+                              color: Colors.black.withOpacity(0.06),
+                              blurRadius: 15,
+                              offset: const Offset(0, 6),
                             ),
                           ],
                         ),
@@ -200,7 +194,7 @@ class _GptOClockScreenState extends State<GptOClockScreen>
                       controller: _fadeController,
                       delay: 0.4,
                       child: Container(
-                        padding: const EdgeInsets.all(24),
+                        padding: const EdgeInsets.all(18),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(20),
@@ -213,7 +207,7 @@ class _GptOClockScreenState extends State<GptOClockScreen>
                           ],
                         ),
                         child: Text(
-                          'You\'re most active ${widget.timeDescription} at ${widget.peakHour}:00. While others are sleeping or working, you\'re having deep conversations with GPT. Your brain works best ${widget.timeDescription} — probably because that\'s when you have the most interesting thoughts. Peak productivity hours! ${widget.timeEmoji}',
+                          'You\'re most active ${widget.timeDescription} at ${widget.peakHour}:00. While others are sleeping or working, you\'re having deep conversations with GPT. Your brain works best ${widget.timeDescription} — probably because that\'s when you have the most interesting thoughts. Peak productivity hours! This is when your creativity flows and your best ideas come to life. ${widget.timeEmoji}',
                           textAlign: TextAlign.center,
                           style: GoogleFonts.inter(
                             color: const Color(0xFF555555),

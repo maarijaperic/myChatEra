@@ -60,7 +60,18 @@ class _RandomQuestionScreenState extends State<RandomQuestionScreen>
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
+    final isLargeScreen = screenWidth > 600;
+    
+    // Responsive padding
+    final horizontalPadding = (screenWidth * 0.06).clamp(16.0, 32.0);
+    final verticalPadding = (screenHeight * 0.025).clamp(16.0, 24.0);
+    
+    // Responsive spacing
+    final topSpacing = (screenHeight * 0.08).clamp(20.0, 60.0);
+    final sectionSpacing = (screenHeight * 0.04).clamp(16.0, 32.0);
+    final bottomSpacing = (screenHeight * 0.05).clamp(20.0, 40.0);
     
     return Scaffold(
       body: Stack(
@@ -97,11 +108,11 @@ class _RandomQuestionScreenState extends State<RandomQuestionScreen>
           // Main content
           SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
+              padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  SizedBox(height: screenHeight * 0.08),
+                  SizedBox(height: topSpacing),
                   
                   // Main headline
                   _AnimatedFade(
@@ -115,7 +126,7 @@ class _RandomQuestionScreenState extends State<RandomQuestionScreen>
                           textAlign: TextAlign.center,
                           style: GoogleFonts.inter(
                             color: Colors.white,
-                            fontSize: (MediaQuery.of(context).size.width * 0.08).clamp(28.0, 36.0),
+                            fontSize: (screenWidth * 0.08).clamp(24.0, isLargeScreen ? 42.0 : 38.0),
                             fontWeight: FontWeight.w700,
                             letterSpacing: 0.8,
                             height: 1.1,
@@ -124,24 +135,24 @@ class _RandomQuestionScreenState extends State<RandomQuestionScreen>
                         Text(
                           '🤔',
                           style: TextStyle(
-                            fontSize: (MediaQuery.of(context).size.width * 0.08).clamp(28.0, 36.0),
+                            fontSize: (screenWidth * 0.08).clamp(24.0, isLargeScreen ? 42.0 : 38.0),
                           ),
                         ),
                       ],
                     ),
                   ),
                   
-                  SizedBox(height: screenHeight * 0.04),
+                  SizedBox(height: sectionSpacing),
                   
                   // Response Time Display Card with Geometric Design
                   _AnimatedFade(
                     controller: _fadeController,
                     delay: 0.2,
                     child: Container(
-                      padding: const EdgeInsets.all(24),
+                      padding: EdgeInsets.all((screenWidth * 0.06).clamp(16.0, 28.0)),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular((screenWidth * 0.05).clamp(18.0, 24.0)),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withOpacity(0.06),
@@ -157,53 +168,58 @@ class _RandomQuestionScreenState extends State<RandomQuestionScreen>
                             '${widget.averageResponseTime}s',
                             style: GoogleFonts.inter(
                               color: const Color(0xFF667eea),
-                              fontSize: (MediaQuery.of(context).size.width * 0.12).clamp(40.0, 52.0),
+                              fontSize: (screenWidth * 0.12).clamp(36.0, isLargeScreen ? 64.0 : 56.0),
                               fontWeight: FontWeight.w800,
                               letterSpacing: -0.5,
                               height: 0.9,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          SizedBox(height: (screenHeight * 0.01).clamp(6.0, 12.0)),
                           Text(
                             'Average Response',
                             textAlign: TextAlign.center,
                             style: GoogleFonts.inter(
                               color: const Color(0xFF555555),
-                              fontSize: (MediaQuery.of(context).size.width * 0.035).clamp(12.0, 15.0),
+                              fontSize: (screenWidth * 0.035).clamp(11.0, isLargeScreen ? 18.0 : 16.0),
                               fontWeight: FontWeight.w500,
                               letterSpacing: 0.3,
                               height: 1.2,
                             ),
                           ),
-                          const SizedBox(height: 24),
+                          SizedBox(height: (screenHeight * 0.03).clamp(16.0, 28.0)),
                           
                           // Progress bar based on response time
-                          Container(
-                            width: double.infinity,
-                            height: 12,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF667eea).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: FractionallySizedBox(
-                              alignment: Alignment.centerLeft,
-                              widthFactor: (widget.averageResponseTime / 30).clamp(0.0, 1.0), // Scale to 30 seconds max
-                              child: Container(
+                          Builder(
+                            builder: (context) {
+                              final progressBarHeight = (screenHeight * 0.015).clamp(10.0, 14.0);
+                              return Container(
+                                width: double.infinity,
+                                height: progressBarHeight,
                                 decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                    colors: [Color(0xFF667eea), Color(0xFF8B9AFF)],
-                                  ),
-                                  borderRadius: BorderRadius.circular(6),
+                                  color: const Color(0xFF667eea).withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(progressBarHeight / 2),
                                 ),
-                              ),
-                            ),
+                                child: FractionallySizedBox(
+                                  alignment: Alignment.centerLeft,
+                                  widthFactor: (widget.averageResponseTime / 30).clamp(0.0, 1.0), // Scale to 30 seconds max
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      gradient: const LinearGradient(
+                                        colors: [Color(0xFF667eea), Color(0xFF8B9AFF)],
+                                      ),
+                                      borderRadius: BorderRadius.circular(progressBarHeight / 2),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
                           ),
-                          const SizedBox(height: 12),
+                          SizedBox(height: (screenHeight * 0.015).clamp(10.0, 16.0)),
                           Text(
                             'Response Speed',
                             style: GoogleFonts.inter(
                               color: const Color(0xFF777777),
-                              fontSize: (MediaQuery.of(context).size.width * 0.032).clamp(11.0, 14.0),
+                              fontSize: (screenWidth * 0.032).clamp(10.0, isLargeScreen ? 16.0 : 14.0),
                               fontWeight: FontWeight.w500,
                               letterSpacing: 0.3,
                             ),
@@ -213,17 +229,17 @@ class _RandomQuestionScreenState extends State<RandomQuestionScreen>
                     ),
                   ),
                   
-                  SizedBox(height: screenHeight * 0.04),
+                  SizedBox(height: sectionSpacing),
                   
                   // Question Text Card
                   _AnimatedFade(
                     controller: _fadeController,
                     delay: 0.4,
                     child: Container(
-                      padding: const EdgeInsets.all(24),
+                      padding: EdgeInsets.all((screenWidth * 0.06).clamp(16.0, 28.0)),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular((screenWidth * 0.05).clamp(18.0, 24.0)),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withOpacity(0.06),
@@ -237,7 +253,7 @@ class _RandomQuestionScreenState extends State<RandomQuestionScreen>
                         textAlign: TextAlign.center,
                         style: GoogleFonts.inter(
                           color: const Color(0xFF555555),
-                          fontSize: (MediaQuery.of(context).size.width * 0.038).clamp(14.0, 16.0),
+                          fontSize: (screenWidth * 0.038).clamp(13.0, isLargeScreen ? 18.0 : 16.0),
                           fontWeight: FontWeight.w400,
                           height: 1.6,
                           letterSpacing: 0.2,
@@ -246,7 +262,7 @@ class _RandomQuestionScreenState extends State<RandomQuestionScreen>
                     ),
                   ),
                   
-                  SizedBox(height: screenHeight * 0.05),
+                  SizedBox(height: bottomSpacing),
                   
                   // Share button - floating outside of cards
                   _AnimatedFade(

@@ -20,7 +20,10 @@ class MostUsedWordScreen extends StatefulWidget {
 class _MostUsedWordScreenState extends State<MostUsedWordScreen>
     with TickerProviderStateMixin {
   late AnimationController _fadeController;
+  late AnimationController _counterController;
   late AnimationController _bubblesController;
+  
+  int _displayedWordCount = 0;
   
   @override
   void initState() {
@@ -29,6 +32,11 @@ class _MostUsedWordScreenState extends State<MostUsedWordScreen>
     _fadeController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
+    );
+    
+    _counterController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
     );
     
     _bubblesController = AnimationController(
@@ -42,11 +50,22 @@ class _MostUsedWordScreenState extends State<MostUsedWordScreen>
   Future<void> _startAnimations() async {
     await Future.delayed(const Duration(milliseconds: 300));
     _fadeController.forward();
+    
+    await Future.delayed(const Duration(milliseconds: 800));
+    _counterController.forward();
+    
+    // Animate counter
+    _counterController.addListener(() {
+      setState(() {
+        _displayedWordCount = (widget.wordCount * _counterController.value).round();
+      });
+    });
   }
 
   @override
   void dispose() {
     _fadeController.dispose();
+    _counterController.dispose();
     _bubblesController.dispose();
     super.dispose();
   }
@@ -59,17 +78,17 @@ class _MostUsedWordScreenState extends State<MostUsedWordScreen>
     return Scaffold(
       body: Stack(
         children: [
-          // Light pink gradient background
+          // Pastel brown gradient background
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Color(0xFFFFF0F5), // Very light pink
-                  Color(0xFFFFE4E9), // Light pink
-                  Color(0xFFFFD1DC), // Soft pink
-                  Color(0xFFFFB6C1), // Light pink
+                  Color(0xFFF5E6D3), // Very light pastel brown
+                  Color(0xFFE8D5C4), // Light pastel brown
+                  Color(0xFFDCC9B5), // Soft pastel brown
+                  Color(0xFFD0BDA6), // Pastel brown
                 ],
                 stops: [0.0, 0.3, 0.7, 1.0],
               ),
@@ -92,10 +111,13 @@ class _MostUsedWordScreenState extends State<MostUsedWordScreen>
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+                padding: EdgeInsets.symmetric(
+                  horizontal: (screenWidth * 0.06).clamp(16.0, 32.0),
+                  vertical: (screenHeight * 0.025).clamp(16.0, 24.0),
+                ),
                 child: Column(
                   children: [
-                    SizedBox(height: screenHeight * 0.08),
+                    SizedBox(height: (screenHeight * 0.08).clamp(20.0, 60.0)),
                     
                     // Main headline
                     _AnimatedFade(
@@ -104,102 +126,112 @@ class _MostUsedWordScreenState extends State<MostUsedWordScreen>
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            'Your Signature Word ',
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.inter(
-                              color: Colors.black,
-                              fontSize: (screenWidth * 0.08).clamp(28.0, 36.0),
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.8,
-                              height: 1.1,
-                            ),
-                          ),
-                          Text(
-                            '✨',
-                            style: TextStyle(
-                              fontSize: (screenWidth * 0.08).clamp(28.0, 36.0),
+                          Flexible(
+                            child: Text(
+                              'Your Signature Word',
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.inter(
+                                color: Colors.black,
+                                fontSize: (screenWidth * 0.065).clamp(18.0, screenWidth > 600 ? 32.0 : 28.0),
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.8,
+                                height: 1.1,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
                             ),
                           ),
                         ],
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.06),
+                    SizedBox(height: (screenHeight * 0.06).clamp(20.0, 48.0)),
                     
                     // Word Card
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.2,
                       child: Container(
-                        padding: const EdgeInsets.all(32),
+                        width: double.infinity,
+                        padding: EdgeInsets.all((screenWidth * 0.045).clamp(14.0, 24.0)),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(24),
+                          borderRadius: BorderRadius.circular((screenWidth * 0.05).clamp(18.0, 24.0)),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.08),
-                              blurRadius: 20,
-                              offset: const Offset(0, 8),
-                            ),
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.04),
-                              blurRadius: 40,
-                              offset: const Offset(0, 16),
+                              color: Colors.black.withOpacity(0.06),
+                              blurRadius: 15,
+                              offset: const Offset(0, 6),
                             ),
                           ],
                         ),
-                        child: Column(
-                          children: [
-                            // Word display
-                            Text(
-                              widget.mostUsedWord,
-                              style: GoogleFonts.inter(
-                                color: const Color(0xFFFF6B35),
-                                fontSize: (screenWidth * 0.12).clamp(40.0, 52.0),
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -0.5,
-                                height: 0.9,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '${widget.wordCount} times',
-                              style: GoogleFonts.inter(
-                                color: const Color(0xFF555555),
-                                fontSize: (screenWidth * 0.035).clamp(12.0, 15.0),
-                                fontWeight: FontWeight.w500,
-                                letterSpacing: 0.3,
-                                height: 1.2,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Your most used word',
-                              style: GoogleFonts.inter(
-                                color: const Color(0xFF555555),
-                                fontSize: (screenWidth * 0.035).clamp(12.0, 15.0),
-                                fontWeight: FontWeight.w500,
-                                letterSpacing: 0.3,
-                                height: 1.2,
-                              ),
-                            ),
-                          ],
+                        child: AnimatedBuilder(
+                          animation: _counterController,
+                          builder: (context, child) {
+                            return Column(
+                              children: [
+                                // Word display
+                                Text(
+                                  widget.mostUsedWord,
+                                  style: GoogleFonts.inter(
+                                    color: const Color(0xFFFF6B35),
+                                    fontSize: (screenWidth * 0.12).clamp(36.0, screenWidth > 600 ? 68.0 : 60.0),
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: -0.5,
+                                    height: 0.9,
+                                  ),
+                                ),
+                                SizedBox(height: (screenHeight * 0.015).clamp(10.0, 16.0)),
+                                Text(
+                                  '$_displayedWordCount',
+                                  style: GoogleFonts.inter(
+                                    color: const Color(0xFF4ECDC4),
+                                    fontSize: (screenWidth * 0.08).clamp(28.0, screenWidth > 600 ? 52.0 : 48.0),
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: -0.5,
+                                    height: 0.9,
+                                  ),
+                                ),
+                                SizedBox(height: (screenHeight * 0.005).clamp(2.0, 6.0)),
+                                Text(
+                                  'times',
+                                  style: GoogleFonts.inter(
+                                    color: const Color(0xFF555555),
+                                    fontSize: (screenWidth * 0.035).clamp(11.0, screenWidth > 600 ? 18.0 : 16.0),
+                                    fontWeight: FontWeight.w500,
+                                    letterSpacing: 0.3,
+                                    height: 1.2,
+                                  ),
+                                ),
+                                SizedBox(height: (screenHeight * 0.01).clamp(6.0, 12.0)),
+                                Text(
+                                  'Your most used word',
+                                  style: GoogleFonts.inter(
+                                    color: const Color(0xFF555555),
+                                    fontSize: (screenWidth * 0.035).clamp(11.0, screenWidth > 600 ? 18.0 : 16.0),
+                                    fontWeight: FontWeight.w500,
+                                    letterSpacing: 0.3,
+                                    height: 1.2,
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
                         ),
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.04),
+                    SizedBox(height: (screenHeight * 0.04).clamp(16.0, 32.0)),
                     
                     // Description Card
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.4,
                       child: Container(
-                        padding: const EdgeInsets.all(24),
+                        padding: EdgeInsets.all((screenWidth * 0.045).clamp(14.0, 24.0)),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular((screenWidth * 0.05).clamp(18.0, 24.0)),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.06),
@@ -209,11 +241,11 @@ class _MostUsedWordScreenState extends State<MostUsedWordScreen>
                           ],
                         ),
                         child: Text(
-                          'You said "${widget.mostUsedWord}" ${widget.wordCount} times this year. It\'s basically your personality in one word. While others have catchphrases, you have a signature word that defines your entire vibe. Pure linguistic main character energy. ✨',
+                          'You said "${widget.mostUsedWord}" ${widget.wordCount} times this year. It\'s basically your personality in one word. While others have catchphrases, you have a signature word that defines your entire vibe. Pure linguistic main character energy. This word has become your calling card, showing up in conversations like a signature move. ✨',
                           textAlign: TextAlign.center,
                           style: GoogleFonts.inter(
                             color: const Color(0xFF555555),
-                            fontSize: (screenWidth * 0.038).clamp(14.0, 16.0),
+                            fontSize: (screenWidth * 0.038).clamp(13.0, screenWidth > 600 ? 18.0 : 16.0),
                             fontWeight: FontWeight.w400,
                             height: 1.6,
                             letterSpacing: 0.2,
@@ -222,7 +254,7 @@ class _MostUsedWordScreenState extends State<MostUsedWordScreen>
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.05),
+                    SizedBox(height: (screenHeight * 0.05).clamp(20.0, 40.0)),
                     
                     // Share button
                     _AnimatedFade(

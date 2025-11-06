@@ -103,7 +103,7 @@ class _PastLifePersonaScreenState extends State<PastLifePersonaScreen>
                     widget.question,
                     textAlign: TextAlign.center,
                     style: GoogleFonts.inter(
-                      color: Colors.white,
+                      color: Colors.black,
                       fontSize: (screenWidth * 0.065).clamp(20.0, 28.0),
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.8,
@@ -125,7 +125,7 @@ class _PastLifePersonaScreenState extends State<PastLifePersonaScreen>
                         curve: Curves.easeOutCubic,
                       )),
                       child: Container(
-                        padding: const EdgeInsets.all(24),
+                        padding: const EdgeInsets.all(18),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(24),
@@ -166,7 +166,7 @@ class _PastLifePersonaScreenState extends State<PastLifePersonaScreen>
                                 letterSpacing: 0.5,
                               ),
                             ),
-                            const SizedBox(height: 20),
+                            const SizedBox(height: 16),
                             
                             // Progress bar representing past life connection
                             Container(
@@ -219,7 +219,7 @@ class _PastLifePersonaScreenState extends State<PastLifePersonaScreen>
                         curve: Curves.easeOutCubic,
                       )),
                       child: Container(
-                        padding: const EdgeInsets.all(24),
+                        padding: const EdgeInsets.all(18),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(20),
@@ -249,8 +249,10 @@ class _PastLifePersonaScreenState extends State<PastLifePersonaScreen>
                   SizedBox(height: screenHeight * 0.04),
                   
                   // Share button
-                  ShareToStoryButton(
-                    shareText: 'In a past life, I was a ${widget.personaTitle}! ${widget.personaEmoji} History echoes in who we are today ✨ #ChatGPTWrapped',
+                  Center(
+                    child: ShareToStoryButton(
+                      shareText: 'In a past life, I was a ${widget.personaTitle}! ${widget.personaEmoji} History echoes in who we are today ✨ #ChatGPTWrapped',
+                    ),
                   ),
                   
                   SizedBox(height: screenHeight * 0.08),
@@ -315,6 +317,7 @@ class HistoricalPatternsPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
+
 
 
 

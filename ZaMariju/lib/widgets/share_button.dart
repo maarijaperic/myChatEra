@@ -17,6 +17,15 @@ class ShareToStoryButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    
+    // Responsive sizing based on screen size
+    final buttonHeight = (screenHeight * 0.07).clamp(48.0, 56.0);
+    final iconContainerSize = (screenWidth * 0.11).clamp(32.0, 40.0);
+    final iconSize = iconContainerSize * 0.5; // Icon is 50% of container
+    final fontSize = (screenWidth * 0.038).clamp(14.0, 18.0);
+    final horizontalPadding = (screenWidth * 0.04).clamp(12.0, 20.0);
+    final iconTextSpacing = (screenWidth * 0.04).clamp(12.0, 16.0);
     
     return GestureDetector(
       onTap: () {
@@ -35,11 +44,15 @@ class ShareToStoryButton extends StatelessWidget {
         );
       },
       child: Container(
-        width: screenWidth * 0.75,
-        height: 56,
+        constraints: BoxConstraints(
+          maxWidth: screenWidth * 0.9, // Max 90% of screen width
+          minWidth: (screenWidth * 0.6).clamp(200.0, 300.0), // Responsive min width
+        ),
+        height: buttonHeight,
+        padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(buttonHeight / 2), // Fully rounded
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.08),
@@ -55,10 +68,11 @@ class ShareToStoryButton extends StatelessWidget {
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 40,
-              height: 40,
+              width: iconContainerSize,
+              height: iconContainerSize,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
@@ -68,7 +82,7 @@ class ShareToStoryButton extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(iconContainerSize / 2),
                 boxShadow: [
                   BoxShadow(
                     color: (primaryColor ?? const Color(0xFFFF6B9D)).withOpacity(0.3),
@@ -77,20 +91,24 @@ class ShareToStoryButton extends StatelessWidget {
                   ),
                 ],
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.ios_share_rounded,
                 color: Colors.white,
-                size: 20,
+                size: iconSize,
               ),
             ),
-            const SizedBox(width: 16),
-            Text(
-              'Share to Story',
-              style: GoogleFonts.inter(
-                color: const Color(0xFF333333),
-                fontSize: (screenWidth * 0.042).clamp(16.0, 18.0),
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.3,
+            SizedBox(width: iconTextSpacing),
+            Flexible(
+              child: Text(
+                'Share to Story',
+                style: GoogleFonts.inter(
+                  color: const Color(0xFF333333),
+                  fontSize: fontSize,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.3,
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
               ),
             ),
           ],

@@ -228,8 +228,10 @@ class _RoastScreenState extends State<RoastScreen>
                       _AnimatedFade(
                         controller: _fadeController,
                         delay: 0.6,
-                        child: ShareToStoryButton(
-                          shareText: 'ChatGPT roasted me and I can\'t even be mad about it. 🔥😂 #ChatGPTWrapped #Roasted',
+                        child: Center(
+                          child: ShareToStoryButton(
+                            shareText: 'ChatGPT roasted me and I can\'t even be mad about it. 🔥😂 #ChatGPTWrapped #Roasted',
+                          ),
                         ),
                       ),
                       

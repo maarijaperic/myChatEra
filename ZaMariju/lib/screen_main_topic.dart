@@ -101,10 +101,13 @@ class _MainCharacterTopicScreenState extends State<MainCharacterTopicScreen>
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+                padding: EdgeInsets.symmetric(
+                  horizontal: (MediaQuery.of(context).size.width * 0.06).clamp(16.0, 32.0),
+                  vertical: (MediaQuery.of(context).size.height * 0.025).clamp(16.0, 24.0),
+                ),
                 child: Column(
                   children: [
-                    SizedBox(height: screenHeight * 0.08),
+                    SizedBox(height: (screenHeight * 0.08).clamp(20.0, 60.0)),
                     
                     // Main headline - Similar to Daily Dose
                     _AnimatedFade(
@@ -122,7 +125,7 @@ class _MainCharacterTopicScreenState extends State<MainCharacterTopicScreen>
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     color: Colors.black,
-                                    fontSize: (screenWidth * 0.065).clamp(20.0, 28.0),
+                                    fontSize: (screenWidth * 0.065).clamp(18.0, screenWidth > 600 ? 32.0 : 28.0),
                                     fontWeight: FontWeight.bold,
                                     letterSpacing: 0.5,
                                     height: 1.2,
@@ -133,7 +136,7 @@ class _MainCharacterTopicScreenState extends State<MainCharacterTopicScreen>
                               Text(
                                 '👑',
                                 style: TextStyle(
-                                  fontSize: (screenWidth * 0.08).clamp(28.0, 36.0),
+                                  fontSize: (screenWidth * 0.08).clamp(24.0, screenWidth > 600 ? 44.0 : 40.0),
                                 ),
                               ),
                             ],
@@ -143,7 +146,7 @@ class _MainCharacterTopicScreenState extends State<MainCharacterTopicScreen>
                             'Character Topic',
                             style: TextStyle(
                               color: Colors.black.withOpacity(0.7),
-                              fontSize: (screenWidth * 0.05).clamp(18.0, 24.0),
+                                fontSize: (screenWidth * 0.05).clamp(16.0, screenWidth > 600 ? 28.0 : 26.0),
                               fontWeight: FontWeight.w500,
                               letterSpacing: 0.5,
                             ),
@@ -159,10 +162,13 @@ class _MainCharacterTopicScreenState extends State<MainCharacterTopicScreen>
                       controller: _fadeController,
                       delay: 0.2,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 32),
+                        padding: EdgeInsets.symmetric(
+                          vertical: (MediaQuery.of(context).size.height * 0.04).clamp(24.0, 40.0),
+                          horizontal: (MediaQuery.of(context).size.width * 0.08).clamp(24.0, 40.0),
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.18),
-                          borderRadius: BorderRadius.circular(24),
+                          borderRadius: BorderRadius.circular((screenWidth * 0.06).clamp(20.0, 28.0)),
                           border: Border.all(
                             color: Colors.white.withOpacity(0.35),
                             width: 1.5,
@@ -175,7 +181,7 @@ class _MainCharacterTopicScreenState extends State<MainCharacterTopicScreen>
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: (screenWidth * 0.10).clamp(36.0, 48.0),
+                                fontSize: (screenWidth * 0.10).clamp(32.0, screenWidth > 600 ? 56.0 : 52.0),
                                 fontWeight: FontWeight.bold,
                                 letterSpacing: 0.5,
                                 height: 1.1,
@@ -186,7 +192,7 @@ class _MainCharacterTopicScreenState extends State<MainCharacterTopicScreen>
                               'is your obsession',
                               style: TextStyle(
                                 color: Colors.white.withOpacity(0.8),
-                                fontSize: (screenWidth * 0.04).clamp(14.0, 18.0),
+                                fontSize: (screenWidth * 0.04).clamp(12.0, screenWidth > 600 ? 22.0 : 20.0),
                                 fontWeight: FontWeight.w500,
                                 letterSpacing: 0.5,
                               ),
@@ -203,10 +209,10 @@ class _MainCharacterTopicScreenState extends State<MainCharacterTopicScreen>
                       controller: _fadeController,
                       delay: 0.4,
                       child: Container(
-                        padding: const EdgeInsets.all(20),
+                        padding: EdgeInsets.all((screenWidth * 0.05).clamp(16.0, 28.0)),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular((screenWidth * 0.04).clamp(14.0, 20.0)),
                           border: Border.all(
                             color: Colors.white.withOpacity(0.3),
                             width: 1,
@@ -217,7 +223,7 @@ class _MainCharacterTopicScreenState extends State<MainCharacterTopicScreen>
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: (screenWidth * 0.039).clamp(14.0, 18.0),
+                            fontSize: (screenWidth * 0.039).clamp(13.0, screenWidth > 600 ? 20.0 : 18.0),
                             fontWeight: FontWeight.w500,
                             height: 1.5,
                             letterSpacing: 0.2,
@@ -233,7 +239,7 @@ class _MainCharacterTopicScreenState extends State<MainCharacterTopicScreen>
                       controller: _fadeController,
                       delay: 0.6,
                       child: Container(
-                        padding: const EdgeInsets.all(24),
+                        padding: EdgeInsets.all((screenWidth * 0.06).clamp(18.0, 32.0)),
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             begin: Alignment.topLeft,
@@ -362,28 +368,33 @@ class _FloatingTopicIcons extends StatelessWidget {
               top: baseY + float,
               child: Opacity(
                 opacity: opacity,
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.3),
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
+                child: Builder(
+                  builder: (context) {
+                    final screenWidth = MediaQuery.of(context).size.width;
+                    return Container(
+                      padding: EdgeInsets.all((screenWidth * 0.025).clamp(8.0, 14.0)),
+                      decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.2),
-                        blurRadius: 10,
-                        spreadRadius: 2,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.3),
+                          width: 1.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.white.withOpacity(0.2),
+                            blurRadius: 10,
+                            spreadRadius: 2,
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  child: Icon(
-                    iconTypes[index % iconTypes.length],
-                    color: Colors.white,
-                    size: 18 + (random.nextDouble() * 8),
-                  ),
+                      child: Icon(
+                        iconTypes[index % iconTypes.length],
+                        color: Colors.white,
+                        size: 18 + (random.nextDouble() * 8),
+                      ),
+                    );
+                  },
                 ),
               ),
             );

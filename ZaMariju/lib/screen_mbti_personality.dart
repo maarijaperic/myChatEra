@@ -63,6 +63,17 @@ class _MBTIPersonalityScreenState extends State<MBTIPersonalityScreen>
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
+    final isLargeScreen = screenWidth > 600;
+    
+    // Responsive padding
+    final horizontalPadding = (screenWidth * 0.06).clamp(16.0, 32.0);
+    final verticalPadding = (screenHeight * 0.025).clamp(16.0, 24.0);
+    
+    // Responsive spacing
+    final topSpacing = (screenHeight * 0.08).clamp(20.0, 60.0);
+    final sectionSpacing = (screenHeight * 0.04).clamp(16.0, 32.0);
+    final largeSpacing = (screenHeight * 0.06).clamp(20.0, 48.0);
+    final mediumSpacing = (screenHeight * 0.03).clamp(12.0, 24.0);
     
     return Scaffold(
       body: Stack(
@@ -100,10 +111,10 @@ class _MBTIPersonalityScreenState extends State<MBTIPersonalityScreen>
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+                padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
                 child: Column(
                   children: [
-                    SizedBox(height: screenHeight * 0.08),
+                    SizedBox(height: topSpacing),
                     
                     // Main headline
                     _AnimatedFade(
@@ -112,120 +123,127 @@ class _MBTIPersonalityScreenState extends State<MBTIPersonalityScreen>
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            'MBTI Personality ',
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.inter(
-                              color: Colors.black,
-                              fontSize: (screenWidth * 0.08).clamp(28.0, 36.0),
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.8,
-                              height: 1.1,
+                          Flexible(
+                            child: Text(
+                              'MBTI Personality ',
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.inter(
+                                color: Colors.black,
+                                fontSize: (screenWidth * 0.065).clamp(18.0, isLargeScreen ? 32.0 : 28.0),
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.8,
+                                height: 1.1,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
                             ),
                           ),
                           Text(
                             '🎭',
                             style: TextStyle(
-                              fontSize: (screenWidth * 0.08).clamp(28.0, 36.0),
+                              fontSize: (screenWidth * 0.065).clamp(18.0, isLargeScreen ? 32.0 : 28.0),
                             ),
                           ),
                         ],
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.06),
+                    SizedBox(height: largeSpacing),
                     
                     // MBTI Type Card with Circular Progress
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.2,
                       child: Container(
-                        padding: const EdgeInsets.all(32),
+                        width: double.infinity,
+                        padding: EdgeInsets.all((screenWidth * 0.035).clamp(12.0, 20.0)),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(24),
+                          borderRadius: BorderRadius.circular((screenWidth * 0.05).clamp(18.0, 24.0)),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.08),
-                              blurRadius: 20,
-                              offset: const Offset(0, 8),
-                            ),
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.04),
-                              blurRadius: 40,
-                              offset: const Offset(0, 16),
+                              color: Colors.black.withOpacity(0.06),
+                              blurRadius: 15,
+                              offset: const Offset(0, 6),
                             ),
                           ],
                         ),
                         child: Column(
                           children: [
                             // Circular Progress Bar with Emoji
-                            SizedBox(
-                              width: 120,
-                              height: 120,
-                              child: Stack(
-                                children: [
-                                  // Background circle
-                                  Container(
-                                    width: 120,
-                                    height: 120,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: const Color(0xFFFF6B35).withOpacity(0.1),
-                                    ),
+                            Builder(
+                              builder: (context) {
+                                final progressSize = (screenWidth * 0.25).clamp(80.0, isLargeScreen ? 140.0 : 120.0);
+                                final strokeWidth = (progressSize * 0.07).clamp(5.0, 9.0);
+                                final emojiSize = (progressSize * 0.32).clamp(24.0, isLargeScreen ? 48.0 : 40.0);
+                                return SizedBox(
+                                  width: progressSize,
+                                  height: progressSize,
+                                  child: Stack(
+                                    children: [
+                                      // Background circle
+                                      Container(
+                                        width: progressSize,
+                                        height: progressSize,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: const Color(0xFFFF6B35).withOpacity(0.1),
+                                        ),
+                                      ),
+                                      // Progress circle
+                                      SizedBox(
+                                        width: progressSize,
+                                        height: progressSize,
+                                        child: CircularProgressIndicator(
+                                          value: 0.85, // 85% match
+                                          strokeWidth: strokeWidth,
+                                          backgroundColor: Colors.transparent,
+                                          valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFFF6B35)),
+                                        ),
+                                      ),
+                                      // Emoji in center
+                                      Center(
+                                        child: Text(
+                                          widget.mbtiEmoji,
+                                          style: TextStyle(fontSize: emojiSize),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  // Progress circle
-                                  SizedBox(
-                                    width: 120,
-                                    height: 120,
-                                    child: CircularProgressIndicator(
-                                      value: 0.85, // 85% match
-                                      strokeWidth: 8,
-                                      backgroundColor: Colors.transparent,
-                                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFFF6B35)),
-                                    ),
-                                  ),
-                                  // Emoji in center
-                                  Center(
-                                    child: Text(
-                                      widget.mbtiEmoji,
-                                      style: const TextStyle(fontSize: 40),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                );
+                              },
                             ),
-                            const SizedBox(height: 16),
+                            SizedBox(height: (screenHeight * 0.015).clamp(10.0, 16.0)),
                             // MBTI Type
                             Text(
                               widget.mbtiType,
                               style: GoogleFonts.inter(
                                 color: const Color(0xFFFF6B35),
-                                fontSize: (screenWidth * 0.08).clamp(24.0, 32.0),
+                                fontSize: (screenWidth * 0.08).clamp(22.0, isLargeScreen ? 40.0 : 36.0),
                                 fontWeight: FontWeight.w800,
                                 letterSpacing: -0.5,
                                 height: 0.9,
                               ),
                             ),
-                            const SizedBox(height: 8),
+                            SizedBox(height: (screenHeight * 0.008).clamp(4.0, 8.0)),
                             // Percentage
                             Text(
                               '85% Match',
                               style: GoogleFonts.inter(
                                 color: const Color(0xFF555555),
-                                fontSize: (screenWidth * 0.035).clamp(12.0, 15.0),
+                                fontSize: (screenWidth * 0.035).clamp(11.0, isLargeScreen ? 18.0 : 16.0),
                                 fontWeight: FontWeight.w500,
                                 letterSpacing: 0.3,
                                 height: 1.2,
                               ),
                             ),
-                            const SizedBox(height: 8),
+                            SizedBox(height: (screenHeight * 0.008).clamp(4.0, 8.0)),
                             // Personality Name
                             Text(
                               widget.personalityName,
                               style: GoogleFonts.inter(
                                 color: const Color(0xFF555555),
-                                fontSize: (screenWidth * 0.035).clamp(12.0, 15.0),
+                                fontSize: (screenWidth * 0.035).clamp(11.0, isLargeScreen ? 18.0 : 16.0),
                                 fontWeight: FontWeight.w500,
                                 letterSpacing: 0.3,
                                 height: 1.2,
@@ -236,17 +254,17 @@ class _MBTIPersonalityScreenState extends State<MBTIPersonalityScreen>
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.04),
+                    SizedBox(height: mediumSpacing),
                     
                     // Description Card
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.4,
                       child: Container(
-                        padding: const EdgeInsets.all(24),
+                        padding: EdgeInsets.all((screenWidth * 0.035).clamp(12.0, 20.0)),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular((screenWidth * 0.05).clamp(18.0, 24.0)),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.06),
@@ -260,7 +278,7 @@ class _MBTIPersonalityScreenState extends State<MBTIPersonalityScreen>
                           textAlign: TextAlign.center,
                           style: GoogleFonts.inter(
                             color: const Color(0xFF555555),
-                            fontSize: (screenWidth * 0.038).clamp(14.0, 16.0),
+                            fontSize: (screenWidth * 0.038).clamp(13.0, isLargeScreen ? 18.0 : 16.0),
                             fontWeight: FontWeight.w400,
                             height: 1.6,
                             letterSpacing: 0.2,
@@ -269,7 +287,7 @@ class _MBTIPersonalityScreenState extends State<MBTIPersonalityScreen>
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.05),
+                    SizedBox(height: (screenHeight * 0.02).clamp(8.0, 16.0)),
                     
                     // Share button
                     _AnimatedFade(
@@ -284,7 +302,7 @@ class _MBTIPersonalityScreenState extends State<MBTIPersonalityScreen>
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.04),
+                    SizedBox(height: sectionSpacing),
                   ],
                 ),
               ),

@@ -90,50 +90,42 @@ class _FirstMessageScreenState extends State<FirstMessageScreen>
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+                padding: EdgeInsets.symmetric(
+                  horizontal: (screenWidth * 0.06).clamp(16.0, 32.0),
+                  vertical: (screenHeight * 0.025).clamp(16.0, 24.0),
+                ),
                 child: Column(
                   children: [
-                    SizedBox(height: screenHeight * 0.08),
+                    SizedBox(height: (screenHeight * 0.08).clamp(20.0, 60.0)),
                     
                     // Main headline
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.0,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Where It All Began ',
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.inter(
-                              color: Colors.black,
-                              fontSize: (screenWidth * 0.08).clamp(28.0, 36.0),
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.8,
-                              height: 1.1,
-                            ),
-                          ),
-                          Text(
-                            '💌',
-                            style: TextStyle(
-                              fontSize: (screenWidth * 0.08).clamp(28.0, 36.0),
-                            ),
-                          ),
-                        ],
+                      child: Text(
+                        'Where It All Began',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.inter(
+                          color: Colors.black,
+                          fontSize: (screenWidth * 0.065).clamp(18.0, screenWidth > 600 ? 32.0 : 28.0),
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.8,
+                          height: 1.1,
+                        ),
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.06),
+                    SizedBox(height: (screenHeight * 0.06).clamp(20.0, 48.0)),
                     
                     // Date Card
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.2,
                       child: Container(
-                        padding: const EdgeInsets.all(32),
+                        padding: EdgeInsets.all((screenWidth * 0.045).clamp(14.0, 24.0)),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(24),
+                          borderRadius: BorderRadius.circular((screenWidth * 0.06).clamp(20.0, 28.0)),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.08),
@@ -148,38 +140,18 @@ class _FirstMessageScreenState extends State<FirstMessageScreen>
                           ],
                         ),
                         child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            // Date display
-                            Text(
-                              'Let\'s go back to',
-                              style: GoogleFonts.inter(
-                                color: const Color(0xFF555555),
-                                fontSize: (screenWidth * 0.035).clamp(12.0, 15.0),
-                                fontWeight: FontWeight.w500,
-                                letterSpacing: 0.3,
-                                height: 1.2,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
+                            // Date display - centered
                             Text(
                               'March 15, 2024',
+                              textAlign: TextAlign.center,
                               style: GoogleFonts.inter(
                                 color: const Color(0xFFFF6B35),
-                                fontSize: (screenWidth * 0.12).clamp(40.0, 52.0),
+                                fontSize: (screenWidth * 0.12).clamp(36.0, screenWidth > 600 ? 68.0 : 60.0),
                                 fontWeight: FontWeight.w800,
                                 letterSpacing: -0.5,
                                 height: 0.9,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Your first message',
-                              style: GoogleFonts.inter(
-                                color: const Color(0xFF555555),
-                                fontSize: (screenWidth * 0.035).clamp(12.0, 15.0),
-                                fontWeight: FontWeight.w500,
-                                letterSpacing: 0.3,
-                                height: 1.2,
                               ),
                             ),
                           ],
@@ -187,17 +159,17 @@ class _FirstMessageScreenState extends State<FirstMessageScreen>
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.04),
+                    SizedBox(height: (screenHeight * 0.04).clamp(16.0, 32.0)),
                     
                     // Message Card
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.4,
                       child: Container(
-                        padding: const EdgeInsets.all(24),
+                        padding: EdgeInsets.all((screenWidth * 0.045).clamp(14.0, 24.0)),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular((screenWidth * 0.05).clamp(18.0, 24.0)),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.06),
@@ -206,21 +178,39 @@ class _FirstMessageScreenState extends State<FirstMessageScreen>
                             ),
                           ],
                         ),
-                        child: Text(
-                          '"${widget.firstMessage}"',
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.inter(
-                            color: const Color(0xFF555555),
-                            fontSize: (screenWidth * 0.038).clamp(14.0, 16.0),
-                            fontWeight: FontWeight.w400,
-                            height: 1.6,
-                            letterSpacing: 0.2,
-                          ),
+                        child: Column(
+                          children: [
+                            // First message - eye catching
+                            Text(
+                              '"${widget.firstMessage}"',
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.inter(
+                                color: const Color(0xFFFF6B35),
+                                fontSize: (screenWidth * 0.045).clamp(16.0, screenWidth > 600 ? 22.0 : 20.0),
+                                fontWeight: FontWeight.w700,
+                                height: 1.5,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                            SizedBox(height: (screenHeight * 0.02).clamp(12.0, 20.0)),
+                            // Additional descriptive text
+                            Text(
+                              "This was your first message to ChatGPT — the moment that started it all. Little did you know, this simple question would lead to countless conversations, insights, and discoveries. Every journey begins with a single step, and this was yours. From this moment forward, you've built a relationship with AI that's helped you grow, learn, and explore new possibilities.",
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.inter(
+                                color: const Color(0xFF555555),
+                                fontSize: (screenWidth * 0.035).clamp(12.0, screenWidth > 600 ? 18.0 : 16.0),
+                                fontWeight: FontWeight.w400,
+                                height: 1.6,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.05),
+                    SizedBox(height: (screenHeight * 0.05).clamp(20.0, 40.0)),
                     
                     // Share button
                     _AnimatedFade(
@@ -235,7 +225,7 @@ class _FirstMessageScreenState extends State<FirstMessageScreen>
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.04),
+                    SizedBox(height: (screenHeight * 0.04).clamp(16.0, 32.0)),
                   ],
                 ),
               ),

@@ -119,7 +119,7 @@ class _ChatEraScreenState extends State<ChatEraScreen>
                   children: [
                     SizedBox(height: screenHeight * 0.05),
                     
-                    // Main headline with watch emoji - Eye catching
+                    // Main headline
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.0,
@@ -127,7 +127,7 @@ class _ChatEraScreenState extends State<ChatEraScreen>
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            'Your Chat Era ',
+                            'Your Chat Era',
                             textAlign: TextAlign.center,
                             style: GoogleFonts.inter(
                               color: Colors.black,
@@ -135,12 +135,6 @@ class _ChatEraScreenState extends State<ChatEraScreen>
                               fontWeight: FontWeight.w700,
                               letterSpacing: 0.8,
                               height: 1.1,
-                            ),
-                          ),
-                          Text(
-                            '⏱️',
-                            style: TextStyle(
-                              fontSize: (screenWidth * 0.065).clamp(20.0, 28.0),
                             ),
                           ),
                         ],
@@ -154,7 +148,7 @@ class _ChatEraScreenState extends State<ChatEraScreen>
                       controller: _fadeController,
                       delay: 0.2,
                       child: Container(
-                        padding: const EdgeInsets.all(24),
+                        padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(24),
@@ -202,7 +196,7 @@ class _ChatEraScreenState extends State<ChatEraScreen>
                                   ],
                                 ),
                                 
-                                const SizedBox(height: 20),
+                                const SizedBox(height: 16),
                                 
                                 // Time Result
                                 Container(
@@ -237,7 +231,7 @@ class _ChatEraScreenState extends State<ChatEraScreen>
                       controller: _fadeController,
                       delay: 0.4,
                       child: Container(
-                        padding: const EdgeInsets.all(24),
+                        padding: const EdgeInsets.all(18),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(20),
@@ -250,7 +244,7 @@ class _ChatEraScreenState extends State<ChatEraScreen>
                           ],
                         ),
                         child: Text(
-                          "You've spent ${widget.totalHours}h ${widget.totalMinutes}m with GPT this year. Top 5% user! Plot twist: Your unpaid therapist was AI all along. While everyone was doom scrolling, you had deep chats with AI. Some people journal. You? GPT on speed dial. No regrets.",
+                          "You've spent ${widget.totalHours}h ${widget.totalMinutes}m with GPT this year. Top 5% user! Plot twist: Your unpaid therapist was AI all along. While everyone was doom scrolling, you had deep chats with AI. Some people journal. You? GPT on speed dial. No regrets. Every conversation was a step toward understanding yourself better. Time well spent is never wasted, and your GPT sessions prove it.",
                           textAlign: TextAlign.center,
                           style: GoogleFonts.inter(
                             color: Colors.black,
@@ -263,10 +257,7 @@ class _ChatEraScreenState extends State<ChatEraScreen>
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.03),
-                    
-                    
-                    SizedBox(height: screenHeight * 0.05),
+                    SizedBox(height: screenHeight * 0.02),
                     
                     // Share button - floating outside of cards
                     _AnimatedFade(

@@ -123,21 +123,19 @@ class _ChatStreakScreenState extends State<ChatStreakScreen>
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(
-                              'Your Longest Chat Streak ',
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.inter(
-                                color: Colors.white,
-                                fontSize: (screenWidth * 0.08).clamp(28.0, 36.0),
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.8,
-                                height: 1.1,
-                              ),
-                            ),
-                            Text(
-                              '🔥',
-                              style: TextStyle(
-                                fontSize: (screenWidth * 0.08).clamp(28.0, 36.0),
+                            Flexible(
+                              child: Text(
+                                'Your Longest Chat Streak',
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.inter(
+                                  color: Colors.black,
+                                  fontSize: (screenWidth * 0.065).clamp(18.0, screenWidth > 600 ? 32.0 : 28.0),
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.8,
+                                  height: 1.1,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 2,
                               ),
                             ),
                           ],

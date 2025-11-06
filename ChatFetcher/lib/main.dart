@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 void main() async {
@@ -40,7 +41,7 @@ class _HomePageState extends State<HomePage> {
 
   String _ellipsize(String value, int max) {
     if (value.length <= max) return value;
-    return value.substring(0, max) + '…';
+    return '${value.substring(0, max)}…';
   }
 
   @override
@@ -252,11 +253,20 @@ class _HomePageState extends State<HomePage> {
                           onPressed: _fetchUpTo100ConversationsInsideWebView,
                           child: const Text('Fetch up to 100 convos'),
                         ),
-                        if (_conversations.isNotEmpty)
+                        if (_conversations.isNotEmpty) ...[
                           OutlinedButton(
                             onPressed: _openConversationsList,
                             child: const Text('View JSON'),
                           ),
+                          FilledButton.icon(
+                            onPressed: _exportForGPTWrapped,
+                            icon: const Icon(Icons.send),
+                            label: const Text('Export for GPT Wrapped'),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: Colors.green,
+                            ),
+                          ),
+                        ],
                         OutlinedButton(
                           onPressed: () async => _controller?.reload(),
                           child: const Text('Reload'),
@@ -317,7 +327,7 @@ class _HomePageState extends State<HomePage> {
     if (_controller == null) return;
     setState(() => _status = 'Trying to read access token from session…');
 
-    final js = '''
+    const js = '''
       (async function() {
         try {
           async function getSession() {
@@ -360,7 +370,7 @@ class _HomePageState extends State<HomePage> {
     if (_controller == null) return;
     setState(() => _status = 'Fetching up to 100 conversations…');
 
-    final js = '''
+    const js = '''
       (async function() {
         let all = [];
         try {
@@ -432,6 +442,197 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> _exportForGPTWrapped() async {
+    if (_conversations.isEmpty) return;
+    
+    // Show loading dialog
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Text('Fetching full conversation data...\n0/${_conversations.length}'),
+          ],
+        ),
+      ),
+    );
+    
+    setState(() => _status = 'Fetching full data for ${_conversations.length} conversations...');
+    
+    try {
+      // Fetch full conversation details for each conversation
+      final fullConversations = <Map<String, dynamic>>[];
+      int fetchedCount = 0;
+      
+      for (var conv in _conversations) {
+        if (conv is! Map) continue;
+        
+        final id = (conv['id'] as String?) ?? (conv['conversation_id'] as String?);
+        if (id == null || id.isEmpty) {
+          // If no ID, just include metadata
+          fullConversations.add(Map<String, dynamic>.from(conv));
+          continue;
+        }
+        
+        try {
+          // Fetch full conversation with messages
+          final fullConv = await _fetchSingleConversationData(id);
+          
+          if (fullConv != null) {
+            // Merge metadata with full conversation
+            final merged = Map<String, dynamic>.from(conv);
+            merged['mapping'] = fullConv['mapping'];
+            fullConversations.add(merged);
+          } else {
+            // If fetch failed, include metadata only
+            fullConversations.add(Map<String, dynamic>.from(conv));
+          }
+          
+          fetchedCount++;
+          
+          // Update loading dialog
+          if (mounted) {
+            Navigator.of(context).pop(); // Close old dialog
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (ctx) => AlertDialog(
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const CircularProgressIndicator(),
+                    const SizedBox(height: 16),
+                    Text('Fetching full conversation data...\n$fetchedCount/${_conversations.length}'),
+                  ],
+                ),
+              ),
+            );
+          }
+          
+          // Small delay to avoid rate limiting
+          await Future.delayed(const Duration(milliseconds: 200));
+          
+        } catch (e) {
+          print('Error fetching conversation $id: $e');
+          // Include metadata only if fetch fails
+          fullConversations.add(Map<String, dynamic>.from(conv));
+        }
+      }
+      
+      // Convert to JSON string
+      final jsonStr = jsonEncode(fullConversations);
+      
+      // Copy to clipboard
+      await Clipboard.setData(ClipboardData(text: jsonStr));
+      
+      if (!mounted) return;
+      
+      // Close loading dialog
+      Navigator.of(context).pop();
+      
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Exported ${fullConversations.length} FULL conversations with messages to clipboard!\nNow open GPT Wrapped and tap "Import Chat Data"'),
+          duration: const Duration(seconds: 5),
+          backgroundColor: Colors.green,
+          action: SnackBarAction(
+            label: 'OK',
+            textColor: Colors.white,
+            onPressed: () {},
+          ),
+        ),
+      );
+      
+      setState(() => _status = 'Exported ${fullConversations.length} FULL conversations (with all messages) to clipboard');
+      
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context).pop(); // Close loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error exporting data: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      setState(() => _status = 'Export failed: $e');
+    }
+  }
+  
+  /// Fetch a single conversation's full data including all messages
+  Future<Map<String, dynamic>?> _fetchSingleConversationData(String conversationId) async {
+    if (_controller == null) return null;
+    
+    final completer = Completer<Map<String, dynamic>?>();
+    
+    final js = '''
+      (async function() {
+        try {
+          const sessionResp = await fetch('/api/auth/session', { credentials: 'include' });
+          if (!sessionResp.ok) { return { error: 'HTTP_SESSION_' + sessionResp.status }; }
+          const session = await sessionResp.json();
+          const token = session && session.accessToken ? session.accessToken : null;
+          if (!token) { return { error: 'NO_TOKEN' }; }
+
+          const url = '/backend-api/conversation/' + encodeURIComponent('$conversationId');
+          const resp = await fetch(url, {
+            method: 'GET',
+            headers: {
+              'Authorization': 'Bearer ' + token,
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+          });
+          if (!resp.ok) { return { error: 'HTTP_' + resp.status }; }
+          const json = await resp.json();
+          return json;
+        } catch (e) {
+          return { error: (e && e.message) ? e.message : String(e) };
+        }
+      })();
+    ''';
+    
+    try {
+      final result = await _controller!.evaluateJavascript(source: js);
+      
+      if (result is Map) {
+        final map = Map<String, dynamic>.from(result);
+        if (map['error'] != null) {
+          print('Error fetching conversation $conversationId: ${map['error']}');
+          completer.complete(null);
+        } else {
+          completer.complete(map);
+        }
+      } else if (result is String) {
+        // Try to parse as JSON
+        try {
+          final parsed = jsonDecode(result);
+          if (parsed is Map) {
+            completer.complete(Map<String, dynamic>.from(parsed));
+          } else {
+            completer.complete(null);
+          }
+        } catch (_) {
+          completer.complete(null);
+        }
+      } else {
+        completer.complete(null);
+      }
+    } catch (e) {
+      print('Exception fetching conversation $conversationId: $e');
+      completer.complete(null);
+    }
+    
+    return completer.future;
+  }
+
   void _openConversationsList() {
     final conversations = _conversations;
     showModalBottomSheet(
@@ -468,7 +669,7 @@ class _HomePageState extends State<HomePage> {
                               width: 36,
                               height: 36,
                               decoration: BoxDecoration(
-                                color: Colors.blue.withOpacity(0.15),
+                                color: Colors.blue.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               alignment: Alignment.center,
@@ -554,7 +755,7 @@ class _HomePageState extends State<HomePage> {
 class _ConversationScreen extends StatelessWidget {
   final String title;
   final List<dynamic> messages;
-  const _ConversationScreen({super.key, required this.title, required this.messages});
+  const _ConversationScreen({required this.title, required this.messages});
 
   @override
   Widget build(BuildContext context) {

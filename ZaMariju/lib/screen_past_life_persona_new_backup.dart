@@ -249,8 +249,10 @@ class _PastLifePersonaScreenState extends State<PastLifePersonaScreen>
                   SizedBox(height: screenHeight * 0.04),
                   
                   // Share button
-                  ShareToStoryButton(
-                    shareText: 'In a past life, I was a ${widget.personaTitle}! ${widget.personaEmoji} History echoes in who we are today ✨ #ChatGPTWrapped',
+                  Center(
+                    child: ShareToStoryButton(
+                      shareText: 'In a past life, I was a ${widget.personaTitle}! ${widget.personaEmoji} History echoes in who we are today ✨ #ChatGPTWrapped',
+                    ),
                   ),
                   
                   SizedBox(height: screenHeight * 0.08),

@@ -246,43 +246,53 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         child: Stack(
           children: [
             Padding(
-              padding: const EdgeInsets.all(6),
+              padding: const EdgeInsets.all(10),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   // Badge and Title
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        title,
-                        style: GoogleFonts.inter(
-                          color: const Color(0xFF1C1C1E),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.2,
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: GoogleFonts.inter(
+                            color: const Color(0xFF1C1C1E),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.2,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
                       ),
                       if (badge != null)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [
-                                Color(0xFFFF6B9D),
-                                Color(0xFFFF8E9E),
-                              ],
+                        Flexible(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [
+                                  Color(0xFFFF6B9D),
+                                  Color(0xFFFF8E9E),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(6),
                             ),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            badge,
-                            style: GoogleFonts.inter(
-                              color: Colors.white,
-                              fontSize: 5,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.1,
+                            child: Text(
+                              badge,
+                              style: GoogleFonts.inter(
+                                color: Colors.white,
+                                fontSize: 7,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.1,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
                             ),
                           ),
                         ),
@@ -294,6 +304,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                   // Price
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
                         price,
@@ -304,10 +315,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                           letterSpacing: -0.5,
                         ),
                       ),
-                      const SizedBox(width: 3),
+                      const SizedBox(width: 2),
                       Padding(
-                        padding: const EdgeInsets.only(top: 5),
-                        child:                         Text(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
                           period,
                           style: GoogleFonts.inter(
                             color: const Color(0xFF8E8E93),
@@ -324,7 +335,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                   
                   // Bullet points
                   ...bullets.map((bullet) => Padding(
-                    padding: const EdgeInsets.only(bottom: 3),
+                    padding: const EdgeInsets.only(bottom: 4),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -332,7 +343,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                           '• ',
                           style: GoogleFonts.inter(
                             color: const Color(0xFF1C1C1E).withOpacity(0.8),
-                            fontSize: 10,
+                            fontSize: 9,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -341,11 +352,13 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                             bullet,
                             style: GoogleFonts.inter(
                               color: const Color(0xFF8E8E93),
-                              fontSize: 6,
+                              fontSize: 8,
                               fontWeight: FontWeight.w500,
-                              height: 1.1,
+                              height: 1.2,
                               letterSpacing: -0.1,
                             ),
+                            overflow: TextOverflow.visible,
+                            maxLines: 2,
                           ),
                         ),
                       ],

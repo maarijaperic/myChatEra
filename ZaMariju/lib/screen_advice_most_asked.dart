@@ -77,6 +77,16 @@ class _AdviceMostAskedScreenState extends State<AdviceMostAskedScreen>
               builder: (context, constraints) {
                 final screenHeight = constraints.maxHeight;
                 final screenWidth = constraints.maxWidth;
+                final isLargeScreen = screenWidth > 600;
+                
+                // Responsive padding
+                final horizontalPadding = (screenWidth * 0.06).clamp(16.0, 32.0);
+                final cardMargin = (screenWidth * 0.06).clamp(16.0, 32.0);
+                
+                // Responsive spacing
+                final topSpacing = (screenHeight * 0.08).clamp(32.0, 60.0);
+                final sectionSpacing = (screenHeight * 0.015).clamp(8.0, 12.0);
+                final bottomSpacing = (screenHeight * 0.015).clamp(12.0, 18.0);
                 
                 return SingleChildScrollView(
                   child: ConstrainedBox(
@@ -85,38 +95,38 @@ class _AdviceMostAskedScreenState extends State<AdviceMostAskedScreen>
                     ),
                     child: Column(
                       children: [
-                        SizedBox(height: screenHeight * 0.06),
+                        SizedBox(height: topSpacing),
                         
                         // Question text
                         _AnimatedText(
                           controller: _mainController,
                           delay: 0.0,
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                            padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
                             child: Text(
                               widget.question,
                               textAlign: TextAlign.center,
                               style: GoogleFonts.inter(
                                 color: Colors.black,
-                                fontSize: 24,
+                                fontSize: (screenWidth * 0.055).clamp(16.0, isLargeScreen ? 28.0 : 24.0),
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                           ),
                         ),
                         
-                        SizedBox(height: screenHeight * 0.03),
+                        SizedBox(height: (screenHeight * 0.04).clamp(20.0, 32.0)),
                         
                         // Advice Display Card
                         _AnimatedText(
                           controller: _mainController,
                           delay: 0.2,
                           child: Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 24.0),
-                            padding: const EdgeInsets.all(16),
+                            margin: EdgeInsets.symmetric(horizontal: cardMargin),
+                            padding: EdgeInsets.all((screenWidth * 0.03).clamp(12.0, 20.0)),
                             decoration: BoxDecoration(
                               color: Colors.white,
-                              borderRadius: BorderRadius.circular(20),
+                              borderRadius: BorderRadius.circular((screenWidth * 0.05).clamp(18.0, 24.0)),
                               boxShadow: [
                                 BoxShadow(
                                   color: Colors.black.withOpacity(0.06),
@@ -132,43 +142,46 @@ class _AdviceMostAskedScreenState extends State<AdviceMostAskedScreen>
                                   children: [
                                     // Advice category
                                     Text(
-                                      'RELATIONSHIPS',
+                                      widget.adviceCategory.toUpperCase(),
                                       textAlign: TextAlign.center,
                                       style: GoogleFonts.inter(
                                         color: const Color(0xFF10B981),
-                                        fontSize: (screenWidth * 0.06).clamp(18.0, 24.0),
+                                        fontSize: (screenWidth * 0.06).clamp(16.0, isLargeScreen ? 28.0 : 24.0),
                                         fontWeight: FontWeight.w700,
                                         letterSpacing: 0.8,
                                       ),
                                     ),
-                                    const SizedBox(height: 6),
+                                    SizedBox(height: (screenHeight * 0.006).clamp(3.0, 6.0)),
                                     Text(
                                       'Most Asked',
                                       textAlign: TextAlign.center,
                                       style: GoogleFonts.inter(
                                         color: const Color(0xFF555555),
-                                        fontSize: (screenWidth * 0.032).clamp(11.0, 13.0),
+                                        fontSize: (screenWidth * 0.032).clamp(10.0, isLargeScreen ? 16.0 : 14.0),
                                         fontWeight: FontWeight.w500,
                                         letterSpacing: 0.3,
                                         height: 1.2,
                                       ),
                                     ),
-                                    const SizedBox(height: 16),
+                                    SizedBox(height: (screenHeight * 0.012).clamp(8.0, 12.0)),
                                     
                                     // Most asked advice
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: (screenWidth * 0.035).clamp(12.0, 18.0),
+                                        vertical: (screenHeight * 0.01).clamp(6.0, 12.0),
+                                      ),
                                       decoration: BoxDecoration(
                                         color: const Color(0xFF10B981), // Green background
-                                        borderRadius: BorderRadius.circular(16),
+                                        borderRadius: BorderRadius.circular((screenWidth * 0.04).clamp(14.0, 20.0)),
                                       ),
                                       child: Center(
                                         child: Text(
-                                          'How to improve my personal relationships',
+                                          widget.mostAskedAdvice,
                                           textAlign: TextAlign.center,
                                           style: GoogleFonts.inter(
                                             color: Colors.white, // White text
-                                            fontSize: (screenWidth * 0.045).clamp(16.0, 20.0),
+                                            fontSize: (screenWidth * 0.045).clamp(14.0, isLargeScreen ? 22.0 : 20.0),
                                             fontWeight: FontWeight.w600,
                                             letterSpacing: 0.3,
                                           ),
@@ -182,18 +195,18 @@ class _AdviceMostAskedScreenState extends State<AdviceMostAskedScreen>
                           ),
                         ),
                         
-                        const SizedBox(height: 12),
+                        SizedBox(height: sectionSpacing),
                         
                         // Explanation Card
                         _AnimatedText(
                           controller: _mainController,
                           delay: 0.4,
                           child: Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 24.0),
-                            padding: const EdgeInsets.all(24),
+                            margin: EdgeInsets.symmetric(horizontal: cardMargin),
+                            padding: EdgeInsets.all((screenWidth * 0.035).clamp(12.0, 20.0)),
                             decoration: BoxDecoration(
                               color: Colors.white,
-                              borderRadius: BorderRadius.circular(20),
+                              borderRadius: BorderRadius.circular((screenWidth * 0.05).clamp(18.0, 24.0)),
                               boxShadow: [
                                 BoxShadow(
                                   color: Colors.black.withOpacity(0.06),
@@ -207,7 +220,7 @@ class _AdviceMostAskedScreenState extends State<AdviceMostAskedScreen>
                               textAlign: TextAlign.center,
                               style: GoogleFonts.inter(
                                 color: const Color(0xFF555555),
-                                fontSize: (screenWidth * 0.038).clamp(14.0, 16.0),
+                                fontSize: (screenWidth * 0.038).clamp(13.0, isLargeScreen ? 18.0 : 16.0),
                                 fontWeight: FontWeight.w400,
                                 height: 1.6,
                                 letterSpacing: 0.2,
@@ -216,38 +229,40 @@ class _AdviceMostAskedScreenState extends State<AdviceMostAskedScreen>
                           ),
                         ),
                         
-                        const SizedBox(height: 16),
+                        SizedBox(height: sectionSpacing),
                         
                         // Subtitle
                         _AnimatedText(
                           controller: _mainController,
                           delay: 0.6,
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 40.0),
+                            padding: EdgeInsets.symmetric(horizontal: (screenWidth * 0.1).clamp(24.0, 48.0)),
                             child: Text(
                               widget.subtitle,
                               textAlign: TextAlign.center,
                               style: GoogleFonts.inter(
                                 color: Colors.white.withOpacity(0.8),
-                                fontSize: 16,
+                                fontSize: (screenWidth * 0.04).clamp(13.0, isLargeScreen ? 20.0 : 18.0),
                                 fontStyle: FontStyle.italic,
                               ),
                             ),
                           ),
                         ),
                         
-                        const SizedBox(height: 12),
+                        SizedBox(height: (screenHeight * 0.008).clamp(4.0, 8.0)),
                         
                         // Share button
                         _AnimatedText(
                           controller: _mainController,
                           delay: 0.8,
-                          child: ShareToStoryButton(
-                            shareText: 'ChatGPT revealed I asked most about "${widget.mostAskedAdvice}". ${widget.adviceEmoji} Wisdom is knowing what to ask! 💡 #ChatGPTWrapped',
+                          child: Center(
+                            child: ShareToStoryButton(
+                              shareText: 'ChatGPT revealed I asked most about "${widget.mostAskedAdvice}". ${widget.adviceEmoji} Wisdom is knowing what to ask! 💡 #ChatGPTWrapped',
+                            ),
                           ),
                         ),
                         
-                        const SizedBox(height: 20),
+                        SizedBox(height: bottomSpacing),
                       ],
                     ),
                   ),
