@@ -26,6 +26,56 @@ class _ChatEraScreenState extends State<ChatEraScreen>
   int _displayedHours = 0;
   int _displayedMinutes = 0;
 
+  int get _totalMinutesRaw => (widget.totalHours * 60) + widget.totalMinutes;
+
+  double get _totalHoursPrecise => widget.totalHours + (widget.totalMinutes / 60.0);
+
+  String get _commitmentLabel {
+    final minutes = _totalMinutesRaw;
+    if (minutes <= 0) return 'Getting started';
+    if (minutes < 180) return 'Drop-in collaborator';
+    if (minutes < 600) return 'Steady strategist';
+    if (minutes < 1200) return 'Dedicated builder';
+    return 'All-in cofounder vibes';
+  }
+
+  String get _eraDescription {
+    final minutes = _totalMinutesRaw;
+    final hours = widget.totalHours;
+    final mins = widget.totalMinutes;
+
+    if (minutes <= 0) {
+      return "You clocked 0 minutes with GPT this year — which basically means every message was a high-stakes mission. Next season, let's see what happens when you stay for the afterparty. Your next deep dive could set the tone for the whole year. Consider it the prologue before the storyline goes cinematic. 🌱✨🔮";
+    }
+    if (minutes < 180) {
+      return "You spent ${hours}h ${mins}m with GPT — quick check-ins that pack a punch. You drop in, get precise answers, and bounce. No fluff, just clarity on demand. Consider it your on-call genius hotline. It's the perfect cadence for quick wins without the mental baggage. ☎️🧠⚡";
+    }
+    if (minutes < 600) {
+      return "${hours}h ${mins}m logged with GPT. That's a steady collab routine — enough time to brainstorm, refine, and ship ideas. You're building momentum one prompt at a time. Little rituals like this are how big wins stack up. That reliable cadence keeps curiosity and output in sync. 📚🚀💡";
+    }
+    if (minutes < 1200) {
+      return "${hours}h ${mins}m this year! GPT is basically your creative partner. You use it to think, plan, and iterate like a pro. That's a serious investment in your future self. You're running a full-on lab powered by curiosity. It’s like holding strategy sessions with your future self on speed dial. 🔧🧪🌟";
+    }
+    return "${hours}h ${mins}m together. Elite tier. GPT isn't just a tool anymore — it's the extra brain cell you unlocked to keep up with your ambition. Cofounder energy detected. You're basically co-writing your future with AI. At this level, you're architecting systems, not just asking questions. 👯‍♂️🤖💥";
+  }
+
+  String get _shareText {
+    final hoursPrecise = _totalHoursPrecise;
+    if (_totalMinutesRaw <= 0) {
+      return "I barely clocked any time with ChatGPT this year — saving my prompts for mission-critical moments. #ChatGPTWrapped";
+    }
+    if (_totalMinutesRaw < 180) {
+      return "Spent ${hoursPrecise.toStringAsFixed(1)} hours with ChatGPT. Tactical check-ins only. #ChatGPTWrapped";
+    }
+    if (_totalMinutesRaw < 600) {
+      return "Logged ${hoursPrecise.toStringAsFixed(1)} hours with ChatGPT — my secret productivity ritual. #ChatGPTWrapped";
+    }
+    if (_totalMinutesRaw < 1200) {
+      return "${hoursPrecise.toStringAsFixed(1)} hours of GPT collabs this year. That AI is basically on payroll. #ChatGPTWrapped";
+    }
+    return "Spent ${hoursPrecise.toStringAsFixed(1)} hours with ChatGPT. Cofounder status unlocked. #ChatGPTWrapped";
+  }
+
   @override
   void initState() {
     super.initState();
@@ -217,6 +267,17 @@ class _ChatEraScreenState extends State<ChatEraScreen>
                                     ),
                                   ),
                                 ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  _commitmentLabel,
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.inter(
+                                    color: const Color(0xFF3A506B),
+                                    fontSize: (screenWidth * 0.035).clamp(12.0, 14.0),
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.2,
+                                  ),
+                                ),
                               ],
                             );
                           },
@@ -244,7 +305,7 @@ class _ChatEraScreenState extends State<ChatEraScreen>
                           ],
                         ),
                         child: Text(
-                          "You've spent ${widget.totalHours}h ${widget.totalMinutes}m with GPT this year. Top 5% user! Plot twist: Your unpaid therapist was AI all along. While everyone was doom scrolling, you had deep chats with AI. Some people journal. You? GPT on speed dial. No regrets. Every conversation was a step toward understanding yourself better. Time well spent is never wasted, and your GPT sessions prove it.",
+                          _eraDescription,
                           textAlign: TextAlign.center,
                           style: GoogleFonts.inter(
                             color: Colors.black,
@@ -265,7 +326,7 @@ class _ChatEraScreenState extends State<ChatEraScreen>
                       delay: 1.0,
                       child: Center(
                         child: ShareToStoryButton(
-                          shareText: 'I spent ${widget.totalHours} hours ${widget.totalMinutes} minutes talking to ChatGPT this year! That\'s longer than some relationships last. 💀 #ChatGPTWrapped',
+                          shareText: _shareText,
                           primaryColor: const Color(0xFFE0F2F7),
                           secondaryColor: const Color(0xFFCCEEF5),
                         ),
@@ -340,7 +401,8 @@ class _ChatParticlesPainter extends CustomPainter {
       final x = (i * 37.0) % size.width;
       final y = (i * 23.0) % size.height;
       final timeOffset = (animationValue * 2 * pi) + (i * 0.3);
-      final twinkle = 0.3 + 0.7 * sin(timeOffset);
+      double twinkle = 0.3 + 0.7 * sin(timeOffset);
+      twinkle = twinkle.clamp(0.0, 1.0);
       final starSize = 1.0 + (2.0 * twinkle);
 
       // Draw star shape
@@ -353,7 +415,8 @@ class _ChatParticlesPainter extends CustomPainter {
       final x = (i * 47.0 + 15.0) % size.width;
       final y = (i * 31.0 + 20.0) % size.height;
       final timeOffset = (animationValue * 3 * pi) + (i * 0.5);
-      final sparkle = 0.2 + 0.6 * sin(timeOffset);
+      double sparkle = 0.2 + 0.6 * sin(timeOffset);
+      sparkle = sparkle.clamp(0.0, 1.0);
       final sparkleSize = 0.5 + (1.0 * sparkle);
 
       canvas.drawCircle(

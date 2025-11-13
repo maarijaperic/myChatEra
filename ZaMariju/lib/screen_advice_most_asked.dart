@@ -80,8 +80,8 @@ class _AdviceMostAskedScreenState extends State<AdviceMostAskedScreen>
                 final isLargeScreen = screenWidth > 600;
                 
                 // Responsive padding
-                final horizontalPadding = (screenWidth * 0.06).clamp(16.0, 32.0);
-                final cardMargin = (screenWidth * 0.06).clamp(16.0, 32.0);
+                final horizontalPadding = ((screenWidth * 0.06).clamp(16.0, 32.0)) * 0.9;
+                final cardMargin = ((screenWidth * 0.06).clamp(16.0, 32.0)) * 0.9;
                 
                 // Responsive spacing
                 final topSpacing = (screenHeight * 0.08).clamp(32.0, 60.0);
@@ -216,7 +216,7 @@ class _AdviceMostAskedScreenState extends State<AdviceMostAskedScreen>
                               ],
                             ),
                             child: Text(
-                              widget.explanation,
+                              "${widget.explanation} You're asking the kinds of questions that keep relationships evolving. Keep reaching for clarity, because that's how you keep leveling up together.",
                               textAlign: TextAlign.center,
                               style: GoogleFonts.inter(
                                 color: const Color(0xFF555555),

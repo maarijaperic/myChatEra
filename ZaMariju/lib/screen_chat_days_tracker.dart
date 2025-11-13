@@ -23,6 +23,64 @@ class _ChatDaysTrackerScreenState extends State<ChatDaysTrackerScreen>
   late AnimationController _counterController;
   late AnimationController _floatController;
 
+  String get _attendanceLabel {
+    final days = widget.totalDays;
+    if (days <= 0) return 'Rare guest';
+    if (days < 30) return 'Intentional drop-ins';
+    if (days < 90) return 'Seasonal regular';
+    if (days < 180) return 'Habit architect';
+    return 'Daily ritualist';
+  }
+
+  String get _dayBlurb {
+    final days = widget.totalDays;
+    double rawPercent = (days / 365.0) * 100.0;
+    if (rawPercent.isNaN || rawPercent.isInfinite) {
+      rawPercent = 0;
+    }
+    int displayPercent = rawPercent.round();
+    if (days == 0) {
+      displayPercent = 0;
+    } else {
+      if (displayPercent <= 0) {
+        displayPercent = 1;
+      }
+      if (displayPercent > 100) {
+        displayPercent = 100;
+      }
+    }
+
+    if (days <= 0) {
+      return "You barely touched GPT this year. Which means when you did, it mattered. Next chapter? Maybe making it a habit. Zero-day years leave a lot of space for next-level experiments. GPT will be waiting when you’re ready to sprint.";
+    }
+    if (displayPercent < 10) {
+      return "You showed up on $days days — that's $displayPercent% of the year. Strategic cameos only. You use GPT for the moments that really count. Those drop-ins run like spark sessions that keep ideas sharp. Keep curating your genius like this.";
+    }
+    if (displayPercent < 30) {
+      return "$days GPT days, or $displayPercent% of your year. That's a rhythm. Enough to keep the ideas flowing, not enough to feel like noise. You're finding the balance between inspiration and execution. That consistency compounds faster than you think.";
+    }
+    if (displayPercent < 50) {
+      return "$days days in, $displayPercent% of the year accounted for. GPT is officially part of your weekly routine — the habit is real. Your prompts are building their own timeline of progress. Stay in that groove and you’ll keep outpacing your yesterday self.";
+    }
+    return "$days GPT days — $displayPercent% of the year. That's a genuine ritual. GPT is as regular in your life as morning coffee. You’ve woven AI into your daily rhythm, so momentum never really stops. This is how personal revolutions become the norm.";
+  }
+
+  String get _shareText {
+    final days = widget.totalDays;
+    final percent = widget.yearPercentage;
+
+    if (days <= 0) {
+      return "I barely touched ChatGPT this year — plotting a comeback arc. #ChatGPTWrapped";
+    }
+    if (percent < 30) {
+      return "I checked in with ChatGPT on $days days this year ($percent% of 2024). Strategic usage only. #ChatGPTWrapped";
+    }
+    if (percent < 60) {
+      return "$days ChatGPT days this year — $percent% of the calendar. It's officially a ritual. #ChatGPTWrapped";
+    }
+    return "I spent $percent% of the year chatting with GPT ($days days). Certified daily habit. #ChatGPTWrapped";
+  }
+
   @override
   void initState() {
     super.initState();
@@ -67,7 +125,6 @@ class _ChatDaysTrackerScreenState extends State<ChatDaysTrackerScreen>
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-    final isSmallScreen = screenWidth < 360;
     final isLargeScreen = screenWidth > 600;
     
     // Responsive padding
@@ -77,7 +134,6 @@ class _ChatDaysTrackerScreenState extends State<ChatDaysTrackerScreen>
     // Responsive spacing
     final topSpacing = (screenHeight * 0.08).clamp(20.0, 60.0);
     final sectionSpacing = (screenHeight * 0.04).clamp(16.0, 32.0);
-    final smallSpacing = (screenHeight * 0.02).clamp(8.0, 16.0);
     
     return Scaffold(
       body: Stack(
@@ -246,7 +302,7 @@ class _ChatDaysTrackerScreenState extends State<ChatDaysTrackerScreen>
                                 ),
                                 SizedBox(height: (screenHeight * 0.005).clamp(2.0, 6.0)),
                                 Text(
-                                  'days visited',
+                                  _attendanceLabel,
                                   style: GoogleFonts.inter(
                                     color: const Color(0xFF555555),
                                     fontSize: (screenWidth * 0.035).clamp(11.0, isLargeScreen ? 18.0 : 16.0),
@@ -288,7 +344,7 @@ class _ChatDaysTrackerScreenState extends State<ChatDaysTrackerScreen>
                           ],
                         ),
                         child: Text(
-                          "You've visited GPT on ${widget.totalDays} days — that's ${widget.yearPercentage}% of your year. Consistency is key! Your dedication shows in every conversation. Some people have coffee habits, you have GPT habits. Every day you showed up, you invested in yourself and your growth. 📅✨",
+                          _dayBlurb,
                           textAlign: TextAlign.center,
                           style: GoogleFonts.inter(
                             color: const Color(0xFF555555),
@@ -309,7 +365,7 @@ class _ChatDaysTrackerScreenState extends State<ChatDaysTrackerScreen>
                       delay: 0.8,
                       child: Center(
                         child: ShareToStoryButton(
-                          shareText: 'I visited ChatGPT on ${widget.totalDays} days this year — that\'s ${widget.yearPercentage}% of 2024! 😳 #ChatGPTWrapped',
+                          shareText: _shareText,
                         ),
                       ),
                     ),

@@ -22,6 +22,57 @@ class _CuriosityIndexScreenState extends State<CuriosityIndexScreen>
   late AnimationController _fadeController;
   late AnimationController _bubblesController;
   
+  String get _capitalizedSpeedLabel {
+    final trimmed = widget.speedLabel.trim();
+    if (trimmed.isEmpty) {
+      return 'dialed-in';
+    }
+    return '${trimmed[0].toUpperCase()}${trimmed.length > 1 ? trimmed.substring(1) : ''}';
+  }
+
+  String get _speedDescriptor {
+    final seconds = widget.averageResponseTime;
+    if (seconds <= 0) return 'Ghosting GPT (for now)';
+    if (seconds <= 1.5) return 'Lightning brain';
+    if (seconds <= 4) return 'Rapid-fire curious';
+    if (seconds <= 10) return 'Thoughtful strategist';
+    return 'Deep dive contemplator';
+  }
+
+  String get _responseBlurb {
+    final seconds = widget.averageResponseTime;
+    final label = _capitalizedSpeedLabel;
+
+    if (seconds <= 0) {
+      return "You didn’t even get a chance to respond this year — analysis mode is loading for 2025. When you do jump back in, your first reply can redefine the whole vibe. Think of this as the calm before your curiosity storm. GPT is stretching and ready for that comeback volleyball serve. 🌩️🏐✨";
+    }
+    if (seconds <= 1.5) {
+      return "${seconds.toStringAsFixed(1)} seconds flat. You fire prompts and instincts instantly. $label doesn't even cover it — you're basically streaming thoughts. Your mind treats GPT like a live co-pilot, syncing without delay. Keep that pace and you'll keep out-running every thought spiral. ⚡🧠🚀";
+    }
+    if (seconds <= 4) {
+      return "${seconds.toStringAsFixed(1)} seconds per reply. You know what you need, you ask it fast, and you keep it moving. $label fits you perfectly. Your prompts are surgical strikes, landing with purpose. GPT is basically holding the door open while you run the playbook. 🎯📋🏃‍♂️";
+    }
+    if (seconds <= 10) {
+      return "${seconds.toStringAsFixed(1)} seconds on average. You take a beat, aim, and deliver precise follow-ups. GPT loves a considered thinker. That pause is where you sharpen the question so the answer lands cleaner. You're drafting strategy on the fly, and it shows. 🎻🧭💡";
+    }
+    return "${seconds.toStringAsFixed(1)} seconds between messages. You're here for depth over speed. GPT gets long-form essays from you, and honestly? It lives for it. Those extra beats are where you gather nuance and pull threads together. Keep marinating on each idea—it's your superpower. 🕰️🌀📚";
+  }
+
+  String get _shareText {
+    final seconds = widget.averageResponseTime;
+    final label = _capitalizedSpeedLabel;
+    if (seconds <= 0) {
+      return "Apparently I ghosted ChatGPT all year. Plot twist coming soon. #ChatGPTWrapped";
+    }
+    if (seconds <= 4) {
+      return "I reply to ChatGPT in ${seconds.toStringAsFixed(1)} seconds. ${label} mode activated. #ChatGPTWrapped";
+    }
+    if (seconds <= 10) {
+      return "My ChatGPT response time is ${seconds.toStringAsFixed(1)} seconds — thoughtful and on point. #ChatGPTWrapped";
+    }
+    return "I take ${seconds.toStringAsFixed(1)} seconds per ChatGPT reply. Slow and intentional wins. #ChatGPTWrapped";
+  }
+
   @override
   void initState() {
     super.initState();
@@ -188,6 +239,16 @@ class _CuriosityIndexScreenState extends State<CuriosityIndexScreen>
                                 height: 1.2,
                               ),
                             ),
+                        SizedBox(height: (screenHeight * 0.01).clamp(6.0, 12.0)),
+                        Text(
+                          _speedDescriptor,
+                          style: GoogleFonts.inter(
+                            color: const Color(0xFF3A506B),
+                            fontSize: (screenWidth * 0.035).clamp(11.0, isLargeScreen ? 18.0 : 16.0),
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.2,
+                          ),
+                        ),
                           ],
                         ),
                       ),
@@ -213,7 +274,7 @@ class _CuriosityIndexScreenState extends State<CuriosityIndexScreen>
                           ],
                         ),
                         child: Text(
-                          'You respond in ${widget.averageResponseTime.toStringAsFixed(1)} seconds on average. You\'re ${widget.speedLabel} — probably because you know exactly what you want to ask. While others overthink their prompts, you\'re already three questions deep. Pure efficiency and curiosity combined. ⚡',
+                          _responseBlurb,
                           textAlign: TextAlign.center,
                           style: GoogleFonts.inter(
                             color: const Color(0xFF555555),
@@ -253,7 +314,7 @@ class _CuriosityIndexScreenState extends State<CuriosityIndexScreen>
                       delay: 0.8,
                       child: Center(
                         child: ShareToStoryButton(
-                          shareText: 'I respond to ChatGPT in ${widget.averageResponseTime.toStringAsFixed(1)} seconds on average. I\'m ${widget.speedLabel} — pure efficiency and curiosity! ⚡ #ChatGPTWrapped',
+                          shareText: _shareText,
                           primaryColor: const Color(0xFFE0F2F7),
                           secondaryColor: const Color(0xFFCCEEF5),
                         ),
@@ -379,4 +440,5 @@ class _CuriosityParticlesPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
+
 

@@ -29,6 +29,7 @@ class _LoveLanguageScreenState extends State<LoveLanguageScreen>
     with TickerProviderStateMixin {
   late AnimationController _heartsController;
   late AnimationController _mainController;
+  late final Map<String, int> _normalizedPercentages;
 
   @override
   void initState() {
@@ -41,6 +42,10 @@ class _LoveLanguageScreenState extends State<LoveLanguageScreen>
     _mainController = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
+    );
+
+    _normalizedPercentages = widget.loveLanguagePercentages.map(
+      (key, value) => MapEntry(key.toLowerCase().trim(), value),
     );
 
     _startLoadingSequence();
@@ -58,16 +63,27 @@ class _LoveLanguageScreenState extends State<LoveLanguageScreen>
     super.dispose();
   }
 
+  int _percentageForAliases(List<String> aliases) {
+    for (final alias in aliases) {
+      final key = alias.toLowerCase().trim();
+      if (_normalizedPercentages.containsKey(key)) {
+        return _normalizedPercentages[key]!.clamp(0, 100);
+      }
+    }
+    return 0;
+  }
+
   Widget _buildCircularChart(String label, int percentage, Color color) {
     return Builder(
       builder: (context) {
         final screenWidth = MediaQuery.of(context).size.width;
         final screenHeight = MediaQuery.of(context).size.height;
         final isLargeScreen = screenWidth > 600;
-        final chartSize = (screenWidth * 0.15).clamp(50.0, isLargeScreen ? 90.0 : 75.0);
-        final strokeWidth = (chartSize * 0.1).clamp(4.0, 8.0);
-        final percentageFontSize = (chartSize * 0.2).clamp(10.0, isLargeScreen ? 18.0 : 16.0);
-        final labelFontSize = (chartSize * 0.17).clamp(8.0, isLargeScreen ? 14.0 : 12.0);
+        final chartSize = (screenWidth * 0.18).clamp(60.0, isLargeScreen ? 110.0 : 90.0);
+        final strokeWidth = (chartSize * 0.12).clamp(5.0, 10.0);
+        final percentageFontSize = (chartSize * 0.28).clamp(12.0, isLargeScreen ? 22.0 : 18.0);
+        final valueFontSize = (chartSize * 0.18).clamp(9.0, isLargeScreen ? 16.0 : 13.0);
+        final labelFontSize = (chartSize * 0.17).clamp(9.0, isLargeScreen ? 16.0 : 13.0);
         
         return Column(
           children: [
@@ -101,13 +117,27 @@ class _LoveLanguageScreenState extends State<LoveLanguageScreen>
                   ),
                   
                   // Center percentage
-                  Text(
-                    '$percentage',
-                    style: GoogleFonts.inter(
-                      color: color,
-                      fontSize: percentageFontSize,
-                      fontWeight: FontWeight.w700,
-                    ),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        '$percentage%',
+                        style: GoogleFonts.inter(
+                          color: color,
+                          fontSize: percentageFontSize,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      SizedBox(height: (chartSize * 0.04).clamp(2.0, 6.0)),
+                      Text(
+                        '$percentage',
+                        style: GoogleFonts.inter(
+                          color: color.withOpacity(0.85),
+                          fontSize: valueFontSize,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -224,14 +254,37 @@ class _LoveLanguageScreenState extends State<LoveLanguageScreen>
                         child: Column(
                           children: [
                             // 4 Circular Progress Charts
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                _buildCircularChart('Words', widget.loveLanguagePercentages['Words'] ?? 0, const Color(0xFFFF6B9D)),
-                                _buildCircularChart('Acts', widget.loveLanguagePercentages['Acts'] ?? 0, const Color(0xFF4ECDC4)),
-                                _buildCircularChart('Gifts', widget.loveLanguagePercentages['Gifts'] ?? 0, const Color(0xFF45B7D1)),
-                                _buildCircularChart('Time', widget.loveLanguagePercentages['Time'] ?? 0, const Color(0xFF96CEB4)),
-                              ],
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: (MediaQuery.of(context).size.width * 0.04).clamp(12.0, 24.0),
+              runSpacing: (MediaQuery.of(context).size.height * 0.02).clamp(12.0, 20.0),
+              children: [
+                _buildCircularChart(
+                  'Words of Affirmation',
+                  _percentageForAliases(['words of affirmation', 'words', 'affirmation']),
+                  const Color(0xFFFF6B9D),
+                ),
+                _buildCircularChart(
+                  'Quality Time',
+                  _percentageForAliases(['quality time', 'time']),
+                  const Color(0xFF96CEB4),
+                ),
+                _buildCircularChart(
+                  'Acts of Service',
+                  _percentageForAliases(['acts of service', 'acts']),
+                  const Color(0xFF4ECDC4),
+                ),
+                _buildCircularChart(
+                  'Receiving Gifts',
+                  _percentageForAliases(['receiving gifts', 'gifts']),
+                  const Color(0xFF45B7D1),
+                ),
+                _buildCircularChart(
+                  'Physical Touch',
+                  _percentageForAliases(['physical touch', 'touch']),
+                  const Color(0xFFFFA36C),
+                ),
+              ],
                             ),
                             
                             SizedBox(height: (MediaQuery.of(context).size.height * 0.012).clamp(8.0, 12.0)),
@@ -239,22 +292,22 @@ class _LoveLanguageScreenState extends State<LoveLanguageScreen>
                             // Primary Love Language
                             Container(
                               padding: EdgeInsets.symmetric(
-                                horizontal: (MediaQuery.of(context).size.width * 0.04).clamp(14.0, 20.0),
-                                vertical: (MediaQuery.of(context).size.height * 0.012).clamp(8.0, 14.0),
+                horizontal: (MediaQuery.of(context).size.width * 0.06).clamp(20.0, 28.0),
+                vertical: (MediaQuery.of(context).size.height * 0.018).clamp(12.0, 20.0),
                               ),
                               decoration: BoxDecoration(
                                 gradient: const LinearGradient(
                                   colors: [Color(0xFFFF6B9D), Color(0xFFFF8E9E)],
                                 ),
-                                borderRadius: BorderRadius.circular((MediaQuery.of(context).size.width * 0.05).clamp(18.0, 24.0)),
+                borderRadius: BorderRadius.circular((MediaQuery.of(context).size.width * 0.07).clamp(24.0, 32.0)),
                               ),
                               child: Text(
                                 widget.loveLanguage,
                                 style: GoogleFonts.inter(
                                   color: Colors.white,
-                                  fontSize: (MediaQuery.of(context).size.width * 0.055).clamp(18.0, MediaQuery.of(context).size.width > 600 ? 28.0 : 26.0),
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 0.5,
+                  fontSize: (MediaQuery.of(context).size.width * 0.065).clamp(20.0, MediaQuery.of(context).size.width > 600 ? 32.0 : 30.0),
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.6,
                                 ),
                               ),
                             ),

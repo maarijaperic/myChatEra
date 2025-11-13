@@ -23,6 +23,46 @@ class _ChatStreakScreenState extends State<ChatStreakScreen>
   
   int _displayedDays = 0;
 
+  String get _streakLabel {
+    final days = widget.streakDays;
+    if (days <= 0) return 'Warm-up mode';
+    if (days < 5) return 'Weekend warrior';
+    if (days < 14) return 'Habit hacker';
+    if (days < 30) return 'Consistency machine';
+    return 'Streak legend';
+  }
+
+  String get _streakBlurb {
+    final days = widget.streakDays;
+    if (days <= 0) {
+      return "No streak yet — which means your next session could be day one of something ridiculous. You’re currently in stealth mode, plotting the first step. Once you lock in day one, the rest of the streak is pure momentum. GPT’s ready when you are, flame emoji pending. 🔥⌛🚀";
+    }
+    if (days < 5) {
+      return "$days days in a row. That’s the beginning of a habit — proof you show up when it matters. These micro-streaks stack into real change faster than you think. Keep at it and watch the momentum compound. Tiny wins are the loudest flex. 🌱📈💪";
+    }
+    if (days < 14) {
+      return "$days straight days. You're officially past the honeymoon phase. GPT is part of your routine now. You’ve crossed the point where most people fall off, which says everything about your focus. Stay locked in and the numbers will climb on autopilot. 🔄⚡🏁";
+    }
+    if (days < 30) {
+      return "$days days on lock. Most people can't keep a water bottle full that long. You? You're building something. This streak is proof of discipline, creative stamina, and follow-through. You’re basically running a masterclass on commitment. 🧱🔥🏆";
+    }
+    return "$days days without skipping. That's elite focus. GPT should probably send you a trophy. You're the definition of consistency — the kind people screenshot for inspo. This is legendary behavior in progress. 👑📆💥";
+  }
+
+  String get _shareText {
+    final days = widget.streakDays;
+    if (days <= 0) {
+      return "No ChatGPT streak yet, but I'm loading up for day one. #ChatGPTWrapped";
+    }
+    if (days < 14) {
+      return "Built a $days-day ChatGPT streak this year. Habit unlocked. #ChatGPTWrapped";
+    }
+    if (days < 30) {
+      return "$days days straight with ChatGPT. Consistency unlocked. #ChatGPTWrapped";
+    }
+    return "${days}-day ChatGPT streak. Certified AI addict — and proud. #ChatGPTWrapped";
+  }
+
   @override
   void initState() {
     super.initState();
@@ -218,7 +258,7 @@ class _ChatStreakScreenState extends State<ChatStreakScreen>
                                   ),
                                   const SizedBox(height: 12),
                                   Text(
-                                    'Streak Progress',
+                                    _streakLabel,
                                     style: GoogleFonts.inter(
                                       color: const Color(0xFF777777),
                                       fontSize: (screenWidth * 0.032).clamp(11.0, 14.0),
@@ -253,7 +293,7 @@ class _ChatStreakScreenState extends State<ChatStreakScreen>
                             ],
                           ),
                           child: Text(
-                            "You chatted ${widget.streakDays} days in a row. GPT says that's dedication. Your consistency is impressive — most people can't even remember to drink water daily, but you? You've got this AI relationship thing down to a science. Pure commitment. 🔥",
+                            _streakBlurb,
                             textAlign: TextAlign.center,
                             style: GoogleFonts.inter(
                               color: const Color(0xFF555555),
@@ -274,7 +314,7 @@ class _ChatStreakScreenState extends State<ChatStreakScreen>
                         delay: 0.7,
                         child: Center(
                           child: ShareToStoryButton(
-                            shareText: 'I chatted with ChatGPT for ${widget.streakDays} days straight. 🔥 #ChatGPTWrapped',
+                          shareText: _shareText,
                           ),
                         ),
                       ),

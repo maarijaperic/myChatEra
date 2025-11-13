@@ -18,22 +18,40 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFFAFAFA), // Off white
-              Color(0xFFF5F5F5), // Light gray
-              Color(0xFFF0F0F0), // Soft gray
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
+    print('🔴 PREMIUM_DEBUG: SubscriptionScreen build called');
+    return PopScope(
+      canPop: true,
+      onPopInvoked: (didPop) {
+        if (didPop) {
+          print('🔴 PREMIUM_DEBUG: SubscriptionScreen - Back button pressed, closing screen');
+        }
+      },
+      child: Scaffold(
+        body: Stack(
+          children: [
+            // Background layer - ignores pointer events to block CardNavigator tap zones
+            // But allows widgets above in Stack to receive pointer events
+            Positioned.fill(
+              child: IgnorePointer(
+                child: Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Color(0xFFFAFAFA), // Off white
+                        Color(0xFFF5F5F5), // Light gray
+                        Color(0xFFF0F0F0), // Soft gray
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            // Content layer - positioned above AbsorbPointer
+            SafeArea(
+              child: Column(
+                children: [
               // Close button
               Align(
                 alignment: Alignment.topRight,
@@ -42,7 +60,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                   onPressed: () => Navigator.pop(context),
                 ),
               ),
-              
               // Centered content
               Expanded(
                 child: Center(
@@ -87,7 +104,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                               child: _buildSubscriptionBox(
                                 index: 0,
                                 title: 'Monthly',
-                                price: '\$2.99',
+                                price: '\$4.99',
                                 period: '/mo',
                                 badge: null,
                               ),
@@ -98,9 +115,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                               child: _buildSubscriptionBox(
                                 index: 1,
                                 title: 'Yearly',
-                                price: '\$12.99',
+                                price: '\$19.99',
                                 period: '/yr',
-                                badge: 'BEST VALUE',
+                                badge: 'SAVE 67%',
                               ),
                             ),
                             const SizedBox(width: 6),
@@ -109,7 +126,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                               child: _buildSubscriptionBox(
                                 index: 2,
                                 title: 'One Time',
-                                price: '\$4.99',
+                                price: '\$9.99',
                                 period: 'once',
                                 badge: null,
                               ),
@@ -129,10 +146,13 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: GestureDetector(
                   onTap: () {
+                    print('🔴 PREMIUM_DEBUG: SubscriptionScreen - Continue button tapped');
                     // Close this screen and trigger premium navigation
                     Navigator.pop(context);
+                    print('🔴 PREMIUM_DEBUG: SubscriptionScreen - Calling widget.onSubscribe()');
                     widget.onSubscribe();
                   },
+                  behavior: HitTestBehavior.opaque, // Ensure this captures taps
                   child: Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 18),
@@ -167,8 +187,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               ),
               
               const SizedBox(height: 16),
-            ],
-          ),
+              ],
+            ),
+            ),
+          ],
         ),
       ),
     );
@@ -185,7 +207,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       case 1: // Yearly
         return [
           'All premium insights',
-          'Best value - save 78%',
+          'Best value - save 67%',
           'Billed once per year',
         ];
       case 2: // One-time

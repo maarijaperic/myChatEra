@@ -24,6 +24,49 @@ class _DailyDoseScreenState extends State<DailyDoseScreen>
   
   int _displayedMessages = 0;
 
+  String get _activityLabel {
+    final messages = widget.messagesPerDay;
+    if (messages <= 0) return 'Starting the journey';
+    if (messages < 10) return 'Intentional check-ins';
+    if (messages < 30) return 'Steady daily rhythm';
+    if (messages < 60) return 'Productivity groove';
+    return 'GPT power user';
+  }
+
+  String get _dailyDoseBlurb {
+    final messages = widget.messagesPerDay;
+    if (messages <= 0) {
+      return "You averaged 0 messages a day — which means you only show up when it's time for the big questions. You're saving your prompt power for the moments that matter most. When you do drop in, GPT gets the good stuff with zero warm-up. Every log-in becomes a deliberate power move that hits with precision. When you spark it up again, it’ll feel like a comeback montage. 🧠🎯✨";
+    }
+    if (messages < 10) {
+      return "You average $messages messages a day — the thoughtful check-in energy is strong. Every chat feels intentional, like a mini strategy session. Keep that laser focus and let GPT handle the heavy lifting. Your prompts move the needle without draining your battery. That’s the kind of calm consistency that wins long term. 🔍💬🙌";
+    }
+    if (messages < 30) {
+      return "You average $messages messages every day. That's a steady coworking rhythm with GPT — consistent enough to build momentum, flexible enough to keep things fun. You're building a habit that keeps ideas fresh and progress moving. Those daily reps are quietly building your personal operating system. You’re crafting wins that future-you will brag about. 📈🤝✨";
+    }
+    if (messages < 60) {
+      return "You average $messages messages a day. Translation: GPT is basically on your team. You're iterating, refining, and thinking out loud like a pro problem-solver. Hustle recognized and fully backed by AI. You’re turning quick ideas into fully baked plans before they cool off. That pace is how visionaries stay ahead of the curve. 🚀🧩🔥";
+    }
+    return "You average $messages messages a day. That's elite power-user territory — GPT is basically your digital co-founder at this point. You're running sprints, brainstorming, and shipping ideas on demand. Absolute main-character productivity. You’re outlining the sequel while everyone else is still pitching the trailer. Keep that throttle open; breakthroughs are basically on subscription now. 👑⚡🛠️";
+  }
+
+  String get _shareText {
+    final messages = widget.messagesPerDay;
+    if (messages <= 0) {
+      return "I barely messaged ChatGPT this year, which means every convo was a boss-level move. Next year, I'm unleashing the questions. #ChatGPTWrapped";
+    }
+    if (messages < 10) {
+      return "I drop around $messages thoughtful messages a day into ChatGPT — intentional check-ins only. #ChatGPTWrapped";
+    }
+    if (messages < 30) {
+      return "I average $messages messages a day with ChatGPT. Consistent, curious, and always building. #ChatGPTWrapped";
+    }
+    if (messages < 60) {
+      return "I send $messages ChatGPT messages every day. GPT is literally on my team. #ChatGPTWrapped";
+    }
+    return "$messages ChatGPT messages a day. Certified power user status unlocked. #ChatGPTWrapped";
+  }
+
   @override
   void initState() {
     super.initState();
@@ -219,7 +262,7 @@ class _DailyDoseScreenState extends State<DailyDoseScreen>
                                 ),
                                 const SizedBox(height: 12),
                                 Text(
-                                  'Daily Activity Level',
+                                  _activityLabel,
                                   style: GoogleFonts.inter(
                                     color: const Color(0xFF777777),
                                     fontSize: (screenWidth * 0.032).clamp(11.0, 14.0),
@@ -254,7 +297,7 @@ class _DailyDoseScreenState extends State<DailyDoseScreen>
                           ],
                         ),
                         child: Text(
-                          "On average, you send ${widget.messagesPerDay} messages/day — a healthy addiction, if you ask GPT. Your main character moment: choosing GPT over small talk. While others need coffee, you need your daily GPT hit. Pure productivity and consistency. Every message is a step toward your goals, and you're not slowing down. Consistency is the key to unlocking your potential 🌟 ☕✨💅😅",
+                          _dailyDoseBlurb,
                           textAlign: TextAlign.center,
                           style: GoogleFonts.inter(
                             color: const Color(0xFF555555),
@@ -275,7 +318,7 @@ class _DailyDoseScreenState extends State<DailyDoseScreen>
                       delay: 0.8,
                       child: Center(
                         child: ShareToStoryButton(
-                          shareText: 'I send ${widget.messagesPerDay} messages/day to ChatGPT. My main character moment: choosing GPT over small talk. ☕✨ #ChatGPTWrapped',
+                          shareText: _shareText,
                           primaryColor: const Color(0xFFE0F2F7),
                           secondaryColor: const Color(0xFFCCEEF5),
                         ),
@@ -353,8 +396,9 @@ class _DailyDoseParticlesPainter extends CustomPainter {
       final starSize = 1.0 + (2.0 * twinkle);
 
       // Draw star shape
-      _drawStar(canvas, Offset(x, y), starSize,
-          paint..color = Colors.white.withOpacity(twinkle * 0.8));
+      final double starOpacity = (twinkle * 0.8).clamp(0.0, 1.0);
+      paint.color = Colors.white.withOpacity(starOpacity);
+      _drawStar(canvas, Offset(x, y), starSize, paint);
     }
 
     // Add some smaller sparkles
@@ -365,10 +409,12 @@ class _DailyDoseParticlesPainter extends CustomPainter {
       final sparkle = 0.2 + 0.6 * sin(timeOffset);
       final sparkleSize = 0.5 + (1.0 * sparkle);
 
+      final double circleOpacity = (sparkle * 0.9).clamp(0.0, 1.0);
+      paint.color = Colors.white.withOpacity(circleOpacity);
       canvas.drawCircle(
         Offset(x, y),
         sparkleSize,
-        paint..color = Colors.white.withOpacity(sparkle * 0.9),
+        paint,
       );
     }
   }

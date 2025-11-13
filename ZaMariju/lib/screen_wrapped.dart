@@ -118,7 +118,7 @@ class _WrappedStatsScreenState extends State<WrappedStatsScreen>
     final bottomSpacing = (screenHeight * 0.04).clamp(20.0, 32.0);
     
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F7), // iOS-like light gray
+      backgroundColor: const Color(0xFFFFF0F6), // Light pastel pink
       body: Stack(
         fit: StackFit.expand,
         children: [

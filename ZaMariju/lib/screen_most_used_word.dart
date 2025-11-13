@@ -24,6 +24,63 @@ class _MostUsedWordScreenState extends State<MostUsedWordScreen>
   late AnimationController _bubblesController;
   
   int _displayedWordCount = 0;
+
+  String get _cleanWord {
+    final raw = widget.mostUsedWord.trim();
+    if (raw.isEmpty || raw.toLowerCase() == 'null' || raw == '—' || raw == '-') {
+      return 'your favorite word';
+    }
+    return raw;
+  }
+
+  String get _wordStyleLabel {
+    final count = widget.wordCount;
+    if (count <= 0) {
+      return 'Minimalist communicator';
+    }
+    if (count < 30) {
+      return 'Intentional storyteller';
+    }
+    if (count < 80) {
+      return 'Signature catchphrase energy';
+    }
+    if (count < 150) {
+      return 'Certified keyword lover';
+    }
+    return 'Iconic brand voice';
+  }
+
+  String get _wordBlurb {
+    final word = _cleanWord;
+    final count = widget.wordCount;
+
+    if (count <= 0 || word.trim().isEmpty) {
+      return "You didn't lean on a single word — every message was a remix. Linguistic chameleon energy. You show up with context instead of catchphrases, so every prompt feels like a new adventure. GPT has to stay on its toes with you, and honestly it lives for the variety. That versatility turns every response into a fresh exploration. You're proof that range is a superpower.";
+    }
+    if (count < 30) {
+      return '"$word" showed up $count times. You deploy it strategically — a go-to move when the idea really matters. It drops only when you need maximum clarity, like your secret handshake with GPT. That kind of precision keeps your conversations crisp and effective. Each drop lands like a clarified intention. GPT has learned to lean in whenever it sees it.';
+    }
+    if (count < 80) {
+      return 'You said "$word" $count times. That word is basically your handshake; GPT knows the assignment as soon as it pops up. You carve entire conversation arcs around it, and it never loses its spark. That\'s how you build your own language of progress. It anchors the narrative so every idea has a home. GPT responds like it\'s hearing a trusted cue.';
+    }
+    if (count < 150) {
+      return '"$word" came up $count times — the signature flavor in your prompts. It\'s part vibe, part brand, all you. Every time it surfaces, GPT shifts into your preferred lane instantly. That\'s artistic direction right there. You\'re not just repeating yourself — you\'re refining a theme. That level of curation is how language becomes a signature.';
+    }
+    return 'You dropped "$word" $count times. That\'s not just a word, it\'s a whole identity. GPT hears it and already knows your direction before the rest of the prompt lands. You\'ve basically built a verbal universe around it. The word carries your intent like a recognizable signature. That kind of consistency turns dialogue into a personal brand.';
+  }
+
+  String get _shareText {
+    final word = _cleanWord;
+    final count = widget.wordCount;
+
+    if (count <= 0 || word.trim().isEmpty) {
+      return "No single word defined my ChatGPT era — every prompt was a plot twist. #ChatGPTWrapped";
+    }
+    if (count < 80) {
+      return 'My ChatGPT signature word this year: "$word" ($count uses). Intentional and iconic. #ChatGPTWrapped';
+    }
+    return 'I said "$word" $count times to ChatGPT. Trademarked vocabulary activated. #ChatGPTWrapped';
+  }
   
   @override
   void initState() {
@@ -172,7 +229,7 @@ class _MostUsedWordScreenState extends State<MostUsedWordScreen>
                               children: [
                                 // Word display
                                 Text(
-                                  widget.mostUsedWord,
+                                  _cleanWord,
                                   style: GoogleFonts.inter(
                                     color: const Color(0xFFFF6B35),
                                     fontSize: (screenWidth * 0.12).clamp(36.0, screenWidth > 600 ? 68.0 : 60.0),
@@ -205,7 +262,7 @@ class _MostUsedWordScreenState extends State<MostUsedWordScreen>
                                 ),
                                 SizedBox(height: (screenHeight * 0.01).clamp(6.0, 12.0)),
                                 Text(
-                                  'Your most used word',
+                                  _wordStyleLabel,
                                   style: GoogleFonts.inter(
                                     color: const Color(0xFF555555),
                                     fontSize: (screenWidth * 0.035).clamp(11.0, screenWidth > 600 ? 18.0 : 16.0),
@@ -241,7 +298,7 @@ class _MostUsedWordScreenState extends State<MostUsedWordScreen>
                           ],
                         ),
                         child: Text(
-                          'You said "${widget.mostUsedWord}" ${widget.wordCount} times this year. It\'s basically your personality in one word. While others have catchphrases, you have a signature word that defines your entire vibe. Pure linguistic main character energy. This word has become your calling card, showing up in conversations like a signature move. ✨',
+                          _wordBlurb,
                           textAlign: TextAlign.center,
                           style: GoogleFonts.inter(
                             color: const Color(0xFF555555),
@@ -262,7 +319,7 @@ class _MostUsedWordScreenState extends State<MostUsedWordScreen>
                       delay: 0.8,
                       child: Center(
                         child: ShareToStoryButton(
-                          shareText: 'My signature word this year: "${widget.mostUsedWord}" (used ${widget.wordCount} times). Pure linguistic main character energy! ✨ #ChatGPTWrapped',
+                          shareText: _shareText,
                           primaryColor: const Color(0xFFE0F2F7),
                           secondaryColor: const Color(0xFFCCEEF5),
                         ),

@@ -1,15 +1,71 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:gpt_wrapped2/models/chat_data.dart';
 
 /// AI-powered analysis using OpenAI API for premium features
-/// Requires API key and costs ~$0.01-0.02 per user
+/// Uses proxy server to hide API key from client
+/// Costs ~$0.01-0.02 per user
 class AIAnalyzer {
-  static const String _apiUrl = 'https://api.openai.com/v1/chat/completions';
+  // Proxy server URL - change this to your deployed proxy server URL
+  // For local development: 'http://localhost:3000'
+  // For production: 'https://your-proxy-server.com'
+  static const String _proxyBaseUrl = String.fromEnvironment(
+    'OPENAI_PROXY_URL',
+    defaultValue: 'http://localhost:3000',
+  );
   
-  /// Your OpenAI API key - Replace with your actual key
-  /// Get it from: https://platform.openai.com/api-keys
-  static const String _apiKey = 'YOUR_OPENAI_API_KEY_HERE';
+  static const String _proxyApiPath = '/api/chat';
+  
+  // Legacy direct API support (not recommended for production)
+  static const String _directApiUrl = 'https://api.openai.com/v1/chat/completions';
+  static const String _compiledApiKey = String.fromEnvironment('OPENAI_API_KEY');
+  static bool _useProxy = true; // Default to using proxy
+
+  static String? _overrideApiKey;
+  static String? _overrideProxyUrl;
+
+  /// Set proxy server URL (e.g., 'https://your-proxy-server.com')
+  static void setProxyUrl(String? proxyUrl) {
+    _overrideProxyUrl = proxyUrl;
+  }
+
+  /// Enable/disable proxy usage (default: true)
+  static void setUseProxy(bool useProxy) {
+    _useProxy = useProxy;
+  }
+
+  /// Allows tests or advanced setups to inject an API key at runtime.
+  /// Only used when proxy is disabled.
+  static void setApiKeyOverride(String? apiKey) {
+    _overrideApiKey = apiKey;
+  }
+
+  static String _getProxyUrl() {
+    if (_overrideProxyUrl != null && _overrideProxyUrl!.isNotEmpty) {
+      return _overrideProxyUrl!;
+    }
+    return _proxyBaseUrl;
+  }
+
+  static String _resolveApiKey() {
+    if (_overrideApiKey != null && _overrideApiKey!.isNotEmpty) {
+      return _overrideApiKey!;
+    }
+
+    final envKey = Platform.environment['OPENAI_API_KEY'];
+    if (envKey != null && envKey.isNotEmpty) {
+      return envKey;
+    }
+
+    if (_compiledApiKey.isNotEmpty) {
+      return _compiledApiKey;
+    }
+
+    throw Exception(
+      'Missing OpenAI API key. Set OPENAI_API_KEY in your environment or .env file.',
+    );
+  }
   
   /// Analyze personality type (Type A vs Type B)
   static Future<Map<String, dynamic>> analyzePersonalityType(
@@ -233,6 +289,34 @@ Respond ONLY with valid JSON in this exact format:
 
     return await _callOpenAI(prompt);
   }
+
+  /// Generate a movie title that matches the user's chat vibe
+  static Future<Map<String, dynamic>> generateMovieTitle(
+    List<MessageData> userMessages,
+  ) async {
+    final messagesSample = _getSampleMessages(userMessages, maxCount: 40);
+    
+    final prompt = '''
+Analyze these ChatGPT conversation messages and pick a movie that best represents the user's overall vibe, journey, and personality.
+
+User messages:
+${messagesSample.join('\n')}
+
+Provide:
+1. Movie title (string)
+2. Release year (integer between 1950 and 2025)
+3. Fun explanation (3-4 sentences, cinematic tone, direct "you" language, references how the chats match the movie's themes)
+
+Respond ONLY with valid JSON in this exact format:
+{
+  "movieTitle": "The Pursuit of Happyness",
+  "releaseYear": 2006,
+  "explanation": "Based on your conversations, GPT detected a relentless drive for self-improvement and asking deep questions about life. Like Chris Gardner in the movie, you are constantly searching for answers, optimizing your life, and never giving up on personal growth. Your chats are basically a journey of someone trying to figure it all out - one prompt at a time. Inspiring, honestly."
+}
+''';
+
+    return await _callOpenAI(prompt);
+  }
   
   /// Determine past life persona
   static Future<Map<String, dynamic>> analyzePastLifePersona(
@@ -243,13 +327,15 @@ Respond ONLY with valid JSON in this exact format:
     final prompt = '''
 Analyze these ChatGPT conversation messages and determine who the user was in a past life based on their interests and conversation style.
 
+IMPORTANT: The era must be from ancient times up to and including the 20th century (1900-2000). DO NOT use the 21st century (2001 or later) since we are currently living in the 21st century and past lives should be from previous centuries.
+
 User messages:
 ${messagesSample.join('\n')}
 
 Provide:
 1. Persona title (e.g., "Renaissance Philosopher-Artist")
 2. Persona emoji
-3. Era (e.g., "15TH CENTURY FLORENCE")
+3. Era (e.g., "15TH CENTURY FLORENCE" or "EARLY 20TH CENTURY PARIS" - must be up to and including 20th century, never 21st century)
 4. Description (3-4 sentences, creative and fun)
 
 Respond ONLY with valid JSON in this exact format:
@@ -315,61 +401,160 @@ Respond ONLY with the roast text, no JSON, no extra formatting.
     return sample;
   }
   
-  /// Helper: Call OpenAI API
+  /// Helper: Call OpenAI API via proxy or directly
   static Future<Map<String, dynamic>> _callOpenAI(String prompt, {bool expectJson = true}) async {
-    if (_apiKey == 'YOUR_OPENAI_API_KEY_HERE') {
-      throw Exception('Please set your OpenAI API key in ai_analyzer.dart');
-    }
-    
     try {
-      final response = await http.post(
-        Uri.parse(_apiUrl),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $_apiKey',
-        },
-        body: jsonEncode({
-          'model': 'gpt-4o-mini', // Cheaper and faster than gpt-4
-          'messages': [
-            {
-              'role': 'system',
-              'content': 'You are a helpful assistant that analyzes ChatGPT conversation patterns. Always respond in the exact format requested.'
-            },
-            {
-              'role': 'user',
-              'content': prompt,
-            },
-          ],
-          'temperature': 0.7,
-          'max_tokens': 500,
-        }),
-      );
+      final stopwatch = Stopwatch()..start();
       
-      if (response.statusCode != 200) {
-        throw Exception('OpenAI API error: ${response.statusCode} - ${response.body}');
-      }
-      
-      final data = jsonDecode(response.body);
-      final content = data['choices'][0]['message']['content'] as String;
-      
-      if (expectJson) {
-        // Parse JSON response
-        final jsonMatch = RegExp(r'\{[\s\S]*\}').firstMatch(content);
-        if (jsonMatch != null) {
-          return jsonDecode(jsonMatch.group(0)!);
+      if (_useProxy) {
+        // Use proxy server
+        final proxyUrl = _getProxyUrl();
+        final uri = Uri.parse('$proxyUrl$_proxyApiPath');
+        
+        print('[AIAnalyzer] POST $uri via proxy (expectJson=$expectJson)');
+        
+        final response = await http.post(
+          uri,
+          headers: {
+            'Content-Type': 'application/json',
+            // No Authorization header needed - proxy handles it
+          },
+          body: jsonEncode({
+            'model': 'gpt-4o-mini', // Cheaper and faster than gpt-4
+            'messages': [
+              {
+                'role': 'system',
+                'content': 'You are a helpful assistant that analyzes ChatGPT conversation patterns. Always respond in the exact format requested.'
+              },
+              {
+                'role': 'user',
+                'content': prompt,
+              },
+            ],
+            'temperature': 0.7,
+            'max_tokens': 500,
+          }),
+        ).timeout(
+          const Duration(seconds: 30),
+          onTimeout: () {
+            throw Exception('Request timeout after 30 seconds');
+          },
+        );
+        
+        stopwatch.stop();
+        print('[AIAnalyzer] Proxy response ${response.statusCode} ${response.reasonPhrase} '
+            '(${stopwatch.elapsedMilliseconds} ms)');
+        
+        if (response.statusCode >= 400) {
+          print('[AIAnalyzer] Error body: ${response.body}');
+          final errorData = jsonDecode(response.body);
+          throw Exception(
+            errorData['error'] ?? 'Proxy server error: ${response.statusCode}',
+          );
         }
-        throw Exception('Failed to parse JSON from OpenAI response');
+        
+        if (response.statusCode != 200) {
+          throw Exception('Proxy server error: ${response.statusCode} - ${response.body}');
+        }
+        
+        final data = jsonDecode(response.body);
+        final content = data['choices'][0]['message']['content'] as String;
+        
+        if (expectJson) {
+          // Parse JSON response
+          try {
+            return jsonDecode(content);
+          } catch (_) {
+            final jsonMatch = RegExp(r'\{[\s\S]*\}').firstMatch(content);
+            if (jsonMatch != null) {
+              return jsonDecode(jsonMatch.group(0)!);
+            }
+            throw Exception('Failed to parse JSON from OpenAI response: $content');
+          }
+        } else {
+          // Return plain text
+          return {'text': content.trim()};
+        }
       } else {
-        // Return plain text
-        return {'text': content.trim()};
+        // Direct API call (legacy, not recommended)
+        final apiKey = _resolveApiKey();
+        final uri = Uri.parse(_directApiUrl);
+        
+        print('[AIAnalyzer] POST $uri directly (expectJson=$expectJson)');
+        
+        final response = await http.post(
+          uri,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $apiKey',
+          },
+          body: jsonEncode({
+            'model': 'gpt-4o-mini',
+            'messages': [
+              {
+                'role': 'system',
+                'content': 'You are a helpful assistant that analyzes ChatGPT conversation patterns. Always respond in the exact format requested.'
+              },
+              {
+                'role': 'user',
+                'content': prompt,
+              },
+            ],
+            'temperature': 0.7,
+            'max_tokens': 500,
+          }),
+        ).timeout(
+          const Duration(seconds: 30),
+          onTimeout: () {
+            throw Exception('Request timeout after 30 seconds');
+          },
+        );
+        
+        stopwatch.stop();
+        print('[AIAnalyzer] Direct API response ${response.statusCode} ${response.reasonPhrase} '
+            '(${stopwatch.elapsedMilliseconds} ms)');
+        
+        if (response.statusCode >= 400) {
+          print('[AIAnalyzer] Error body: ${response.body}');
+        }
+        
+        if (response.statusCode != 200) {
+          throw Exception('OpenAI API error: ${response.statusCode} - ${response.body}');
+        }
+        
+        final data = jsonDecode(response.body);
+        final content = data['choices'][0]['message']['content'] as String;
+        
+        if (expectJson) {
+          // Parse JSON response
+          try {
+            return jsonDecode(content);
+          } catch (_) {
+            final jsonMatch = RegExp(r'\{[\s\S]*\}').firstMatch(content);
+            if (jsonMatch != null) {
+              return jsonDecode(jsonMatch.group(0)!);
+            }
+            throw Exception('Failed to parse JSON from OpenAI response: $content');
+          }
+        } else {
+          // Return plain text
+          return {'text': content.trim()};
+        }
       }
       
+    } on SocketException catch (e) {
+      print('Network error: $e');
+      throw Exception('Network error: Unable to connect to server. Please check your internet connection.');
+    } on FormatException catch (e) {
+      print('JSON parsing error: $e');
+      throw Exception('Invalid response from server. Please try again.');
     } catch (e) {
       print('Error calling OpenAI API: $e');
       rethrow;
     }
   }
 }
+
 
 
 

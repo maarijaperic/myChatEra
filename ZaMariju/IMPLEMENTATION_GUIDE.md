@@ -191,9 +191,6 @@ class _FreeWrappedNavigator extends StatelessWidget {
           totalHours: stats.totalHours,
           totalMinutes: stats.totalMinutes,
         ),
-        FirstMessageScreen(
-          firstMessage: stats.randomQuestion ?? 'How do I...?',
-        ),
         MostUsedWordScreen(
           mostUsedWord: stats.mainTopic ?? 'question',
           wordCount: 100, // Calculate separately if needed
@@ -284,6 +281,7 @@ If you encounter issues:
 - Verify all messages have timestamps
 - Test with a small file first
 - Check console logs for parsing errors
+
 
 
 

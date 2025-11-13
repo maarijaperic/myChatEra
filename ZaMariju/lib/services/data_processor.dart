@@ -16,26 +16,7 @@ class DataProcessor {
 
       print('Processing ${jsonData.length} conversations...');
       
-      // Convert JSON to ConversationData objects
-      final conversations = <ConversationData>[];
-      for (var json in jsonData) {
-        try {
-          final jsonMap = json as Map<String, dynamic>;
-          
-          // If we have mapping (full conversation with messages), parse it
-          if (jsonMap.containsKey('mapping') && jsonMap['mapping'] != null) {
-            final conv = _parseConversationWithMessages(jsonMap);
-            conversations.add(conv);
-          } else {
-            // Otherwise, just parse metadata
-            final conv = ConversationData.fromJson(jsonMap);
-            conversations.add(conv);
-          }
-        } catch (e) {
-          print('Error parsing conversation: $e');
-          print('Conversation data: $json');
-        }
-      }
+      final conversations = parseConversations(jsonData);
 
       if (conversations.isEmpty) {
         print('No valid conversations parsed');
@@ -43,7 +24,7 @@ class DataProcessor {
       }
 
       print('Successfully parsed ${conversations.length} conversations');
-      final stats = _analyzeConversations(conversations);
+      final stats = analyzeConversations(conversations);
       print('Calculated stats: ${stats.totalConversations} conversations, ${stats.totalMessages} messages');
       return stats;
     } catch (e, stackTrace) {
@@ -51,6 +32,44 @@ class DataProcessor {
       print('Stack trace: $stackTrace');
       return ChatStats.empty();
     }
+  }
+
+  /// Convert raw JSON conversation entries into ConversationData objects
+  static List<ConversationData> parseConversations(List<dynamic> jsonData) {
+    final conversations = <ConversationData>[];
+
+    for (var json in jsonData) {
+      try {
+        final jsonMap = json as Map<String, dynamic>;
+
+        // If we already have simplified messages, parse them directly
+        if (jsonMap.containsKey('messages') && jsonMap['messages'] is List) {
+          final conv = _parseConversationWithMessageList(jsonMap);
+          conversations.add(conv);
+          continue;
+        }
+
+        // If we have mapping (full conversation with messages), parse it
+        if (jsonMap.containsKey('mapping') && jsonMap['mapping'] != null) {
+          final conv = _parseConversationWithMessages(jsonMap);
+          conversations.add(conv);
+        } else {
+          // Otherwise, just parse metadata
+          final conv = ConversationData.fromJson(jsonMap);
+          conversations.add(conv);
+        }
+      } catch (e) {
+        print('Error parsing conversation: $e');
+        print('Conversation data: $json');
+      }
+    }
+
+    return conversations;
+  }
+
+  /// Public helper to analyze already parsed conversations
+  static ChatStats analyzeConversations(List<ConversationData> conversations) {
+    return _analyzeConversations(conversations);
   }
 
   /// Process ChatGPT data from clipboard (exported by ChatFetcher)
@@ -80,11 +99,11 @@ class DataProcessor {
         if (altConversations.isEmpty) {
           throw Exception('No conversations found in clipboard data');
         }
-        return _analyzeConversations(altConversations);
+        return analyzeConversations(altConversations);
       }
 
       // Step 3: Analyze and return stats
-      return _analyzeConversations(conversations);
+      return analyzeConversations(conversations);
     } catch (e) {
       print('Error processing clipboard data: $e');
       return null;
@@ -169,6 +188,43 @@ class DataProcessor {
     }
 
     // Sort messages by timestamp
+    messages.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+
+    return ConversationData(
+      id: json['id'] ?? '',
+      title: json['title'] ?? 'Untitled',
+      createTime: _parseTime(json['create_time']),
+      updateTime: _parseTime(json['update_time'] ?? json['create_time']),
+      messages: messages,
+    );
+  }
+
+  static ConversationData _parseConversationWithMessageList(Map<String, dynamic> json) {
+    final messages = <MessageData>[];
+    final messageEntries = json['messages'] as List;
+
+    for (var entry in messageEntries) {
+      if (entry is! Map<String, dynamic>) continue;
+
+      final role = (entry['role'] ?? '').toString();
+      if (role != 'user' && role != 'assistant') continue;
+
+      final rawContent = entry['content'];
+      final content = rawContent is String ? rawContent : rawContent?.toString() ?? '';
+      if (content.trim().isEmpty) continue;
+
+      final id = (entry['id'] ?? '').toString();
+
+      messages.add(
+        MessageData(
+          id: id.isNotEmpty ? id : '${json['id'] ?? ''}-${messages.length}',
+          role: role,
+          content: content.trim(),
+          timestamp: _parseTime(entry['create_time']),
+        ),
+      );
+    }
+
     messages.sort((a, b) => a.timestamp.compareTo(b.timestamp));
 
     return ConversationData(

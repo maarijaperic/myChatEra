@@ -46,18 +46,28 @@ class _TypeABPreviewScreenState extends State<TypeABPreviewScreen>
   }
 
   void _showSubscriptionScreen() {
+    print('🔴 PREMIUM_DEBUG: TypeABPreviewScreen - _showSubscriptionScreen called');
+    print('🔴 PREMIUM_DEBUG: Opening SubscriptionScreen');
+    print('🔴 PREMIUM_DEBUG: widget.onSubscribe callback available');
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => SubscriptionScreen(
-          onSubscribe: widget.onSubscribe,
-        ),
+        builder: (context) {
+          print('🔴 PREMIUM_DEBUG: Building SubscriptionScreen with onSubscribe callback');
+          return SubscriptionScreen(
+            onSubscribe: () {
+              print('🔴 PREMIUM_DEBUG: SubscriptionScreen onSubscribe callback called from TypeABPreviewScreen');
+              widget.onSubscribe();
+            },
+          );
+        },
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    print('🔴 PREMIUM_DEBUG: TypeABPreviewScreen build called');
     return Scaffold(
       body: Stack(
         fit: StackFit.expand,
@@ -237,7 +247,10 @@ class _TypeABPreviewScreenState extends State<TypeABPreviewScreen>
                   FadeTransition(
                     opacity: _fadeController,
                     child: GestureDetector(
-                      onTap: _showSubscriptionScreen,
+                      onTap: () {
+                        print('🔴 PREMIUM_DEBUG: TypeABPreviewScreen - Lock icon tapped');
+                        _showSubscriptionScreen();
+                      },
                       child: Container(
                         width: 100,
                         height: 100,

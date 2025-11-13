@@ -58,6 +58,31 @@ class _SplashScreenState extends State<SplashScreen>
     super.dispose();
   }
 
+  Widget _buildLogo() {
+    // Try to load logo from assets, fallback to placeholder
+    try {
+      return Image.asset(
+        'assets/images/logo.png',
+        width: 150,
+        height: 150,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) {
+          // If image not found, use placeholder
+          return CustomPaint(
+            size: const Size(150, 150),
+            painter: _LogoPlaceholderPainter(),
+          );
+        },
+      );
+    } catch (e) {
+      // Fallback to placeholder if asset not configured
+      return CustomPaint(
+        size: const Size(150, 150),
+        painter: _LogoPlaceholderPainter(),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -90,19 +115,8 @@ class _SplashScreenState extends State<SplashScreen>
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
-                          // Placeholder for your logo
-                          // TODO: Replace with actual logo image
-                          CustomPaint(
-                            size: const Size(150, 150),
-                            painter: _LogoPlaceholderPainter(),
-                          ),
-                          
-                          // Alternative: Use image when you have it
-                          // Image.asset(
-                          //   'assets/images/logo.png',
-                          //   width: 150,
-                          //   height: 150,
-                          // ),
+                          // Try to load logo image, fallback to placeholder
+                          _buildLogo(),
                         ],
                       ),
                     ),

@@ -156,6 +156,11 @@ class _CardNavigatorState extends State<CardNavigator>
     if (_currentIndex == widget.screens.length - 1) {
       return false;
     }
+    // Disable tap zones on SubscriptionScreen (check by widget type)
+    final currentScreen = widget.screens[_currentIndex];
+    if (currentScreen.runtimeType.toString() == 'SubscriptionScreen') {
+      return false;
+    }
     return true;
   }
 

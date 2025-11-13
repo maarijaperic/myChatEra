@@ -152,6 +152,7 @@ class _LoginScreenState extends State<LoginScreen>
   Future<void> _fetchConversations() async {
     if (_webViewController == null || _accessToken == null) return;
 
+    if (!mounted) return;
     setState(() => _status = 'Fetching your conversations...');
 
     const js = '''
@@ -201,7 +202,7 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   Future<void> _fetchFullConversations(List<dynamic> conversationList) async {
-    if (_webViewController == null) return;
+    if (_webViewController == null || !mounted) return;
 
     final fullConversations = <Map<String, dynamic>>[];
     int fetchedCount = 0;
@@ -218,17 +219,15 @@ class _LoginScreenState extends State<LoginScreen>
 
       try {
         // Update status
+        if (!mounted) return;
         setState(() {
           _status = 'Loading messages... ${fetchedCount + 1}/$totalCount';
         });
 
         // Fetch full conversation with messages
         final fullConv = await _fetchSingleConversation(id);
-        if (fullConv != null && fullConv['mapping'] != null) {
-          // Merge metadata with full conversation data
-          final merged = Map<String, dynamic>.from(conv);
-          merged['mapping'] = fullConv['mapping'];
-          fullConversations.add(merged);
+        if (fullConv != null) {
+          fullConversations.add(fullConv);
         } else {
           // If fetch failed, include metadata only
           fullConversations.add(conv);
@@ -245,6 +244,7 @@ class _LoginScreenState extends State<LoginScreen>
       }
     }
 
+    if (!mounted) return;
     setState(() {
       _conversations = fullConversations;
       _status = 'Fetched ${fullConversations.length} conversations with messages ✓';
@@ -253,6 +253,7 @@ class _LoginScreenState extends State<LoginScreen>
 
     // Auto-complete login after fetching
     Future.delayed(const Duration(milliseconds: 500), () {
+      if (!mounted) return;
       _completeLogin();
     });
   }
@@ -261,6 +262,7 @@ class _LoginScreenState extends State<LoginScreen>
     if (_webViewController == null) return null;
 
     final completer = Completer<Map<String, dynamic>?>();
+    var hasCompleted = false;
     Map<String, dynamic>? result;
 
     final js = '''
@@ -284,9 +286,90 @@ class _LoginScreenState extends State<LoginScreen>
           });
           
           if (!resp.ok) return null;
-          const json = await resp.json();
-          window.flutter_inappwebview.callHandler('onConversationData', JSON.stringify(json));
-          return json;
+          const raw = await resp.json();
+
+          const toText = (content) => {
+            if (!content) return '';
+            if (Array.isArray(content.parts)) {
+              return content.parts
+                .map((part) => {
+                  if (typeof part === 'string') return part;
+                  if (part && typeof part.text === 'string') return part.text;
+                  return '';
+                })
+                .filter(Boolean)
+                .join('\\n')
+                .trim();
+            }
+            if (typeof content.text === 'string') {
+              return content.text.trim();
+            }
+            return '';
+          };
+
+          const toEpochSeconds = (value) => {
+            if (typeof value === 'number') return value;
+            if (typeof value === 'string') {
+              const parsed = Date.parse(value);
+              if (!Number.isNaN(parsed)) {
+                return Math.floor(parsed / 1000);
+              }
+            }
+            return 0;
+          };
+
+          const simplifyMessages = (mapping) => {
+            const collected = [];
+            const nodes = Object.values(mapping || {});
+            for (const node of nodes) {
+              if (!node || !node.message) continue;
+              const msg = node.message;
+              const role = msg.author && msg.author.role ? msg.author.role : '';
+              if (role !== 'user' && role !== 'assistant') continue;
+
+              const text = toText(msg.content);
+              if (!text) continue;
+
+              collected.push({
+                id: msg.id || node.id || '',
+                role,
+                content: text,
+                create_time: msg.create_time || node.create_time || null,
+              });
+            }
+
+            collected.sort((a, b) => {
+              const aTime = toEpochSeconds(a.create_time);
+              const bTime = toEpochSeconds(b.create_time);
+              return aTime - bTime;
+            });
+
+            const HARD_LIMIT = 250;
+            if (collected.length > HARD_LIMIT) {
+              const step = collected.length / HARD_LIMIT;
+              const reduced = [];
+              for (let i = 0; i < HARD_LIMIT; i++) {
+                const idx = Math.floor(i * step);
+                if (idx < collected.length) {
+                  reduced.push(collected[idx]);
+                }
+              }
+              return reduced;
+            }
+
+            return collected;
+          };
+
+          const simplified = {
+            id: raw.id || raw.conversation_id || '$conversationId',
+            title: raw.title || 'Untitled',
+            create_time: raw.create_time || raw.timestamp || null,
+            update_time: raw.update_time || raw.last_modified_at || raw.create_time || null,
+            messages: simplifyMessages(raw.mapping),
+          };
+
+          window.flutter_inappwebview.callHandler('onConversationData', JSON.stringify(simplified));
+          return simplified;
         } catch (e) {
           return null;
         }
@@ -294,30 +377,45 @@ class _LoginScreenState extends State<LoginScreen>
     ''';
 
     // Set up one-time handler
+    _webViewController!.removeJavaScriptHandler(handlerName: 'onConversationData');
     _webViewController!.addJavaScriptHandler(
       handlerName: 'onConversationData',
       callback: (args) {
+        if (hasCompleted) {
+          return {'ok': true};
+        }
+        hasCompleted = true;
         if (args.isNotEmpty && args.first is String) {
           try {
             result = jsonDecode(args.first as String) as Map<String, dynamic>;
-            completer.complete(result);
+            if (!completer.isCompleted) {
+              completer.complete(result);
+            }
           } catch (e) {
-            completer.complete(null);
+            if (!completer.isCompleted) {
+              completer.complete(null);
+            }
           }
         } else {
-          completer.complete(null);
+          if (!completer.isCompleted) {
+            completer.complete(null);
+          }
         }
+        _webViewController!.removeJavaScriptHandler(handlerName: 'onConversationData');
         return {'ok': true};
       },
     );
 
     await _webViewController!.evaluateJavascript(source: js);
     
-    // Wait for result with timeout
-    return completer.future.timeout(
-      const Duration(seconds: 10),
-      onTimeout: () => null,
-    );
+    try {
+      return await completer.future.timeout(
+        const Duration(seconds: 10),
+        onTimeout: () => null,
+      );
+    } finally {
+      _webViewController!.removeJavaScriptHandler(handlerName: 'onConversationData');
+    }
   }
 
   void _completeLogin() {
@@ -418,11 +516,13 @@ class _LoginScreenState extends State<LoginScreen>
                     handlerName: 'onToken',
                     callback: (args) {
                       if (args.isNotEmpty && args.first is String) {
-                        setState(() {
-                          _accessToken = args.first as String;
-                          _status = 'Successfully logged in! ✓';
-                        });
-                        _fetchConversations();
+                        if (mounted) {
+                          setState(() {
+                            _accessToken = args.first as String;
+                            _status = 'Successfully logged in! ✓';
+                          });
+                          _fetchConversations();
+                        }
                       }
                       return {'ok': true};
                     },
@@ -438,9 +538,11 @@ class _LoginScreenState extends State<LoginScreen>
                               as Map<String, dynamic>;
                           final items = (map['items'] as List?) ?? [];
                           if (items.isNotEmpty) {
-                            setState(() {
-                              _status = 'Fetched ${items.length} conversations. Loading messages...';
-                            });
+                            if (mounted) {
+                              setState(() {
+                                _status = 'Fetched ${items.length} conversations. Loading messages...';
+                              });
+                            }
                             // Fetch full conversation data with messages
                             _fetchFullConversations(items);
                           }
@@ -457,62 +559,74 @@ class _LoginScreenState extends State<LoginScreen>
                     callback: (args) {
                       if (args.isNotEmpty && args.first is String) {
                         final error = args.first as String;
-                        setState(() {
-                          _isLoading = false;
-                          if (error == 'SESSION_ERROR') {
-                            _status = 'Session error. Please try logging in again.';
-                          } else if (error == 'NO_TOKEN') {
-                            _status = 'Authentication failed. Please log in again.';
-                          } else if (error == 'FETCH_ERROR') {
-                            _status = 'Failed to fetch conversations. Please try again.';
-                          } else {
-                            _status = 'Error: $error';
-                          }
-                        });
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(_status),
-                            backgroundColor: Colors.red,
-                            duration: const Duration(seconds: 4),
-                          ),
-                        );
+                        if (mounted) {
+                          setState(() {
+                            _isLoading = false;
+                            if (error == 'SESSION_ERROR') {
+                              _status = 'Session error. Please try logging in again.';
+                            } else if (error == 'NO_TOKEN') {
+                              _status = 'Authentication failed. Please log in again.';
+                            } else if (error == 'FETCH_ERROR') {
+                              _status = 'Failed to fetch conversations. Please try again.';
+                            } else {
+                              _status = 'Error: $error';
+                            }
+                          });
+                        }
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(_status),
+                              backgroundColor: Colors.red,
+                              duration: const Duration(seconds: 4),
+                            ),
+                          );
+                        }
                       }
                       return {'ok': true};
                     },
                   );
                 },
                 onLoadStop: (controller, url) async {
-                  setState(() {
-                    _status = 'Please sign in to ChatGPT...';
-                  });
+                  if (mounted) {
+                    setState(() {
+                      _status = 'Please sign in to ChatGPT...';
+                    });
+                  }
                   await _checkLoginStatus();
                 },
                 onReceivedError: (controller, request, error) {
-                  setState(() {
-                    _isLoading = false;
-                    _status = 'Failed to load page. Please check your internet connection.';
-                  });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Network error: ${error.description}'),
-                      backgroundColor: Colors.red,
-                      duration: const Duration(seconds: 4),
-                    ),
-                  );
-                },
-                onReceivedHttpError: (controller, request, response) {
-                  if (response.statusCode != null && response.statusCode! >= 400) {
+                  if (mounted) {
                     setState(() {
                       _isLoading = false;
-                      _status = 'Failed to connect. Please try again.';
+                      _status = 'Failed to load page. Please check your internet connection.';
                     });
+                  }
+                  if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Connection error: ${response.statusCode}'),
+                        content: Text('Network error: ${error.description}'),
                         backgroundColor: Colors.red,
                         duration: const Duration(seconds: 4),
                       ),
                     );
+                  }
+                },
+                onReceivedHttpError: (controller, request, response) {
+                  if (response.statusCode != null && response.statusCode! >= 400) {
+                    if (mounted) {
+                      setState(() {
+                        _isLoading = false;
+                        _status = 'Failed to connect. Please try again.';
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Connection error: ${response.statusCode}'),
+                          backgroundColor: Colors.red,
+                          duration: const Duration(seconds: 4),
+                        ),
+                      );
+                    }
                   }
                 },
               ),
@@ -529,216 +643,241 @@ class _LoginScreenState extends State<LoginScreen>
           opacity: _fadeAnimation,
           child: SlideTransition(
             position: _slideAnimation,
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-              child: Column(
-                children: [
-                  const Spacer(flex: 2),
-
-                  // App Name
-                  Text(
-                    'MyChatEra',
-                    style: TextStyle(
-                      fontSize: (screenWidth * 0.12)
-                          .clamp(36.0, isLargeScreen ? 64.0 : 56.0),
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF2D2D2D),
-                      letterSpacing: -1.0,
-                    ),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final viewInsets = MediaQuery.of(context).viewInsets.bottom;
+                return SingleChildScrollView(
+                  padding: EdgeInsets.only(
+                    left: horizontalPadding,
+                    right: horizontalPadding,
+                    bottom: viewInsets + 24,
                   ),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                    child: IntrinsicHeight(
+                      child: Column(
+                        children: [
+                          const Spacer(flex: 2),
 
-                  SizedBox(height: (screenHeight * 0.02).clamp(16.0, 24.0)),
-
-                  // Tagline
-                  Text(
-                    'Sign in to get started',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: (screenWidth * 0.045)
-                          .clamp(16.0, isLargeScreen ? 24.0 : 22.0),
-                      color: const Color(0xFF2D2D2D).withOpacity(0.5),
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: 0.3,
-                    ),
-                  ),
-
-                  SizedBox(height: (screenHeight * 0.05).clamp(32.0, 48.0)),
-
-                  // Email field
-                  TextField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: InputDecoration(
-                      labelText: 'Email',
-                      hintText: 'Enter your ChatGPT email',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(
-                            (screenWidth * 0.04).clamp(14.0, 20.0)),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 16),
-                    ),
-                  ),
-
-                  SizedBox(height: (screenHeight * 0.02).clamp(16.0, 24.0)),
-
-                  // Password field
-                  TextField(
-                    controller: _passwordController,
-                    obscureText: true,
-                    decoration: InputDecoration(
-                      labelText: 'Password',
-                      hintText: 'Enter your password',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(
-                            (screenWidth * 0.04).clamp(14.0, 20.0)),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 16),
-                    ),
-                  ),
-
-                  SizedBox(height: (screenHeight * 0.04).clamp(24.0, 32.0)),
-
-                  // Login Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: (screenHeight * 0.07).clamp(48.0, 64.0),
-                    child: CupertinoButton(
-                      padding: EdgeInsets.zero,
-                      onPressed: _isLoading ? null : _handleLogin,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [
-                              Color(0xFFFF6B9D),
-                              Color(0xFFFFB4A2),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(
-                              (screenWidth * 0.04).clamp(14.0, 20.0)),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFFFF6B9D).withOpacity(0.3),
-                              blurRadius: 20,
-                              offset: const Offset(0, 8),
+                          // App Name
+                          Text(
+                            'MyChatEra',
+                            style: TextStyle(
+                              fontSize: (screenWidth * 0.12)
+                                  .clamp(36.0, isLargeScreen ? 64.0 : 56.0),
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF2D2D2D),
+                              letterSpacing: -1.0,
                             ),
-                          ],
-                        ),
-                        child: Center(
-                          child: _isLoading
-                              ? const SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white),
+                          ),
+
+                          SizedBox(height: (screenHeight * 0.02).clamp(16.0, 24.0)),
+
+                          // Tagline
+                          Text(
+                            'Sign in to get started',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: (screenWidth * 0.045)
+                                  .clamp(16.0, isLargeScreen ? 24.0 : 22.0),
+                              color: const Color(0xFF2D2D2D).withOpacity(0.5),
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+
+                          SizedBox(height: (screenHeight * 0.05).clamp(32.0, 48.0)),
+
+                          // Email field
+                          TextField(
+                            controller: _emailController,
+                            keyboardType: TextInputType.emailAddress,
+                            decoration: InputDecoration(
+                              labelText: 'Email',
+                              hintText: 'Enter your ChatGPT email',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(
+                                    (screenWidth * 0.04).clamp(14.0, 20.0)),
+                              ),
+                              filled: true,
+                              fillColor: Colors.white,
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 16),
+                            ),
+                          ),
+
+                          SizedBox(height: (screenHeight * 0.02).clamp(16.0, 24.0)),
+
+                          // Password field
+                          TextField(
+                            controller: _passwordController,
+                            obscureText: true,
+                            decoration: InputDecoration(
+                              labelText: 'Password',
+                              hintText: 'Enter your password',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(
+                                    (screenWidth * 0.04).clamp(14.0, 20.0)),
+                              ),
+                              filled: true,
+                              fillColor: Colors.white,
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 16),
+                            ),
+                          ),
+
+                          SizedBox(height: (screenHeight * 0.04).clamp(24.0, 32.0)),
+
+                          // Login Button
+                          SizedBox(
+                            width: double.infinity,
+                            height: (screenHeight * 0.07).clamp(48.0, 64.0),
+                            child: CupertinoButton(
+                              padding: EdgeInsets.zero,
+                              onPressed: _isLoading ? null : _handleLogin,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [
+                                      Color(0xFFFF6B9D),
+                                      Color(0xFFFFB4A2),
+                                    ],
                                   ),
-                                )
-                              : Text(
-                                  'Continue',
+                                  borderRadius: BorderRadius.circular(
+                                      (screenWidth * 0.04).clamp(14.0, 20.0)),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(0xFFFF6B9D).withOpacity(0.3),
+                                      blurRadius: 20,
+                                      offset: const Offset(0, 8),
+                                    ),
+                                  ],
+                                ),
+                                child: Center(
+                                  child: _isLoading
+                                      ? const SizedBox(
+                                          width: 24,
+                                          height: 24,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                                    Colors.white),
+                                          ),
+                                        )
+                                      : Text(
+                                          'Continue',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: (screenWidth * 0.042)
+                                                .clamp(15.0,
+                                                    isLargeScreen ? 22.0 : 20.0),
+                                            fontWeight: FontWeight.w600,
+                                            letterSpacing: 0.3,
+                                          ),
+                                        ),
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          SizedBox(height: (screenHeight * 0.03).clamp(20.0, 32.0)),
+
+                          // Terms and Privacy Policy
+                          Wrap(
+                            alignment: WrapAlignment.center,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 4,
+                            runSpacing: 4,
+                            children: [
+                              Text(
+                                'By continuing I am accepting',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: (screenWidth * 0.032)
+                                      .clamp(11.0, 14.0),
+                                  color:
+                                      const Color(0xFF2D2D2D).withOpacity(0.6),
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  // TODO: Open Terms of Use
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Terms of Use'),
+                                    ),
+                                  );
+                                },
+                                child: Text(
+                                  'Terms of Use',
+                                  textAlign: TextAlign.center,
                                   style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: (screenWidth * 0.042)
-                                        .clamp(15.0, isLargeScreen ? 22.0 : 20.0),
+                                    fontSize: (screenWidth * 0.032)
+                                        .clamp(11.0, 14.0),
+                                    color: const Color(0xFFFF6B9D),
                                     fontWeight: FontWeight.w600,
-                                    letterSpacing: 0.3,
+                                    decoration: TextDecoration.underline,
                                   ),
                                 ),
-                        ),
+                              ),
+                              Text(
+                                'and',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: (screenWidth * 0.032)
+                                      .clamp(11.0, 14.0),
+                                  color:
+                                      const Color(0xFF2D2D2D).withOpacity(0.6),
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  // TODO: Open Privacy Policy
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Privacy Policy'),
+                                    ),
+                                  );
+                                },
+                                child: Text(
+                                  'Privacy Policy',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: (screenWidth * 0.032)
+                                        .clamp(11.0, 14.0),
+                                    color: const Color(0xFFFF6B9D),
+                                    fontWeight: FontWeight.w600,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          SizedBox(height: (screenHeight * 0.02).clamp(12.0, 20.0)),
+
+                          // Privacy note
+                          Text(
+                            'We never store your passwords.\nAll authentication happens securely through ChatGPT.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: const Color(0xFF2D2D2D).withOpacity(0.4),
+                              fontWeight: FontWeight.w500,
+                              height: 1.5,
+                            ),
+                          ),
+
+                          const Spacer(flex: 2),
+                        ],
                       ),
                     ),
                   ),
-
-                  SizedBox(height: (screenHeight * 0.03).clamp(20.0, 32.0)),
-
-                  // Terms and Privacy Policy
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'By continuing I am accepting ',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: (screenWidth * 0.032).clamp(11.0, 14.0),
-                          color: const Color(0xFF2D2D2D).withOpacity(0.6),
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          // TODO: Open Terms of Use
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Terms of Use'),
-                            ),
-                          );
-                        },
-                        child: Text(
-                          'Terms of Use',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: (screenWidth * 0.032).clamp(11.0, 14.0),
-                            color: const Color(0xFFFF6B9D),
-                            fontWeight: FontWeight.w600,
-                            decoration: TextDecoration.underline,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        ' and ',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: (screenWidth * 0.032).clamp(11.0, 14.0),
-                          color: const Color(0xFF2D2D2D).withOpacity(0.6),
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          // TODO: Open Privacy Policy
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Privacy Policy'),
-                            ),
-                          );
-                        },
-                        child: Text(
-                          'Privacy Policy',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: (screenWidth * 0.032).clamp(11.0, 14.0),
-                            color: const Color(0xFFFF6B9D),
-                            fontWeight: FontWeight.w600,
-                            decoration: TextDecoration.underline,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  SizedBox(height: (screenHeight * 0.02).clamp(12.0, 20.0)),
-
-                  // Privacy note
-                  Text(
-                    'We never store your passwords.\nAll authentication happens securely through ChatGPT.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: const Color(0xFF2D2D2D).withOpacity(0.4),
-                      fontWeight: FontWeight.w500,
-                      height: 1.5,
-                    ),
-                  ),
-
-                  const Spacer(flex: 2),
-                ],
-              ),
+                );
+              },
             ),
           ),
         ),

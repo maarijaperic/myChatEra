@@ -51,6 +51,11 @@ class PremiumInsights {
   // Roast
   final String roastText;
 
+  // Movie Recommendation
+  final String movieTitle;
+  final int movieYear;
+  final String movieExplanation;
+
   PremiumInsights({
     required this.personalityType,
     required this.typeAPercentage,
@@ -82,6 +87,9 @@ class PremiumInsights {
     required this.era,
     required this.personaDescription,
     required this.roastText,
+    required this.movieTitle,
+    required this.movieYear,
+    required this.movieExplanation,
   });
 }
 
@@ -115,43 +123,67 @@ class PremiumProcessor {
       // 1. Analyze Type A/B Personality
       onProgress?.call('Analyzing personality type...');
       final personalityResult = await AIAnalyzer.analyzePersonalityType(userMessages);
+      print('Premium debug — personalityResult: $personalityResult');
       
       // 2. Analyze Red and Green Flags
       onProgress?.call('Identifying red and green flags...');
       final flagsResult = await AIAnalyzer.analyzeRedGreenFlags(userMessages);
+      print('Premium debug — flagsResult: $flagsResult');
       
       // 3. Analyze Love Language
       onProgress?.call('Determining love language...');
       final loveLanguageResult = await AIAnalyzer.analyzeLoveLanguage(userMessages);
+      print('Premium debug — loveLanguageResult: $loveLanguageResult');
       
       // 4. Analyze Introvert vs Extrovert
       onProgress?.call('Analyzing introvert vs extrovert...');
       final introExtroResult = await AIAnalyzer.analyzeIntrovertExtrovert(userMessages);
+      print('Premium debug — introExtroResult: $introExtroResult');
       
       // 5. Analyze MBTI
       onProgress?.call('Determining MBTI personality...');
       final mbtiResult = await AIAnalyzer.analyzeMBTI(userMessages);
+      print('Premium debug — mbtiResult: $mbtiResult');
       
       // 6. Guess Zodiac Sign
       onProgress?.call('Guessing zodiac sign...');
       final zodiacResult = await AIAnalyzer.guessZodiacSign(userMessages);
+      print('Premium debug — zodiacResult: $zodiacResult');
       
       // 7. Analyze Most Asked Advice
       onProgress?.call('Finding most asked advice...');
       final adviceResult = await AIAnalyzer.analyzeMostAskedAdvice(userMessages);
+      print('Premium debug — adviceResult: $adviceResult');
       
       // 8. Generate Roast
       onProgress?.call('Generating roast...');
       final roastText = await AIAnalyzer.generateRoast(userMessages);
+      print('Premium debug — roastText: $roastText');
+
+      // 9. Determine movie title
+      onProgress?.call('Matching your movie title...');
+      final movieResult = await AIAnalyzer.generateMovieTitle(userMessages);
+      print('Premium debug — movieResult: $movieResult');
       
-      // 9. Analyze Past Life Persona
+      // 10. Analyze Past Life Persona
       onProgress?.call('Revealing past life persona...');
       final personaResult = await AIAnalyzer.analyzePastLifePersona(userMessages);
+      print('Premium debug — personaResult: $personaResult');
       
       onProgress?.call('Complete!');
       
+      // Debug: Print raw values before creating PremiumInsights
+      print('Premium debug — Raw values before creating PremiumInsights:');
+      print('  personalityResult[personalityType]: ${personalityResult['personalityType']}');
+      print('  personalityResult[typeAPercentage]: ${personalityResult['typeAPercentage']}');
+      print('  introExtroResult[personalityType]: ${introExtroResult['personalityType']}');
+      print('  mbtiResult[mbtiType]: ${mbtiResult['mbtiType']}');
+      print('  zodiacResult[zodiacName]: ${zodiacResult['zodiacName']}');
+      print('  loveLanguageResult[loveLanguage]: ${loveLanguageResult['loveLanguage']}');
+      print('  movieResult[movieTitle]: ${movieResult['movieTitle']}');
+      
       // Combine all results
-      return PremiumInsights(
+      final insights = PremiumInsights(
         personalityType: personalityResult['personalityType'] ?? 'TYPE A',
         typeAPercentage: personalityResult['typeAPercentage'] ?? 50,
         typeBPercentage: personalityResult['typeBPercentage'] ?? 50,
@@ -182,7 +214,14 @@ class PremiumProcessor {
         era: personaResult['era'] ?? 'ANCIENT GREECE',
         personaDescription: personaResult['description'] ?? '',
         roastText: roastText,
+        movieTitle: movieResult['movieTitle'] ?? 'The Pursuit of Happyness',
+        movieYear: int.tryParse('${movieResult['releaseYear']}') ?? 2006,
+        movieExplanation: movieResult['explanation'] ?? 'Based on your conversations, GPT detected a relentless drive for self-improvement and asking deep questions about life. Like Chris Gardner in the movie, you are constantly searching for answers, optimizing your life, and never giving up on personal growth. Your chats are basically a journey of someone trying to figure it all out - one prompt at a time.',
       );
+      
+      print('🔴 PREMIUM_DEBUG: Created PremiumInsights - personalityType: ${insights.personalityType}, mbtiType: ${insights.mbtiType}, zodiacName: ${insights.zodiacName}');
+      
+      return insights;
       
     } catch (e) {
       print('Error analyzing premium insights: $e');
@@ -235,9 +274,14 @@ class PremiumProcessor {
       era: '15TH CENTURY FLORENCE',
       personaDescription: 'You were a Renaissance thinker who questioned everything and created beauty from chaos. Your conversations reveal a mind that blends logic with creativity, always seeking deeper meaning.',
       roastText: 'You ask ChatGPT for life advice at 3 AM like it\'s your therapist, career coach, and life guru all in one. You literally have more deep conversations with an AI than with actual humans. Your search history is 60% "how to be productive" and 40% asking GPT to validate your life choices. GPT knows more about your problems than your best friend does. But hey, at least you\'re self-aware... or are you just asking GPT if you are? 💀😂',
+      movieTitle: 'The Pursuit of Happyness',
+      movieYear: 2006,
+      movieExplanation: 'Based on your conversations, GPT detected a relentless drive for self-improvement and asking deep questions about life. Like Chris Gardner in the movie, you are constantly searching for answers, optimizing your life, and never giving up on personal growth. Your chats are basically a journey of someone trying to figure it all out - one prompt at a time.',
     );
   }
 }
+
+
 
 
 

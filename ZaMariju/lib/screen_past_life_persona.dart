@@ -154,15 +154,26 @@ class _PastLifePersonaScreenState extends State<PastLifePersonaScreen>
                                 color: const Color(0xFFF6E9DA),
                                 borderRadius: BorderRadius.circular(20),
                               ),
-                              child: Text(
-                                'A PAST LIFE PERSONA',
-                                textAlign: TextAlign.center,
-                                style: GoogleFonts.inter(
-                                  color: const Color(0xFF8B7E74),
-                                  fontSize: (screenWidth * 0.03).clamp(11.0, 12.0),
-                                  fontWeight: FontWeight.w500,
-                                  letterSpacing: 0.5,
-                                ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'A PAST LIFE PERSONA',
+                                    textAlign: TextAlign.center,
+                                    style: GoogleFonts.inter(
+                                      color: const Color(0xFF8B7E74),
+                                      fontSize: (screenWidth * 0.03).clamp(11.0, 12.0),
+                                      fontWeight: FontWeight.w500,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  const Text(
+                                    '🕐',
+                                    style: TextStyle(color: Color(0xFF8B7E74)),
+                                  ),
+                                ],
                               ),
                             ),
                             
@@ -199,22 +210,7 @@ class _PastLifePersonaScreenState extends State<PastLifePersonaScreen>
                             SizedBox(height: (screenHeight * 0.02).clamp(12.0, 20.0)),
                             
                             // Body Text
-                            Container(
-                              constraints: BoxConstraints(
-                                maxWidth: screenWidth * 0.9,
-                              ),
-                              child: Text(
-                                widget.description,
-                                textAlign: TextAlign.center,
-                                style: GoogleFonts.inter(
-                                  color: const Color(0xFF4A4A4A),
-                                  fontSize: (screenWidth * 0.038).clamp(14.0, 15.0),
-                                  fontWeight: FontWeight.w400,
-                                  height: 1.5,
-                                  letterSpacing: 0.2,
-                                ),
-                              ),
-                            ),
+                            const SizedBox.shrink(),
                           ],
                         ),
                       ),

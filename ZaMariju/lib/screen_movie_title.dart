@@ -1,15 +1,21 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class MovieTitleScreen extends StatefulWidget {
   final String movieTitle;
   final String explanation;
   final int releaseYear;
+  final String? question;
+  final String? subtitle;
 
   const MovieTitleScreen({
     super.key,
     required this.movieTitle,
     required this.explanation,
     required this.releaseYear,
+    this.question,
+    this.subtitle,
   });
 
   @override
@@ -19,7 +25,7 @@ class MovieTitleScreen extends StatefulWidget {
 class _MovieTitleScreenState extends State<MovieTitleScreen>
     with TickerProviderStateMixin {
   late AnimationController _fadeController;
-  late AnimationController _titleController;
+  late AnimationController _particlesController;
 
   @override
   void initState() {
@@ -30,10 +36,10 @@ class _MovieTitleScreenState extends State<MovieTitleScreen>
       duration: const Duration(milliseconds: 1500),
     );
     
-    _titleController = AnimationController(
+    _particlesController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2000),
-    );
+      duration: const Duration(milliseconds: 5000),
+    )..repeat();
     
     _startAnimations();
   }
@@ -41,15 +47,12 @@ class _MovieTitleScreenState extends State<MovieTitleScreen>
   Future<void> _startAnimations() async {
     await Future.delayed(const Duration(milliseconds: 300));
     _fadeController.forward();
-    
-    await Future.delayed(const Duration(milliseconds: 400));
-    _titleController.forward();
   }
 
   @override
   void dispose() {
     _fadeController.dispose();
-    _titleController.dispose();
+    _particlesController.dispose();
     super.dispose();
   }
 
@@ -57,26 +60,48 @@ class _MovieTitleScreenState extends State<MovieTitleScreen>
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
+    final isLargeScreen = screenWidth > 600;
+    
+    // Responsive padding
+    final horizontalPadding = (screenWidth * 0.06).clamp(16.0, 32.0);
+    final verticalPadding = (screenHeight * 0.025).clamp(16.0, 24.0);
+    
+    // Responsive spacing
+    final topSpacing = (screenHeight * 0.08).clamp(20.0, 60.0);
+    final sectionSpacing = (screenHeight * 0.04).clamp(16.0, 32.0);
+    final largeSpacing = (screenHeight * 0.06).clamp(20.0, 48.0);
+    final mediumSpacing = (screenHeight * 0.03).clamp(12.0, 24.0);
     
     return Scaffold(
       body: Stack(
+        fit: StackFit.expand,
         children: [
-          // Gradient background
+          // Light purple/pink gradient background
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Color(0xFF1A1A2E), // Deep navy
-                  Color(0xFF16213E), // Dark blue
-                  Color(0xFF0F3460), // Ocean blue
-                  Color(0xFFE94560), // Hollywood red
-                  Color(0xFFFF6B9D), // Pink
+                  Color(0xFFFFF0F8), // Very light pink
+                  Color(0xFFFFE5F0), // Light pink
+                  Color(0xFFFFD6E8), // Soft pink
+                  Color(0xFFFFC8E0), // Pastel pink
                 ],
-                stops: [0.0, 0.25, 0.5, 0.75, 1.0],
+                stops: [0.0, 0.3, 0.7, 1.0],
               ),
             ),
+          ),
+          
+          // Subtle animated particles
+          AnimatedBuilder(
+            animation: _particlesController,
+            builder: (context, child) {
+              return CustomPaint(
+                painter: _MovieParticlesPainter(_particlesController.value),
+                child: Container(),
+              );
+            },
           ),
           
           // Main content
@@ -84,185 +109,105 @@ class _MovieTitleScreenState extends State<MovieTitleScreen>
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+                padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
                 child: Column(
                   children: [
-                    SizedBox(height: screenHeight * 0.03),
+                    SizedBox(height: topSpacing),
                     
-                    // Main headline
+                    // Question/Title
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.0,
-                      child: Text(
-                        'Your Life as a Movie Title',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: (screenWidth * 0.058).clamp(20.0, 26.0),
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.5,
-                          height: 1.2,
-                        ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              widget.question ?? 'Your Life as a Movie Title 🎬',
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.inter(
+                                color: Colors.black,
+                                fontSize: (screenWidth * 0.065).clamp(18.0, isLargeScreen ? 32.0 : 28.0),
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.8,
+                                height: 1.1,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 2,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.05),
+                    SizedBox(height: largeSpacing),
                     
-                    // Movie poster frame
-                    AnimatedBuilder(
-                      animation: _titleController,
-                      builder: (context, child) {
-                        final slideAnimation = CurvedAnimation(
-                          parent: _titleController,
-                          curve: Curves.easeOutCubic,
-                        );
-                        
-                        return Transform.translate(
-                          offset: Offset(0, 30 * (1 - slideAnimation.value)),
-                            child: Opacity(
-                            opacity: slideAnimation.value,
-                            child: Container(
-                              padding: const EdgeInsets.all(24),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    const Color(0xFFE94560).withOpacity(0.3),
-                                    const Color(0xFF0F3460).withOpacity(0.4),
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: const Color(0xFFFFD700).withOpacity(0.6), // Gold border
-                                  width: 2.5,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFFFFD700).withOpacity(0.3),
-                                    blurRadius: 25,
-                                    spreadRadius: 2,
-                                  ),
-                                ],
-                              ),
-                              child: Column(
-                                children: [
-                                  // Movie title with emoji
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        '🎬 ',
-                                        style: TextStyle(
-                                          fontSize: (screenWidth * 0.055).clamp(19.0, 25.0),
-                                        ),
-                                      ),
-                                      Flexible(
-                                        child: Text(
-                                          widget.movieTitle,
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: (screenWidth * 0.055).clamp(19.0, 25.0),
-                                            fontWeight: FontWeight.w800,
-                                            height: 1.2,
-                                            letterSpacing: 0.5,
-                                            shadows: [
-                                              Shadow(
-                                                color: Colors.black.withOpacity(0.5),
-                                                offset: const Offset(2, 2),
-                                                blurRadius: 4,
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 10),
-                                  // Year and rating
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                          vertical: 6,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.2),
-                                          borderRadius: BorderRadius.circular(12),
-                                          border: Border.all(
-                                            color: Colors.white.withOpacity(0.3),
-                                          ),
-                                        ),
-                                        child: Text(
-                                          '${widget.releaseYear}',
-                                          style: TextStyle(
-                                            color: Colors.white.withOpacity(0.95),
-                                            fontSize: (screenWidth * 0.035).clamp(12.0, 16.0),
-                                            fontWeight: FontWeight.w600,
-                                            letterSpacing: 0.5,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Row(
-                                        children: List.generate(5, (index) {
-                                          return Padding(
-                                            padding: const EdgeInsets.only(right: 2),
-                                            child: Text(
-                                              '⭐',
-                                              style: TextStyle(
-                                                fontSize: (screenWidth * 0.04).clamp(14.0, 18.0),
-                                              ),
-                                            ),
-                                          );
-                                        }),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                    
-                    SizedBox(height: screenHeight * 0.015),
-                    
-                    // "Why this movie?" label
+                    // Movie Title Card
                     _AnimatedFade(
                       controller: _fadeController,
-                      delay: 0.5,
+                      delay: 0.2,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        width: double.infinity,
+                        padding: EdgeInsets.all((screenWidth * 0.035).clamp(12.0, 20.0)),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFFD700).withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: const Color(0xFFFFD700).withOpacity(0.5),
-                            width: 1.5,
-                          ),
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular((screenWidth * 0.05).clamp(18.0, 24.0)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.06),
+                              blurRadius: 15,
+                              offset: const Offset(0, 6),
+                            ),
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.04),
+                              blurRadius: 40,
+                              offset: const Offset(0, 16),
+                            ),
+                          ],
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
+                        child: Column(
                           children: [
+                            // Movie emoji
                             Text(
-                              '🎭',
+                              '🎬',
                               style: TextStyle(
-                                fontSize: (screenWidth * 0.045).clamp(16.0, 20.0),
+                                fontSize: (screenWidth * 0.08).clamp(28.0, isLargeScreen ? 48.0 : 40.0),
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            SizedBox(height: (screenHeight * 0.015).clamp(10.0, 16.0)),
+                            
+                            // Movie title
                             Text(
-                              'Why This Movie?',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: (screenWidth * 0.04).clamp(14.0, 18.0),
+                              widget.movieTitle,
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.inter(
+                                color: const Color(0xFFFF6B9D),
+                                fontSize: (screenWidth * 0.055).clamp(18.0, isLargeScreen ? 28.0 : 24.0),
                                 fontWeight: FontWeight.w700,
-                                letterSpacing: 0.5,
+                                letterSpacing: 0.3,
+                                height: 1.2,
+                              ),
+                            ),
+                            SizedBox(height: (screenHeight * 0.008).clamp(4.0, 8.0)),
+                            
+                            // Release year
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: (screenWidth * 0.04).clamp(14.0, 20.0),
+                                vertical: (screenHeight * 0.008).clamp(4.0, 8.0),
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFF6B9D).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular((screenWidth * 0.03).clamp(12.0, 16.0)),
+                              ),
+                              child: Text(
+                                '${widget.releaseYear}',
+                                style: GoogleFonts.inter(
+                                  color: const Color(0xFFFF6B9D),
+                                  fontSize: (screenWidth * 0.035).clamp(11.0, isLargeScreen ? 18.0 : 16.0),
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.5,
+                                ),
                               ),
                             ),
                           ],
@@ -270,90 +215,60 @@ class _MovieTitleScreenState extends State<MovieTitleScreen>
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.015),
+                    SizedBox(height: mediumSpacing),
                     
-                    // Explanation text box
+                    // Explanation Card
                     _AnimatedFade(
                       controller: _fadeController,
-                      delay: 0.7,
+                      delay: 0.4,
                       child: Container(
-                        padding: const EdgeInsets.all(16),
+                        padding: EdgeInsets.all((screenWidth * 0.035).clamp(12.0, 20.0)),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.3),
-                            width: 1.5,
-                          ),
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular((screenWidth * 0.05).clamp(18.0, 24.0)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.06),
+                              blurRadius: 15,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
                         ),
                         child: Text(
                           widget.explanation,
                           textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.95),
-                            fontSize: (screenWidth * 0.038).clamp(14.0, 17.0),
-                            fontWeight: FontWeight.w500,
-                            height: 1.5,
+                          style: GoogleFonts.inter(
+                            color: const Color(0xFF555555),
+                            fontSize: (screenWidth * 0.038).clamp(13.0, isLargeScreen ? 18.0 : 16.0),
+                            fontWeight: FontWeight.w400,
+                            height: 1.6,
                             letterSpacing: 0.2,
                           ),
                         ),
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.015),
+                    SizedBox(height: mediumSpacing),
                     
-                    // Additional commentary
-                    _AnimatedFade(
-                      controller: _fadeController,
-                      delay: 0.9,
-                      child: Container(
-                        padding: const EdgeInsets.all(18),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              Colors.white.withOpacity(0.18),
-                              Colors.white.withOpacity(0.08),
-                            ],
+                    // Subtitle
+                    if (widget.subtitle != null)
+                      _AnimatedFade(
+                        controller: _fadeController,
+                        delay: 0.6,
+                        child: Text(
+                          widget.subtitle!,
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.inter(
+                            color: const Color(0xFF777777),
+                            fontSize: (screenWidth * 0.035).clamp(12.0, isLargeScreen ? 18.0 : 16.0),
+                            fontWeight: FontWeight.w500,
+                            fontStyle: FontStyle.italic,
+                            letterSpacing: 0.3,
                           ),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.3),
-                            width: 1.5,
-                          ),
-                        ),
-                        child: Column(
-                          children: [
-                            Text(
-                              "Plot twist: Your chats are cinema-worthy 🍿",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: (screenWidth * 0.042).clamp(15.0, 19.0),
-                                fontWeight: FontWeight.w700,
-                                height: 1.4,
-                                letterSpacing: 0.3,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              "Based on your conversations, GPT analyzed your vibe, your drama levels, your plot twists, and your character development. The result? This movie perfectly captures your energy. Now we just need a Hollywood producer to notice. 🎬✨",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.9),
-                                fontSize: (screenWidth * 0.038).clamp(14.0, 17.0),
-                                fontWeight: FontWeight.w500,
-                                height: 1.5,
-                                letterSpacing: 0.2,
-                              ),
-                            ),
-                          ],
                         ),
                       ),
-                    ),
                     
-                    SizedBox(height: screenHeight * 0.03),
+                    SizedBox(height: sectionSpacing),
                   ],
                 ),
               ),
@@ -400,5 +315,35 @@ class _AnimatedFade extends StatelessWidget {
         );
       },
     );
+  }
+}
+
+// Subtle particles painter for movie screen
+class _MovieParticlesPainter extends CustomPainter {
+  final double animationValue;
+
+  _MovieParticlesPainter(this.animationValue);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFFFF6B9D).withOpacity(0.08)
+      ..style = PaintingStyle.fill;
+
+    // Draw subtle floating particles
+    for (int i = 0; i < 8; i++) {
+      final x = (size.width / 8) * i + (size.width / 16);
+      final y = size.height * 0.2 +
+          (size.height * 0.6) *
+              (0.5 + 0.5 * sin(animationValue * 2 * pi + i * pi / 4));
+      final radius = 3.0 + 2.0 * sin(animationValue * 2 * pi + i * pi / 3);
+
+      canvas.drawCircle(Offset(x, y), radius, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_MovieParticlesPainter oldDelegate) {
+    return oldDelegate.animationValue != animationValue;
   }
 }

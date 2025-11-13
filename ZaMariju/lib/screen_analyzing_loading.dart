@@ -3,9 +3,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'dart:async';
 import 'package:gpt_wrapped2/services/data_processor.dart';
 import 'package:gpt_wrapped2/models/chat_data.dart';
+import 'package:gpt_wrapped2/services/premium_processor.dart';
 
 class AnalyzingLoadingScreen extends StatefulWidget {
-  final Function(ChatStats) onAnalysisComplete;
+  final Function(ChatStats, PremiumInsights?) onAnalysisComplete;
   final List<dynamic>? conversations;
 
   const AnalyzingLoadingScreen({
@@ -24,13 +25,14 @@ class _AnalyzingLoadingScreenState extends State<AnalyzingLoadingScreen>
   late AnimationController _fadeController;
   double _progress = 0.0;
   String _statusText = 'Connecting to ChatGPT...';
+  PremiumInsights? _premiumInsights;
 
   final List<String> _loadingSteps = [
     'Connecting to ChatGPT...',
     'Fetching your conversations...',
     'Analyzing your messages...',
     'Calculating statistics...',
-    'Discovering insights...',
+    'Discovering premium insights...',
     'Preparing your Wrapped...',
   ];
 
@@ -54,7 +56,8 @@ class _AnalyzingLoadingScreenState extends State<AnalyzingLoadingScreen>
   Future<void> _startLoading() async {
     _fadeController.forward();
 
-    ChatStats? analyzedStats;
+    ChatStats analyzedStats = ChatStats.empty();
+    List<ConversationData> parsedConversations = [];
 
     // Step 1: Connecting
     setState(() {
@@ -85,7 +88,8 @@ class _AnalyzingLoadingScreenState extends State<AnalyzingLoadingScreen>
     // Actually process the conversations
     if (widget.conversations != null && widget.conversations!.isNotEmpty) {
       try {
-        analyzedStats = await DataProcessor.processConversationsFromJson(widget.conversations!);
+        parsedConversations = DataProcessor.parseConversations(widget.conversations!);
+        analyzedStats = DataProcessor.analyzeConversations(parsedConversations);
       } catch (e) {
         print('Error analyzing conversations: $e');
         // Use empty stats if analysis fails
@@ -108,8 +112,108 @@ class _AnalyzingLoadingScreenState extends State<AnalyzingLoadingScreen>
     setState(() {
       _statusText = _loadingSteps[4];
     });
-    await _animateProgress(0.75, 0.90);
-    await Future.delayed(const Duration(milliseconds: 500));
+    await _animateProgress(0.75, 0.80);
+
+    PremiumInsights? premiumInsights;
+    final conversationsWithMessages =
+        parsedConversations.where((conv) => conv.messages.isNotEmpty).toList();
+
+    if (conversationsWithMessages.isNotEmpty) {
+      try {
+        print(
+          'Premium debug — conversations: '
+          '${conversationsWithMessages.length}',
+        );
+        for (final conv in conversationsWithMessages.take(3)) {
+          print(
+            'Premium debug — convo ${conv.id} messages: '
+            '${conv.messages.length}',
+          );
+        }
+        premiumInsights = await PremiumProcessor.analyzePremiumInsights(
+          conversationsWithMessages,
+          (progressMessage) {
+            if (!mounted) return;
+            setState(() {
+              _statusText = progressMessage;
+            });
+          },
+        );
+        print(
+          'Premium debug — result personality: '
+          '${premiumInsights.personalityType} | '
+          '${premiumInsights.introExtroType} | '
+          '${premiumInsights.mbtiType}',
+        );
+      } catch (e) {
+        print('Error during premium analysis: $e');
+        // Don't fall back to demo - show error to user
+        if (mounted) {
+          // Show error dialog
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => AlertDialog(
+              title: const Text('Analysis Error'),
+              content: Text(
+                'Unable to analyze your conversations. Please check:\n\n'
+                '1. Your internet connection\n'
+                '2. Proxy server is running\n'
+                '3. Try again later\n\n'
+                'Error: ${e.toString()}',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    Navigator.of(context).pop(); // Go back to previous screen
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
+            ),
+          );
+          return; // Exit early, don't continue with demo data
+        }
+        // If not mounted, just return null
+        premiumInsights = null;
+      }
+    } else {
+      // No conversations - this is a valid case, but we should inform the user
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            title: const Text('No Conversations Found'),
+            content: const Text(
+              'No conversations with messages were found in your data. '
+              'Please make sure you exported your ChatGPT conversations correctly.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  Navigator.of(context).pop(); // Go back to previous screen
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+        return; // Exit early
+      }
+      premiumInsights = null;
+    }
+
+    if (mounted) {
+      setState(() {
+        _premiumInsights = premiumInsights;
+      });
+    }
+
+    await _animateProgress(0.80, 0.90);
+    await Future.delayed(const Duration(milliseconds: 300));
 
     // Step 6: Preparing wrapped
     setState(() {
@@ -120,7 +224,10 @@ class _AnalyzingLoadingScreenState extends State<AnalyzingLoadingScreen>
 
     // Complete with analyzed stats (or empty if no data)
     if (mounted) {
-      widget.onAnalysisComplete(analyzedStats);
+      widget.onAnalysisComplete(
+        analyzedStats,
+        _premiumInsights,
+      );
     }
   }
 

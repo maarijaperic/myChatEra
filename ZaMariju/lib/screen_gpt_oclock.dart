@@ -26,6 +26,60 @@ class _GptOClockScreenState extends State<GptOClockScreen>
   late AnimationController _fadeController;
   late AnimationController _bubblesController;
 
+  String get _formattedHour {
+    final hour = widget.peakHour.clamp(0, 23);
+    final displayHour = hour % 12 == 0 ? 12 : hour % 12;
+    final suffix = hour >= 12 ? 'PM' : 'AM';
+    return '$displayHour:00 $suffix';
+  }
+
+  String get _timePersona {
+    switch (widget.peakTime) {
+      case 'morning':
+        return 'Sunrise strategist';
+      case 'afternoon':
+        return 'Daylight decision-maker';
+      case 'evening':
+        return 'Golden-hour thinker';
+      case 'night':
+        return 'Moonlight mastermind';
+      default:
+        if (widget.peakHour >= 0 && widget.peakHour < 5) {
+          return 'Night-owl visionary';
+        }
+        if (widget.peakHour < 12) {
+          return 'Early-bird planner';
+        }
+        if (widget.peakHour < 18) {
+          return 'Peak-hour strategist';
+        }
+        return 'After-hours architect';
+    }
+  }
+
+  String get _timeBlurb {
+    final descriptor = widget.timeDescription;
+    final persona = _timePersona;
+    final hourString = _formattedHour;
+
+    if (widget.peakHour < 5) {
+      return "You're most active ${descriptor.toLowerCase()} at $hourString. While everyone else is asleep, you're building dreams with GPT. $persona energy. The quiet gives your ideas room to breathe and evolve. It's basically your secret lab while the rest of the world resets. That space lets you build without distractions steering the wheel. 🌙🔬✨";
+    }
+    if (widget.peakHour < 12) {
+      return "$hourString is your sweet spot. You start the day by thinking out loud with GPT — clarity before the world even wakes up. $persona unlocked. You’re building direction before the inbox even loads. That early spark keeps your day calibrated. It's how you set intention before the world asks for anything. 🌅🧭⚙️";
+    }
+    if (widget.peakHour < 18) {
+      return "$hourString chats hit different. You carve out daylight to ideate with GPT, turning breaks into breakthroughs. $persona in full effect. These sessions Prime your brain without draining it. Afternoon clarity is your productivity cheat code. You’re the one turning quick pauses into momentum builders. ☀️🧠🎯";
+    }
+    return "$hourString is prime time. You wind down by spinning up new ideas with GPT. The world gets quiet, your brain gets loud. $persona mode. Night sessions turn reflections into game plans. You're closing out the day with momentum locked in. That’s how you turn evenings into launch pads for tomorrow. 🌆📝🚀";
+  }
+
+  String get _shareText {
+    final hourString = _formattedHour;
+    final persona = _timePersona;
+    return "My peak ChatGPT window is $hourString — $persona hours only. #ChatGPTWrapped";
+  }
+
   @override
   void initState() {
     super.initState();
@@ -151,7 +205,7 @@ class _GptOClockScreenState extends State<GptOClockScreen>
                           children: [
                             // Time display
                             Text(
-                              '${widget.peakHour}:00',
+                              _formattedHour,
                               style: GoogleFonts.inter(
                                 color: const Color(0xFFFF6B35),
                                 fontSize: (screenWidth * 0.12).clamp(40.0, 52.0),
@@ -173,7 +227,7 @@ class _GptOClockScreenState extends State<GptOClockScreen>
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Your most active time',
+                              _timePersona,
                               style: GoogleFonts.inter(
                                 color: const Color(0xFF555555),
                                 fontSize: (screenWidth * 0.035).clamp(12.0, 15.0),
@@ -207,7 +261,7 @@ class _GptOClockScreenState extends State<GptOClockScreen>
                           ],
                         ),
                         child: Text(
-                          'You\'re most active ${widget.timeDescription} at ${widget.peakHour}:00. While others are sleeping or working, you\'re having deep conversations with GPT. Your brain works best ${widget.timeDescription} — probably because that\'s when you have the most interesting thoughts. Peak productivity hours! This is when your creativity flows and your best ideas come to life. ${widget.timeEmoji}',
+                          '${_timeBlurb} ${widget.timeEmoji}',
                           textAlign: TextAlign.center,
                           style: GoogleFonts.inter(
                             color: const Color(0xFF555555),
@@ -228,7 +282,7 @@ class _GptOClockScreenState extends State<GptOClockScreen>
                       delay: 0.8,
                       child: Center(
                         child: ShareToStoryButton(
-                          shareText: 'My peak ChatGPT time: ${widget.peakHour}:00 ${widget.timeDescription}. While others are sleeping, I\'m having deep AI conversations! ${widget.timeEmoji} #ChatGPTWrapped',
+                          shareText: _shareText,
                           primaryColor: const Color(0xFFE0F2F7),
                           secondaryColor: const Color(0xFFCCEEF5),
                         ),
