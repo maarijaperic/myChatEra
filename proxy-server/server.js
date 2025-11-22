@@ -3,6 +3,15 @@ const cors = require('cors');
 const axios = require('axios');
 require('dotenv').config();
 
+// Debug: Check environment variables
+console.log('=== ENVIRONMENT VARIABLES DEBUG ===');
+console.log('PORT:', process.env.PORT);
+console.log('OPENAI_API_KEY exists:', !!process.env.OPENAI_API_KEY);
+console.log('OPENAI_API_KEY length:', process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.length : 0);
+console.log('OPENAI_API_KEY starts with:', process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.substring(0, 10) + '...' : 'NOT SET');
+console.log('All env vars with OPENAI:', Object.keys(process.env).filter(k => k.includes('OPENAI')));
+console.log('===================================');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -50,8 +59,13 @@ app.post('/api/chat', rateLimit, async (req, res) => {
   try {
     const apiKey = process.env.OPENAI_API_KEY;
     
+    // Debug: Check if API key is set (log first 10 chars only for security)
+    console.log('[Proxy] OPENAI_API_KEY exists:', !!apiKey);
+    console.log('[Proxy] OPENAI_API_KEY starts with:', apiKey ? apiKey.substring(0, 10) + '...' : 'NOT SET');
+    
     if (!apiKey) {
       console.error('OPENAI_API_KEY is not set in environment variables');
+      console.error('Available env vars:', Object.keys(process.env).filter(k => k.includes('OPENAI')));
       return res.status(500).json({ 
         error: 'Server configuration error. Please contact support.' 
       });

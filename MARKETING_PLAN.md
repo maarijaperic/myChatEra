@@ -472,3 +472,5 @@ Interested?
 **Možeš li ovo?** DA! Samo treba plan i disciplina. Ti imaš plan - sada samo treba da ga sprovedeš! 💪
 
 
+
+

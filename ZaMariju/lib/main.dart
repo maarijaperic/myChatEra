@@ -49,7 +49,7 @@ void main() async {
   // You can also use environment variables or build configurations
   const String proxyUrl = String.fromEnvironment(
     'PROXY_URL',
-    defaultValue: 'http://localhost:3000', // Default for development
+    defaultValue: 'https://gentle-blessing-production.up.railway.app', // Railway production URL
   );
   AIAnalyzer.setProxyUrl(proxyUrl);
   

@@ -66,3 +66,5 @@ Pokreni aplikaciju i proveri da li se logo prikazuje na splash screenu.
   ```
 
 
+
+
