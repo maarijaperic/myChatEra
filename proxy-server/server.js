@@ -10,6 +10,8 @@ console.log('OPENAI_API_KEY exists:', !!process.env.OPENAI_API_KEY);
 console.log('OPENAI_API_KEY length:', process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.length : 0);
 console.log('OPENAI_API_KEY starts with:', process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.substring(0, 10) + '...' : 'NOT SET');
 console.log('All env vars with OPENAI:', Object.keys(process.env).filter(k => k.includes('OPENAI')));
+console.log('ALL ENV VARS (first 20):', Object.keys(process.env).slice(0, 20));
+console.log('TOTAL ENV VARS:', Object.keys(process.env).length);
 console.log('===================================');
 
 const app = express();
