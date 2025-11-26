@@ -1,7 +1,10 @@
-import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'dart:math';
-import 'package:gpt_wrapped2/widgets/share_button.dart';
+import 'dart:ui' as ui;
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:gpt_wrapped2/widgets/instagram_share_button.dart';
 
 class CuriosityIndexScreen extends StatefulWidget {
   final double averageResponseTime; // in seconds
@@ -21,6 +24,7 @@ class _CuriosityIndexScreenState extends State<CuriosityIndexScreen>
     with TickerProviderStateMixin {
   late AnimationController _fadeController;
   late AnimationController _bubblesController;
+  final GlobalKey _screenshotKey = GlobalKey();
   
   String get _capitalizedSpeedLabel {
     final trimmed = widget.speedLabel.trim();
@@ -39,24 +43,14 @@ class _CuriosityIndexScreenState extends State<CuriosityIndexScreen>
     return 'Deep dive contemplator';
   }
 
-  String get _responseBlurb {
+  double _getProgressValue() {
     final seconds = widget.averageResponseTime;
-    final label = _capitalizedSpeedLabel;
-
-    if (seconds <= 0) {
-      return "You didn’t even get a chance to respond this year — analysis mode is loading for 2025. When you do jump back in, your first reply can redefine the whole vibe. Think of this as the calm before your curiosity storm. GPT is stretching and ready for that comeback volleyball serve. 🌩️🏐✨";
-    }
-    if (seconds <= 1.5) {
-      return "${seconds.toStringAsFixed(1)} seconds flat. You fire prompts and instincts instantly. $label doesn't even cover it — you're basically streaming thoughts. Your mind treats GPT like a live co-pilot, syncing without delay. Keep that pace and you'll keep out-running every thought spiral. ⚡🧠🚀";
-    }
-    if (seconds <= 4) {
-      return "${seconds.toStringAsFixed(1)} seconds per reply. You know what you need, you ask it fast, and you keep it moving. $label fits you perfectly. Your prompts are surgical strikes, landing with purpose. GPT is basically holding the door open while you run the playbook. 🎯📋🏃‍♂️";
-    }
-    if (seconds <= 10) {
-      return "${seconds.toStringAsFixed(1)} seconds on average. You take a beat, aim, and deliver precise follow-ups. GPT loves a considered thinker. That pause is where you sharpen the question so the answer lands cleaner. You're drafting strategy on the fly, and it shows. 🎻🧭💡";
-    }
-    return "${seconds.toStringAsFixed(1)} seconds between messages. You're here for depth over speed. GPT gets long-form essays from you, and honestly? It lives for it. Those extra beats are where you gather nuance and pull threads together. Keep marinating on each idea—it's your superpower. 🕰️🌀📚";
+    // Normalize to 0-1 range (0s = 1.0, 15s+ = 0.0)
+    if (seconds <= 0) return 0.0;
+    if (seconds >= 15) return 0.0;
+    return (1.0 - (seconds / 15.0)).clamp(0.0, 1.0);
   }
+
 
   String get _shareText {
     final seconds = widget.averageResponseTime;
@@ -108,15 +102,6 @@ class _CuriosityIndexScreenState extends State<CuriosityIndexScreen>
     final screenHeight = MediaQuery.of(context).size.height;
     final isLargeScreen = screenWidth > 600;
     
-    // Responsive padding
-    final horizontalPadding = (screenWidth * 0.06).clamp(16.0, 32.0);
-    final verticalPadding = (screenHeight * 0.025).clamp(16.0, 24.0);
-    
-    // Responsive spacing
-    final topSpacing = (screenHeight * 0.08).clamp(20.0, 60.0);
-    final sectionSpacing = (screenHeight * 0.04).clamp(16.0, 32.0);
-    final largeSpacing = (screenHeight * 0.06).clamp(20.0, 48.0);
-    
     return Scaffold(
       body: Stack(
         children: [
@@ -150,182 +135,213 @@ class _CuriosityIndexScreenState extends State<CuriosityIndexScreen>
           
           // Main content
           SafeArea(
-            child: SingleChildScrollView(
+            child: RepaintBoundary(
+              key: _screenshotKey,
+              child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
+                padding: EdgeInsets.symmetric(
+                  horizontal: (screenWidth * 0.06).clamp(20.0, 24.0),
+                  vertical: (screenHeight * 0.025).clamp(16.0, 20.0),
+                ),
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    SizedBox(height: topSpacing),
+                    SizedBox(height: screenHeight * 0.06),
                     
                     // Main headline
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.0,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      child: Column(
                         children: [
-                          Flexible(
-                            child: Text(
-                              'Quick or Thoughtful',
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.inter(
-                                color: Colors.black,
-                                fontSize: (screenWidth * 0.065).clamp(18.0, isLargeScreen ? 32.0 : 28.0),
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.8,
-                                height: 1.1,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
+                          Text(
+                            'Quick or Thoughtful',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.inter(
+                              color: const Color(0xFF1F1F21),
+                              fontSize: (screenWidth * 0.08).clamp(26.0, 34.0),
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.2,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Your response speed reveals your thinking style.',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.inter(
+                              color: const Color(0xFF636366),
+                              fontSize: (screenWidth * 0.04).clamp(14.0, 16.0),
+                              fontWeight: FontWeight.w400,
+                              letterSpacing: 0.2,
                             ),
                           ),
                         ],
                       ),
                     ),
                     
-                    SizedBox(height: largeSpacing),
+                    SizedBox(height: screenHeight * 0.05),
                     
-                    // Response Time Card
+                    // Hero Card with Response Time
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.2,
-                      child: Container(
-                        width: double.infinity,
-                        padding: EdgeInsets.all((screenWidth * 0.045).clamp(16.0, 24.0)),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular((screenWidth * 0.05).clamp(18.0, 24.0)),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.06),
-                              blurRadius: 15,
-                              offset: const Offset(0, 6),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(36),
+                        child: BackdropFilter(
+                          filter: ui.ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+                          child: Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.all((screenWidth * 0.07).clamp(28.0, 38.0)),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.white.withOpacity(0.75),
+                                  Colors.white.withOpacity(0.55),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(36),
+                              border: Border.all(color: Colors.white.withOpacity(0.4), width: 1),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF8E8E93).withOpacity(0.12),
+                                  blurRadius: 30,
+                                  offset: const Offset(0, 18),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
                         child: Column(
                           children: [
                             // Response time display
                             Text(
                               '${widget.averageResponseTime.toStringAsFixed(1)}s',
                               style: GoogleFonts.inter(
-                                color: const Color(0xFFFF6B35),
-                                fontSize: (screenWidth * 0.12).clamp(36.0, isLargeScreen ? 64.0 : 56.0),
+                                color: const Color(0xFFFF6B9D),
+                                fontSize: (screenWidth * 0.10).clamp(32.0, isLargeScreen ? 52.0 : 48.0),
                                 fontWeight: FontWeight.w800,
                                 letterSpacing: -0.5,
                                 height: 0.9,
                               ),
                             ),
-                            SizedBox(height: (screenHeight * 0.01).clamp(6.0, 12.0)),
+                            SizedBox(height: (screenHeight * 0.005).clamp(2.0, 4.0)),
                             Text(
                               widget.speedLabel,
                               style: GoogleFonts.inter(
                                 color: const Color(0xFF555555),
-                                fontSize: (screenWidth * 0.035).clamp(11.0, isLargeScreen ? 18.0 : 16.0),
+                                fontSize: (screenWidth * 0.032).clamp(12.0, isLargeScreen ? 16.0 : 15.0),
                                 fontWeight: FontWeight.w500,
                                 letterSpacing: 0.3,
                                 height: 1.2,
                               ),
                             ),
-                            SizedBox(height: (screenHeight * 0.01).clamp(6.0, 12.0)),
+                            SizedBox(height: (screenHeight * 0.005).clamp(2.0, 4.0)),
                             Text(
                               'Average response time',
                               style: GoogleFonts.inter(
                                 color: const Color(0xFF555555),
-                                fontSize: (screenWidth * 0.035).clamp(11.0, isLargeScreen ? 18.0 : 16.0),
+                                fontSize: (screenWidth * 0.032).clamp(12.0, isLargeScreen ? 16.0 : 15.0),
                                 fontWeight: FontWeight.w500,
                                 letterSpacing: 0.3,
                                 height: 1.2,
                               ),
                             ),
-                        SizedBox(height: (screenHeight * 0.01).clamp(6.0, 12.0)),
-                        Text(
-                          _speedDescriptor,
-                          style: GoogleFonts.inter(
-                            color: const Color(0xFF3A506B),
-                            fontSize: (screenWidth * 0.035).clamp(11.0, isLargeScreen ? 18.0 : 16.0),
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.2,
-                          ),
-                        ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    
-                    SizedBox(height: sectionSpacing),
-                    
-                    // Description Card
-                    _AnimatedFade(
-                      controller: _fadeController,
-                      delay: 0.4,
-                      child: Container(
-                        padding: EdgeInsets.all((screenWidth * 0.045).clamp(16.0, 24.0)),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular((screenWidth * 0.05).clamp(18.0, 24.0)),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.06),
-                              blurRadius: 15,
-                              offset: const Offset(0, 6),
+                            SizedBox(height: (screenHeight * 0.015).clamp(10.0, 14.0)),
+                            // Progress bar
+                            Container(
+                              width: double.infinity,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFF6B9D).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: FractionallySizedBox(
+                                alignment: Alignment.centerLeft,
+                                widthFactor: _getProgressValue(),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [Color(0xFFFF6B9D), Color(0xFFFF8FB1)],
+                                    ),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: (screenHeight * 0.01).clamp(6.0, 10.0)),
+                            Text(
+                              _speedDescriptor,
+                              style: GoogleFonts.inter(
+                                color: const Color(0xFF3A506B),
+                                fontSize: (screenWidth * 0.032).clamp(12.0, isLargeScreen ? 16.0 : 15.0),
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.2,
+                              ),
                             ),
                           ],
                         ),
-                        child: Text(
-                          _responseBlurb,
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.inter(
-                            color: const Color(0xFF555555),
-                            fontSize: (screenWidth * 0.038).clamp(13.0, isLargeScreen ? 18.0 : 16.0),
-                            fontWeight: FontWeight.w400,
-                            height: 1.6,
-                            letterSpacing: 0.2,
                           ),
                         ),
                       ),
                     ),
                     
-                    SizedBox(height: sectionSpacing),
+                    SizedBox(height: screenHeight * 0.035),
                     
-                    // Subtitle
+                    // Highlight cards - 2 cards in one row
+                    _AnimatedFade(
+                      controller: _fadeController,
+                      delay: 0.45,
+                      child: IntrinsicHeight(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.only(right: 8),
+                                child: _CuriosityHighlightCard(
+                                  icon: Icons.label,
+                                  title: 'Style',
+                                  subtitle: widget.speedLabel,
+                                  gradient: const [Color(0xFFFF6B9D), Color(0xFFFF8FB1)],
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.only(left: 8),
+                                child: _CuriosityHighlightCard(
+                                  icon: Icons.psychology,
+                                  title: 'Persona',
+                                  subtitle: _speedDescriptor,
+                                  gradient: const [Color(0xFFFF4D6D), Color(0xFFFF6B9D)],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    
+                    SizedBox(height: screenHeight * 0.045),
+                    
+                    // Small Share to Story button
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.6,
-                      child: Text(
-                        'Speed reflects your mindset, and yours shows clarity of thought 🌟',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.inter(
-                          color: const Color(0xFF777777),
-                          fontSize: (screenWidth * 0.035).clamp(12.0, isLargeScreen ? 18.0 : 16.0),
-                          fontWeight: FontWeight.w500,
-                          fontStyle: FontStyle.italic,
-                          letterSpacing: 0.3,
-                        ),
+                      child: SmallShareToStoryButton(
+                        shareText: _shareText,
+                        screenshotKey: _screenshotKey,
+                        accentGradient: const [Color(0xFFFF8FB1), Color(0xFFFFB5D8)],
                       ),
                     ),
                     
-                    SizedBox(height: (screenHeight * 0.05).clamp(20.0, 40.0)),
-                    
-                    // Share button
-                    _AnimatedFade(
-                      controller: _fadeController,
-                      delay: 0.8,
-                      child: Center(
-                        child: ShareToStoryButton(
-                          shareText: _shareText,
-                          primaryColor: const Color(0xFFE0F2F7),
-                          secondaryColor: const Color(0xFFCCEEF5),
-                        ),
-                      ),
-                    ),
-                    
-                    SizedBox(height: sectionSpacing),
+                    SizedBox(height: screenHeight * 0.05),
                   ],
                 ),
               ),
             ),
+          ),
           ),
         ],
       ),
@@ -440,5 +456,91 @@ class _CuriosityParticlesPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
+
+// Highlight Card Widget (like Daily Dose)
+class _CuriosityHighlightCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final List<Color> gradient;
+
+  const _CuriosityHighlightCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.gradient,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: gradient,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(26),
+        boxShadow: [
+          BoxShadow(
+            color: gradient.last.withOpacity(0.25),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              icon,
+              color: Colors.white,
+              size: 20,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            title,
+            style: GoogleFonts.inter(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              height: 1.2,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Flexible(
+            child: Text(
+              subtitle,
+              style: GoogleFonts.inter(
+                color: Colors.white.withOpacity(0.85),
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 2,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+
+
+
+
+
 
 

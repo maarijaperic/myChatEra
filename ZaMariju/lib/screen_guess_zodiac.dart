@@ -1,7 +1,10 @@
 import 'dart:math';
+import 'dart:ui' as ui;
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:gpt_wrapped2/widgets/share_button.dart';
+import 'package:gpt_wrapped2/widgets/instagram_share_button.dart';
 
 class GuessZodiacScreen extends StatefulWidget {
   final String question;
@@ -28,7 +31,8 @@ class GuessZodiacScreen extends StatefulWidget {
 class _GuessZodiacScreenState extends State<GuessZodiacScreen>
     with TickerProviderStateMixin {
   late AnimationController _fadeController;
-  late AnimationController _bubblesController;
+  late AnimationController _particlesController;
+  final GlobalKey _screenshotKey = GlobalKey();
   
   @override
   void initState() {
@@ -39,9 +43,9 @@ class _GuessZodiacScreenState extends State<GuessZodiacScreen>
       duration: const Duration(milliseconds: 1500),
     );
     
-    _bubblesController = AnimationController(
+    _particlesController = AnimationController(
+      duration: const Duration(seconds: 4),
       vsync: this,
-      duration: const Duration(milliseconds: 3000),
     )..repeat();
     
     _startAnimations();
@@ -55,53 +59,46 @@ class _GuessZodiacScreenState extends State<GuessZodiacScreen>
   @override
   void dispose() {
     _fadeController.dispose();
-    _bubblesController.dispose();
+    _particlesController.dispose();
     super.dispose();
+  }
+
+  String _removeEmojis(String text) {
+    return text.replaceAll(RegExp(r'[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]', unicode: true), '').trim();
   }
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-    final isLargeScreen = screenWidth > 600;
-    
-    // Responsive padding
-    final horizontalPadding = (screenWidth * 0.06).clamp(16.0, 32.0);
-    final verticalPadding = (screenHeight * 0.025).clamp(16.0, 24.0);
-    
-    // Responsive spacing
-    final topSpacing = (screenHeight * 0.08).clamp(20.0, 60.0);
-    final sectionSpacing = (screenHeight * 0.04).clamp(16.0, 32.0);
-    final largeSpacing = (screenHeight * 0.06).clamp(20.0, 48.0);
-    final mediumSpacing = (screenHeight * 0.03).clamp(12.0, 24.0);
-    final smallSpacing = (screenHeight * 0.02).clamp(8.0, 16.0);
     
     return Scaffold(
       body: Stack(
+        fit: StackFit.expand,
         children: [
-          // Light pastel purple gradient background
+          // Soft pastel gradient background (like Share with People)
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
                 colors: [
-                  Color(0xFFF3E5F5), // Very light purple
-                  Color(0xFFE1BEE7), // Light purple
-                  Color(0xFFCE93D8), // Soft purple
-                  Color(0xFFBA68C8), // Pastel purple
+                  Color(0xFFFFF5FB),
+                  Color(0xFFF4F1FF),
+                  Color(0xFFEFF6FF),
+                  Color(0xFFEAF9FF),
                 ],
                 stops: [0.0, 0.3, 0.7, 1.0],
               ),
             ),
           ),
           
-          // Animated particles
+          // Subtle animated particles (like Share with People)
           AnimatedBuilder(
-            animation: _bubblesController,
+            animation: _particlesController,
             builder: (context, child) {
               return CustomPaint(
-                painter: _ZodiacParticlesPainter(_bubblesController.value),
+                painter: _SubtleParticlesPainter(_particlesController.value),
                 child: Container(),
               );
             },
@@ -109,145 +106,76 @@ class _GuessZodiacScreenState extends State<GuessZodiacScreen>
           
           // Main content
           SafeArea(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
+            child: RepaintBoundary(
+              key: _screenshotKey,
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: (screenWidth * 0.06).clamp(20.0, 24.0),
+                  vertical: (screenHeight * 0.025).clamp(16.0, 20.0),
+                ),
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    SizedBox(height: topSpacing),
+                    SizedBox(height: screenHeight * 0.04),
                     
-                    // Main headline
+                    // Header + hero card
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.0,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      child: Column(
                         children: [
-                          Flexible(
-                            child: Text(
-                              'What is your zodiac sign?',
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.inter(
-                                color: Colors.black,
-                                fontSize: (screenWidth * 0.058).clamp(16.0, isLargeScreen ? 30.0 : 26.0),
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.8,
-                                height: 1.1,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 2,
+                          Text(
+                            'Your Zodiac Sign',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.inter(
+                              color: const Color(0xFF1F1F21),
+                              fontSize: (screenWidth * 0.08).clamp(28.0, 36.0),
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.2,
                             ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            widget.question,
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.inter(
+                              color: const Color(0xFF636366),
+                              fontSize: (screenWidth * 0.04).clamp(14.0, 16.0),
+                              fontWeight: FontWeight.w400,
+                              letterSpacing: 0.2,
+                            ),
+                          ),
+                          SizedBox(height: screenHeight * 0.045),
+                          _ZodiacHeroCard(
+                            screenWidth: screenWidth,
+                            zodiacSign: widget.zodiacSign,
+                            zodiacEmoji: widget.zodiacEmoji,
+                            zodiacName: widget.zodiacName,
                           ),
                         ],
                       ),
                     ),
                     
-                    SizedBox(height: largeSpacing),
+                    SizedBox(height: screenHeight * 0.03),
                     
-                    // Zodiac Sign Card with Circular Progress
+                    // Message card (like Share with People)
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.2,
                       child: Container(
-                        width: double.infinity,
-                        padding: EdgeInsets.all((screenWidth * 0.035).clamp(12.0, 20.0)),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular((screenWidth * 0.05).clamp(18.0, 24.0)),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.06),
-                              blurRadius: 15,
-                              offset: const Offset(0, 6),
-                            ),
-                          ],
+                        padding: EdgeInsets.symmetric(
+                          horizontal: (screenWidth * 0.04).clamp(16.0, 18.0),
+                          vertical: (screenHeight * 0.018).clamp(14.0, 16.0),
                         ),
-                        child: Column(
-                          children: [
-                            // Circular Progress Bar with Emoji
-                            Builder(
-                              builder: (context) {
-                                final progressSize = (screenWidth * 0.25).clamp(80.0, isLargeScreen ? 140.0 : 120.0);
-                                final strokeWidth = (progressSize * 0.07).clamp(5.0, 9.0);
-                                final emojiSize = (progressSize * 0.32).clamp(24.0, isLargeScreen ? 48.0 : 40.0);
-                                return SizedBox(
-                                  width: progressSize,
-                                  height: progressSize,
-                                  child: Stack(
-                                    children: [
-                                      // Background circle
-                                      Container(
-                                        width: progressSize,
-                                        height: progressSize,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: const Color(0xFF9C27B0).withOpacity(0.1),
-                                        ),
-                                      ),
-                                      // Progress circle
-                                      SizedBox(
-                                        width: progressSize,
-                                        height: progressSize,
-                                        child: CircularProgressIndicator(
-                                          value: 0.92, // 92% match
-                                          strokeWidth: strokeWidth,
-                                          backgroundColor: Colors.transparent,
-                                          valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF9C27B0)),
-                                        ),
-                                      ),
-                                      // Emoji in center
-                                      Center(
-                                        child: Text(
-                                          widget.zodiacEmoji,
-                                          style: TextStyle(fontSize: emojiSize),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
-                            SizedBox(height: (screenHeight * 0.015).clamp(10.0, 16.0)),
-                            // Zodiac Sign
-                            Text(
-                              widget.zodiacSign,
-                              style: GoogleFonts.inter(
-                                color: const Color(0xFF9C27B0),
-                                fontSize: (screenWidth * 0.075).clamp(20.0, isLargeScreen ? 36.0 : 32.0),
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -0.5,
-                                height: 0.9,
-                              ),
-                            ),
-                            SizedBox(height: (screenHeight * 0.008).clamp(4.0, 8.0)),
-                            // Zodiac Name
-                            Text(
-                              widget.zodiacName,
-                              style: GoogleFonts.inter(
-                                color: const Color(0xFF555555),
-                                fontSize: (screenWidth * 0.035).clamp(11.0, isLargeScreen ? 18.0 : 16.0),
-                                fontWeight: FontWeight.w500,
-                                letterSpacing: 0.3,
-                                height: 1.2,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    
-                    SizedBox(height: mediumSpacing),
-                    
-                    // Description Card
-                    _AnimatedFade(
-                      controller: _fadeController,
-                      delay: 0.4,
-                      child: Container(
-                        padding: EdgeInsets.all((screenWidth * 0.035).clamp(12.0, 20.0)),
                         decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular((screenWidth * 0.05).clamp(18.0, 24.0)),
+                          borderRadius: BorderRadius.circular(24),
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFFFFFFF), Color(0xFFF6F7FF)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.06),
@@ -257,36 +185,35 @@ class _GuessZodiacScreenState extends State<GuessZodiacScreen>
                           ],
                         ),
                         child: Text(
-                          '${widget.explanation} Your zodiac sign reveals so much about your personality, and ChatGPT saw it all in your conversations.',
+                          '${_removeEmojis(widget.explanation)} Your conversations reveal patterns that align with this zodiac sign\'s characteristics, showing how your communication style reflects your astrological nature.${widget.subtitle.isNotEmpty ? ' ${_removeEmojis(widget.subtitle)}' : ''}',
                           textAlign: TextAlign.center,
                           style: GoogleFonts.inter(
                             color: const Color(0xFF555555),
-                            fontSize: (screenWidth * 0.038).clamp(13.0, isLargeScreen ? 18.0 : 16.0),
+                            fontSize: (screenWidth * 0.034).clamp(12.5, 14.5),
                             fontWeight: FontWeight.w400,
-                            height: 1.6,
+                            height: 1.4,
                             letterSpacing: 0.2,
                           ),
                         ),
                       ),
                     ),
                     
-                    SizedBox(height: mediumSpacing),
+                    SizedBox(height: screenHeight * 0.025),
                     
-                    // Share button
+                    // Small Share to Story button
                     _AnimatedFade(
                       controller: _fadeController,
-                      delay: 0.8,
-                      child: Center(
-                        child: ShareToStoryButton(
-                          shareText: 'My zodiac sign: ${widget.zodiacSign} - ${widget.zodiacName}! 92% match according to ChatGPT. ${widget.subtitle} ${widget.zodiacEmoji} #ChatGPTWrapped',
-                          primaryColor: const Color(0xFFE0F2F7),
-                          secondaryColor: const Color(0xFFCCEEF5),
-                        ),
+                      delay: 0.4,
+                      child: SmallShareToStoryButton(
+                        shareText: 'My zodiac sign: ${widget.zodiacSign} - ${widget.zodiacName}! 92% match according to ChatGPT. ${_removeEmojis(widget.subtitle)} ${widget.zodiacEmoji} #ChatGPTWrapped',
+                        screenshotKey: _screenshotKey,
+                        accentGradient: const [Color(0xFFFF8FB1), Color(0xFFFFB5D8)],
                       ),
                     ),
                     
-                    SizedBox(height: sectionSpacing),
+                    SizedBox(height: screenHeight * 0.04),
                   ],
+                ),
                 ),
               ),
             ),
@@ -335,11 +262,152 @@ class _AnimatedFade extends StatelessWidget {
   }
 }
 
-// Zodiac particles painter - bubbles and sparkles floating
-class _ZodiacParticlesPainter extends CustomPainter {
+// Zodiac Hero Card (like Share Hero Card)
+class _ZodiacHeroCard extends StatelessWidget {
+  final double screenWidth;
+  final String zodiacSign;
+  final String zodiacEmoji;
+  final String zodiacName;
+
+  const _ZodiacHeroCard({
+    required this.screenWidth,
+    required this.zodiacSign,
+    required this.zodiacEmoji,
+    required this.zodiacName,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isLargeScreen = screenWidth > 600;
+    final cardPadding = (screenWidth * 0.035).clamp(14.0, isLargeScreen ? 24.0 : 18.0);
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular((screenWidth * 0.06).clamp(22.0, 28.0)),
+      child: BackdropFilter(
+        filter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(cardPadding),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Colors.white.withOpacity(0.75),
+                Colors.white.withOpacity(0.55),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            border: Border.all(color: Colors.white.withOpacity(0.4), width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF8E8E93).withOpacity(0.12),
+                blurRadius: 24,
+                offset: const Offset(0, 12),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              // Circular Progress with Emoji (smaller)
+              Builder(
+                builder: (context) {
+                  final progressSize = (screenWidth * 0.18).clamp(70.0, isLargeScreen ? 110.0 : 90.0);
+                  final strokeWidth = (progressSize * 0.07).clamp(5.0, 7.0);
+                  final emojiSize = (progressSize * 0.32).clamp(22.0, isLargeScreen ? 40.0 : 32.0);
+                  return SizedBox(
+                    width: progressSize,
+                    height: progressSize,
+                    child: Stack(
+                      children: [
+                        // Background circle
+                        Container(
+                          width: progressSize,
+                          height: progressSize,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: const Color(0xFF9C27B0).withOpacity(0.1),
+                          ),
+                        ),
+                        // Progress circle
+                        SizedBox(
+                          width: progressSize,
+                          height: progressSize,
+                          child: CircularProgressIndicator(
+                            value: 0.92,
+                            strokeWidth: strokeWidth,
+                            backgroundColor: Colors.transparent,
+                            valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF9C27B0)),
+                            strokeCap: StrokeCap.round,
+                          ),
+                        ),
+                        // Emoji in center
+                        Center(
+                          child: Text(
+                            zodiacEmoji,
+                            style: TextStyle(fontSize: emojiSize),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+              SizedBox(height: (screenWidth * 0.025).clamp(10.0, 14.0)),
+              // Zodiac Sign (smaller)
+              Text(
+                zodiacSign,
+                style: GoogleFonts.inter(
+                  color: const Color(0xFF9C27B0),
+                  fontSize: (screenWidth * 0.075).clamp(24.0, isLargeScreen ? 40.0 : 32.0),
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.5,
+                  height: 0.9,
+                ),
+              ),
+              const SizedBox(height: 4),
+              // Zodiac Name (smaller)
+              Text(
+                zodiacName,
+                style: GoogleFonts.inter(
+                  color: const Color(0xFF1F1F21),
+                  fontSize: (screenWidth * 0.038).clamp(14.0, isLargeScreen ? 18.0 : 16.0),
+                  fontWeight: FontWeight.w700,
+                  height: 1.2,
+                ),
+              ),
+              const SizedBox(height: 4),
+              // Match percentage (smaller)
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: (screenWidth * 0.03).clamp(10.0, 12.0),
+                  vertical: (screenWidth * 0.01).clamp(4.0, 5.0),
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF9C27B0).withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Text(
+                  '92% Match',
+                  style: GoogleFonts.inter(
+                    color: const Color(0xFF9C27B0),
+                    fontSize: (screenWidth * 0.030).clamp(11.0, 12.0),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// Subtle particles painter (like Share with People)
+class _SubtleParticlesPainter extends CustomPainter {
   final double animationValue;
 
-  _ZodiacParticlesPainter(this.animationValue);
+  _SubtleParticlesPainter(this.animationValue);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -347,58 +415,20 @@ class _ZodiacParticlesPainter extends CustomPainter {
       ..color = Colors.white.withOpacity(0.4)
       ..style = PaintingStyle.fill;
 
-    // Draw floating bubbles
+    // Draw subtle floating dots
     for (int i = 0; i < 20; i++) {
       final x = (i * 47.0) % size.width;
       final y = (i * 31.0) % size.height;
       final timeOffset = (animationValue * 2 * pi) + (i * 0.4);
-      final float = sin(timeOffset) * 15;
-      final bubbleY = y + float;
-      final opacity = 0.2 + 0.3 * sin(timeOffset);
-      final bubbleSize = 3.0 + (2.0 * sin(timeOffset));
-      
+      final float = 0.3 + 0.4 * sin(timeOffset);
+      final dotSize = 1.0 + (1.5 * float);
+
       canvas.drawCircle(
-        Offset(x, bubbleY),
-        bubbleSize,
-        paint..color = Colors.white.withOpacity(opacity),
+        Offset(x, y),
+        dotSize,
+        paint..color = Colors.white.withOpacity(float * 0.6),
       );
     }
-    
-    // Add floating sparkles
-    for (int i = 0; i < 15; i++) {
-      final x = (i * 67.0 + 30) % size.width;
-      final y = (i * 43.0 + 20) % size.height;
-      final timeOffset = (animationValue * 2 * pi) + (i * 0.6);
-      final twinkle = 0.3 + 0.7 * sin(timeOffset);
-      final starSize = 1.0 + (1.5 * twinkle);
-      
-      _drawStar(canvas, Offset(x, y), starSize, paint..color = Colors.white.withOpacity(twinkle * 0.6));
-    }
-  }
-
-  void _drawStar(Canvas canvas, Offset center, double size, Paint paint) {
-    final path = Path();
-    final outerRadius = size;
-    final innerRadius = size * 0.4;
-    
-    for (int i = 0; i < 5; i++) {
-      final angle = (i * 2 * pi / 5) - (pi / 2);
-      final outerX = center.dx + cos(angle) * outerRadius;
-      final outerY = center.dy + sin(angle) * outerRadius;
-      final innerAngle = angle + (pi / 5);
-      final innerX = center.dx + cos(innerAngle) * innerRadius;
-      final innerY = center.dy + sin(innerAngle) * innerRadius;
-      
-      if (i == 0) {
-        path.moveTo(outerX, outerY);
-      } else {
-        path.lineTo(outerX, outerY);
-      }
-      path.lineTo(innerX, innerY);
-    }
-    path.close();
-    
-    canvas.drawPath(path, paint);
   }
 
   @override

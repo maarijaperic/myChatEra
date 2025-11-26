@@ -1,77 +1,47 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:async';
-import 'package:gpt_wrapped2/services/data_processor.dart';
 import 'package:gpt_wrapped2/models/chat_data.dart';
 import 'package:gpt_wrapped2/services/premium_processor.dart';
 
-class AnalyzingLoadingScreen extends StatefulWidget {
-  final Function(ChatStats, PremiumInsights?, List<ConversationData>?) onAnalysisComplete;
-  final List<dynamic>? conversations;
-  final bool isPremiumAnalysis;
-  final String? title;
-  final List<String>? customLoadingSteps;
-  final Function(String)? onProgressUpdate;
+class PremiumAnalyzingScreen extends StatefulWidget {
+  final List<ConversationData> conversations;
+  final Function(PremiumInsights) onAnalysisComplete;
+  final Function(String)? onError;
 
-  const AnalyzingLoadingScreen({
+  const PremiumAnalyzingScreen({
     super.key,
+    required this.conversations,
     required this.onAnalysisComplete,
-    this.conversations,
-    this.isPremiumAnalysis = false,
-    this.title,
-    this.customLoadingSteps,
-    this.onProgressUpdate,
+    this.onError,
   });
 
   @override
-  State<AnalyzingLoadingScreen> createState() => _AnalyzingLoadingScreenState();
+  State<PremiumAnalyzingScreen> createState() => _PremiumAnalyzingScreenState();
 }
 
-class _AnalyzingLoadingScreenState extends State<AnalyzingLoadingScreen>
+class _PremiumAnalyzingScreenState extends State<PremiumAnalyzingScreen>
     with TickerProviderStateMixin {
   late AnimationController _progressController;
   late AnimationController _fadeController;
   double _progress = 0.0;
-  String _statusText = 'Connecting to ChatGPT...';
+  String _statusText = 'Analyzing Type A/B...';
 
-  List<String> get _loadingSteps {
-    if (widget.customLoadingSteps != null) {
-      return widget.customLoadingSteps!;
-    }
-    if (widget.isPremiumAnalysis) {
-      return [
-        'Analyzing Type A/B...',
-        'Identifying red and green flags...',
-        'Determining love language...',
-        'Analyzing introvert vs extrovert...',
-        'Determining MBTI personality...',
-        'Guessing zodiac sign...',
-        'Finding most asked advice...',
-        'Generating roast...',
-        'Matching your movie title...',
-        'Revealing past life persona...',
-        'Preparing your Premium Wrapped...',
-      ];
-    }
-    return [
-      'Connecting to ChatGPT...',
-      'Fetching your conversations...',
-      'Analyzing your messages...',
-      'Calculating statistics...',
-      'Discovering premium insights...',
-      'Preparing your Wrapped...',
-    ];
-  }
+  final List<String> _loadingSteps = [
+    'Analyzing Type A/B...',
+    'Identifying red and green flags...',
+    'Determining love language...',
+    'Analyzing introvert vs extrovert...',
+    'Determining MBTI personality...',
+    'Guessing zodiac sign...',
+    'Finding most asked advice...',
+    'Generating roast...',
+    'Matching your movie title...',
+    'Revealing past life persona...',
+    'Preparing your Premium Wrapped...',
+  ];
 
-  String get _screenTitle {
-    if (widget.title != null) {
-      return widget.title!;
-    }
-    if (widget.isPremiumAnalysis) {
-      return 'Analyzing Premium Insights';
-    }
-    return 'Analyzing Your Chats';
-  }
+  int _currentStep = 0;
 
   @override
   void initState() {
@@ -87,90 +57,75 @@ class _AnalyzingLoadingScreenState extends State<AnalyzingLoadingScreen>
       vsync: this,
     );
 
-    _startLoading();
+    _startAnalysis();
   }
 
-  Future<void> _startLoading() async {
+  Future<void> _startAnalysis() async {
     _fadeController.forward();
 
-    ChatStats analyzedStats = ChatStats.empty();
-    List<ConversationData> parsedConversations = [];
+    final conversationsWithMessages =
+        widget.conversations.where((conv) => conv.messages.isNotEmpty).toList();
 
-    // Step 1: Connecting
-    setState(() {
-      _statusText = _loadingSteps[0];
-    });
-    await _animateProgress(0.0, 0.15);
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    // Step 2: Fetching (already done, but show status)
-    if (widget.conversations != null && widget.conversations!.isNotEmpty) {
-      setState(() {
-        _statusText = 'Found ${widget.conversations!.length} conversations';
-      });
-    } else {
-      setState(() {
-        _statusText = _loadingSteps[1];
-      });
-    }
-    await _animateProgress(0.15, 0.35);
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    // Step 3: Analyzing messages
-    setState(() {
-      _statusText = _loadingSteps[2];
-    });
-    await _animateProgress(0.35, 0.55);
-    
-    // Actually process the conversations
-    if (widget.conversations != null && widget.conversations!.isNotEmpty) {
-      try {
-        parsedConversations = DataProcessor.parseConversations(widget.conversations!);
-        analyzedStats = DataProcessor.analyzeConversations(parsedConversations);
-      } catch (e) {
-        print('Error analyzing conversations: $e');
-        // Use empty stats if analysis fails
-        analyzedStats = ChatStats.empty();
+    if (conversationsWithMessages.isEmpty) {
+      if (widget.onError != null) {
+        widget.onError!('No conversations with messages found.');
       }
-    } else {
-      // No conversations, use empty stats
-      analyzedStats = ChatStats.empty();
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+      return;
     }
-    await Future.delayed(const Duration(milliseconds: 800));
 
-    // Step 4: Calculating statistics
-    setState(() {
-      _statusText = _loadingSteps[3];
-    });
-    await _animateProgress(0.55, 0.75);
-    await Future.delayed(const Duration(milliseconds: 500));
+    try {
+      // Start with first step
+      setState(() {
+        _statusText = _loadingSteps[0];
+        _currentStep = 0;
+      });
+      await _animateProgress(0.0, 0.1);
 
-    // Step 5: Skipping premium insights (will be analyzed when user subscribes)
-    setState(() {
-      _statusText = 'Preparing your Wrapped...';
-    });
-    await _animateProgress(0.75, 0.90);
-    
-    // Premium insights will be analyzed when user clicks on subscription plan
-    // Set to null initially - will be generated when user subscribes
-    await Future.delayed(const Duration(milliseconds: 300));
-
-    // Step 6: Preparing wrapped
-    setState(() {
-      _statusText = _loadingSteps[5];
-    });
-    await _animateProgress(0.90, 1.0);
-    await Future.delayed(const Duration(milliseconds: 300));
-
-    // Complete with analyzed stats (or empty if no data)
-    // Pass parsed conversations so premium analysis can be done later
-    // Premium insights will be null - will be generated when user subscribes
-    if (mounted) {
-      widget.onAnalysisComplete(
-        analyzedStats,
-        null, // Premium insights will be analyzed when user subscribes
-        parsedConversations.isNotEmpty ? parsedConversations : null,
+      // Analyze premium insights with progress updates
+      final premiumInsights = await PremiumProcessor.analyzePremiumInsights(
+        conversationsWithMessages,
+        (progressMessage) {
+          if (!mounted) return;
+          
+          // Update status text based on progress message
+          setState(() {
+            _statusText = progressMessage;
+            
+            // Update progress based on current step
+            if (_currentStep < _loadingSteps.length - 1) {
+              _currentStep++;
+            }
+            
+            // Calculate progress: each step is approximately 1/10 of total
+            _progress = (_currentStep / _loadingSteps.length).clamp(0.0, 0.95);
+          });
+        },
       );
+
+      // Final step
+      if (mounted) {
+        setState(() {
+          _statusText = _loadingSteps[_loadingSteps.length - 1];
+          _progress = 1.0;
+        });
+        await Future.delayed(const Duration(milliseconds: 500));
+      }
+
+      // Complete
+      if (mounted) {
+        widget.onAnalysisComplete(premiumInsights);
+      }
+    } catch (e) {
+      print('Error during premium analysis: $e');
+      if (widget.onError != null) {
+        widget.onError!('Error analyzing premium insights: ${e.toString()}');
+      }
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
     }
   }
 
@@ -227,7 +182,8 @@ class _AnalyzingLoadingScreenState extends State<AnalyzingLoadingScreen>
                   children: [
                     // Status text
                     Text(
-                      _screenTitle,
+                      'Analyzing Premium Insights',
+                      textAlign: TextAlign.center,
                       style: GoogleFonts.inter(
                         fontSize: 28,
                         fontWeight: FontWeight.w700,

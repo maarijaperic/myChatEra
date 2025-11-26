@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:gpt_wrapped2/widgets/share_button.dart';
@@ -126,10 +127,26 @@ class _ComparisonStatsScreenState extends State<ComparisonStatsScreen>
     final bottomSpacing = (screenHeight * 0.04).clamp(20.0, 32.0);
     
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF0F6), // Light pastel pink
       body: Stack(
         fit: StackFit.expand,
         children: [
+          // Gradient background (like Share with People)
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color(0xFFFFF0F6), // Light pastel pink
+                  Color(0xFFFFE8F0), // Light pink
+                  Color(0xFFFFE0EA), // Soft pink
+                  Color(0xFFFFD8E4), // Pastel pink
+                ],
+                stops: [0.0, 0.3, 0.7, 1.0],
+              ),
+            ),
+          ),
+          
           // Subtle animated particles
           AnimatedBuilder(
             animation: _particlesController,
@@ -162,22 +179,21 @@ class _ComparisonStatsScreenState extends State<ComparisonStatsScreen>
                             'Your GPT Wrapped',
                             textAlign: TextAlign.center,
                             style: GoogleFonts.inter(
-                              color: const Color(0xFF1D1D1F),
-                              fontSize: (screenWidth * 0.075).clamp(28.0, isLargeScreen ? 44.0 : 40.0),
+                              color: const Color(0xFF1F1F21),
+                              fontSize: (screenWidth * 0.08).clamp(28.0, isLargeScreen ? 44.0 : 36.0),
                               fontWeight: FontWeight.w700,
-                              letterSpacing: -0.5,
-                              height: 1.1,
+                              letterSpacing: -0.2,
                             ),
                           ),
-                          SizedBox(height: (screenHeight * 0.015).clamp(8.0, 16.0)),
+                          const SizedBox(height: 8),
                           // Subtitle
                           Text(
                             'Monthly Obsessions',
                             textAlign: TextAlign.center,
                             style: GoogleFonts.inter(
-                              color: const Color(0xFF86868B),
-                              fontSize: (screenWidth * 0.042).clamp(14.0, isLargeScreen ? 20.0 : 18.0),
-                              fontWeight: FontWeight.w500,
+                              color: const Color(0xFF636366),
+                              fontSize: (screenWidth * 0.04).clamp(14.0, isLargeScreen ? 20.0 : 16.0),
+                              fontWeight: FontWeight.w400,
                               letterSpacing: 0.2,
                             ),
                           ),
@@ -214,6 +230,9 @@ class _ComparisonStatsScreenState extends State<ComparisonStatsScreen>
                                         accentColor: monthData['accentColor'],
                                         delay: 0.3 + (index * 0.1),
                                         fadeController: _fadeController,
+                                        screenWidth: screenWidth,
+                                        screenHeight: screenHeight,
+                                        isLargeScreen: isLargeScreen,
                                       ),
                                     ),
                                   );
@@ -234,8 +253,6 @@ class _ComparisonStatsScreenState extends State<ComparisonStatsScreen>
                       child: Center(
                         child: ShareToStoryButton(
                           shareText: 'My GPT Wrapped Monthly Obsessions: From summer vibes to reflection! Check out my year 🎉 #ChatGPTWrapped',
-                          primaryColor: const Color(0xFF007AFF),
-                          secondaryColor: const Color(0xFF0051D5),
                         ),
                       ),
                     ),
@@ -252,7 +269,7 @@ class _ComparisonStatsScreenState extends State<ComparisonStatsScreen>
   }
 }
 
-// Month Obsession Card Widget
+// Month Obsession Card Widget (modern design with gradient icon)
 class _MonthObsessionCard extends StatelessWidget {
   final String month;
   final String obsession;
@@ -261,6 +278,9 @@ class _MonthObsessionCard extends StatelessWidget {
   final Color accentColor;
   final double delay;
   final AnimationController fadeController;
+  final double screenWidth;
+  final double screenHeight;
+  final bool isLargeScreen;
 
   const _MonthObsessionCard({
     required this.month,
@@ -270,72 +290,116 @@ class _MonthObsessionCard extends StatelessWidget {
     required this.accentColor,
     required this.delay,
     required this.fadeController,
+    required this.screenWidth,
+    required this.screenHeight,
+    required this.isLargeScreen,
   });
+
+  String _getMonthInitials(String month) {
+    // Get first 2-3 letters of month
+    if (month.length >= 3) {
+      return month.substring(0, 3);
+    }
+    return month;
+  }
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
-    final isLargeScreen = screenWidth > 600;
-    
     return _AnimatedFade(
       controller: fadeController,
       delay: delay,
-      child: Container(
-        height: (screenHeight * 0.18).clamp(140.0, 200.0),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 20,
-              offset: const Offset(0, 4),
-              spreadRadius: 0,
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: EdgeInsets.all((screenWidth * 0.04).clamp(16.0, 20.0)),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Month label
-              Text(
-                month,
-                style: GoogleFonts.inter(
-                  color: const Color(0xFF86868B),
-                  fontSize: (screenWidth * 0.028).clamp(10.0, isLargeScreen ? 14.0 : 12.0),
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 1.2,
-                ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: BackdropFilter(
+          filter: ui.ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+          child: Container(
+            height: (screenHeight * 0.18).clamp(140.0, 200.0),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.white.withOpacity(0.85),
+                  Colors.white.withOpacity(0.65),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-              
-              // Emoji and Obsession
-              Column(
+              border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: accentColor.withOpacity(0.15),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: EdgeInsets.all((screenWidth * 0.04).clamp(16.0, 20.0)),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
+                  // Month label
                   Text(
-                    emoji,
-                    style: TextStyle(
-                      fontSize: (screenWidth * 0.08).clamp(32.0, isLargeScreen ? 48.0 : 40.0),
+                    month,
+                    style: GoogleFonts.inter(
+                      color: const Color(0xFF636366),
+                      fontSize: (screenWidth * 0.028).clamp(10.0, isLargeScreen ? 14.0 : 12.0),
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1.0,
                     ),
                   ),
-                  SizedBox(height: (screenHeight * 0.01).clamp(6.0, 10.0)),
-                  Text(
-                    obsession,
-                    style: GoogleFonts.inter(
-                      color: const Color(0xFF1D1D1F),
-                      fontSize: (screenWidth * 0.045).clamp(16.0, isLargeScreen ? 22.0 : 20.0),
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.3,
-                      height: 1.2,
-                    ),
+                  
+                  // Month initials circle and Obsession
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: (screenWidth * 0.12).clamp(48.0, isLargeScreen ? 64.0 : 56.0),
+                        height: (screenWidth * 0.12).clamp(48.0, isLargeScreen ? 64.0 : 56.0),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [accentColor, accentColor.withOpacity(0.7)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: accentColor.withOpacity(0.3),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: Text(
+                            _getMonthInitials(month),
+                            style: GoogleFonts.inter(
+                              color: Colors.white,
+                              fontSize: (screenWidth * 0.04).clamp(16.0, isLargeScreen ? 22.0 : 20.0),
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: (screenHeight * 0.015).clamp(10.0, 14.0)),
+                      Text(
+                        obsession,
+                        style: GoogleFonts.inter(
+                          color: const Color(0xFF1F1F21),
+                          fontSize: (screenWidth * 0.045).clamp(16.0, isLargeScreen ? 22.0 : 20.0),
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.2,
+                          height: 1.2,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -381,7 +445,7 @@ class _AnimatedFade extends StatelessWidget {
   }
 }
 
-// Subtle particles painter
+// Subtle particles painter (like Share with People)
 class _SubtleParticlesPainter extends CustomPainter {
   final double animationValue;
 
@@ -390,21 +454,21 @@ class _SubtleParticlesPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.black.withOpacity(0.02)
+      ..color = Colors.white.withOpacity(0.4)
       ..style = PaintingStyle.fill;
 
     // Draw subtle floating dots
-    for (int i = 0; i < 12; i++) {
-      final x = (i * 67.0) % size.width;
-      final y = (i * 43.0) % size.height;
+    for (int i = 0; i < 20; i++) {
+      final x = (i * 47.0) % size.width;
+      final y = (i * 31.0) % size.height;
       final timeOffset = (animationValue * 2 * pi) + (i * 0.4);
-      final float = 0.2 + 0.3 * sin(timeOffset);
-      final dotSize = 1.5 + (1.5 * float);
+      final float = 0.3 + 0.4 * sin(timeOffset);
+      final dotSize = 1.0 + (1.5 * float);
 
       canvas.drawCircle(
         Offset(x, y),
         dotSize,
-        paint..color = Colors.black.withOpacity(float * 0.03),
+        paint..color = Colors.white.withOpacity(float * 0.6),
       );
     }
   }

@@ -1,7 +1,10 @@
-import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:gpt_wrapped2/widgets/share_button.dart';
 import 'dart:math';
+import 'dart:ui' as ui;
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:gpt_wrapped2/widgets/instagram_share_button.dart';
 
 class ChatStreakScreen extends StatefulWidget {
   final int streakDays;
@@ -20,6 +23,7 @@ class _ChatStreakScreenState extends State<ChatStreakScreen>
   late AnimationController _fadeController;
   late AnimationController _counterController;
   late AnimationController _sparkleController;
+  final GlobalKey _screenshotKey = GlobalKey();
   
   int _displayedDays = 0;
 
@@ -35,33 +39,20 @@ class _ChatStreakScreenState extends State<ChatStreakScreen>
   String get _streakBlurb {
     final days = widget.streakDays;
     if (days <= 0) {
-      return "No streak yet — which means your next session could be day one of something ridiculous. You’re currently in stealth mode, plotting the first step. Once you lock in day one, the rest of the streak is pure momentum. GPT’s ready when you are, flame emoji pending. 🔥⌛🚀";
+      return "No streak yet — which means your next session could be day one of something ridiculous. You're currently in stealth mode, plotting the first step. Once you lock in day one, the rest of the streak is pure momentum. GPT's ready when you are, flame emoji pending. Every legend starts with a single day. 🔥⌛🚀";
     }
     if (days < 5) {
-      return "$days days in a row. That’s the beginning of a habit — proof you show up when it matters. These micro-streaks stack into real change faster than you think. Keep at it and watch the momentum compound. Tiny wins are the loudest flex. 🌱📈💪";
+      return "$days days in a row. That's the beginning of a habit — proof you show up when it matters. These micro-streaks stack into real change faster than you think. Keep at it and watch the momentum compound. Tiny wins are the loudest flex. You're building the foundation of consistency, one day at a time. 🌱📈💪";
     }
     if (days < 14) {
-      return "$days straight days. You're officially past the honeymoon phase. GPT is part of your routine now. You’ve crossed the point where most people fall off, which says everything about your focus. Stay locked in and the numbers will climb on autopilot. 🔄⚡🏁";
+      return "$days straight days. You're officially past the honeymoon phase. GPT is part of your routine now. You've crossed the point where most people fall off, which says everything about your focus. Stay locked in and the numbers will climb on autopilot. You've proven you can maintain momentum when it gets real. 🔄⚡🏁";
     }
     if (days < 30) {
-      return "$days days on lock. Most people can't keep a water bottle full that long. You? You're building something. This streak is proof of discipline, creative stamina, and follow-through. You’re basically running a masterclass on commitment. 🧱🔥🏆";
+      return "$days days on lock. Most people can't keep a water bottle full that long. You? You're building something. This streak is proof of discipline, creative stamina, and follow-through. You're basically running a masterclass on commitment. You've turned consistency into your competitive advantage. 🧱🔥🏆";
     }
-    return "$days days without skipping. That's elite focus. GPT should probably send you a trophy. You're the definition of consistency — the kind people screenshot for inspo. This is legendary behavior in progress. 👑📆💥";
+    return "$days days without skipping. That's elite focus. GPT should probably send you a trophy. You're the definition of consistency — the kind people screenshot for inspo. This is legendary behavior in progress. You've mastered the art of showing up, day after day, without compromise. 👑📆💥";
   }
 
-  String get _shareText {
-    final days = widget.streakDays;
-    if (days <= 0) {
-      return "No ChatGPT streak yet, but I'm loading up for day one. #ChatGPTWrapped";
-    }
-    if (days < 14) {
-      return "Built a $days-day ChatGPT streak this year. Habit unlocked. #ChatGPTWrapped";
-    }
-    if (days < 30) {
-      return "$days days straight with ChatGPT. Consistency unlocked. #ChatGPTWrapped";
-    }
-    return "${days}-day ChatGPT streak. Certified AI addict — and proud. #ChatGPTWrapped";
-  }
 
   @override
   void initState() {
@@ -147,188 +138,241 @@ class _ChatStreakScreenState extends State<ChatStreakScreen>
             
             // Main content
             SafeArea(
-              child: Center(
+              child: RepaintBoundary(
+                key: _screenshotKey,
                 child: SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.all(24.0),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: (screenWidth * 0.06).clamp(20.0, 24.0),
+                    vertical: (screenHeight * 0.025).clamp(16.0, 20.0),
+                  ),
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const SizedBox(height: 40),
-                      
-                      // Main headline with fire emoji
-                      _AnimatedFade(
-                        controller: _fadeController,
-                        delay: 0.0,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Flexible(
-                              child: Text(
-                                'Your Longest Chat Streak',
-                                textAlign: TextAlign.center,
-                                style: GoogleFonts.inter(
-                                  color: Colors.black,
-                                  fontSize: (screenWidth * 0.065).clamp(18.0, screenWidth > 600 ? 32.0 : 28.0),
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 0.8,
-                                  height: 1.1,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 2,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 40),
-                      
-                      // Streak Display Card with Loading Bar
-                      _AnimatedFade(
-                        controller: _fadeController,
-                        delay: 0.2,
-                        child: Container(
-                          padding: const EdgeInsets.all(32),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(24),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.08),
-                                blurRadius: 20,
-                                offset: const Offset(0, 8),
-                              ),
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.04),
-                                blurRadius: 40,
-                                offset: const Offset(0, 16),
-                              ),
-                            ],
-                          ),
-                          child: AnimatedBuilder(
-                            animation: _counterController,
-                            builder: (context, child) {
-                              return Column(
-                                children: [
-                                  // Days display
-                                  Text(
-                                    '$_displayedDays',
-                                    style: GoogleFonts.inter(
-                                      color: const Color(0xFFFF6B35),
-                                      fontSize: (screenWidth * 0.12).clamp(40.0, 52.0),
-                                      fontWeight: FontWeight.w800,
-                                      letterSpacing: -0.5,
-                                      height: 0.9,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'days in a row',
-                                    style: GoogleFonts.inter(
-                                      color: const Color(0xFF555555),
-                                      fontSize: (screenWidth * 0.035).clamp(12.0, 15.0),
-                                      fontWeight: FontWeight.w500,
-                                      letterSpacing: 0.3,
-                                      height: 1.2,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 24),
-                                  
-                                  // Progress bar
-                                  Container(
-                                    width: double.infinity,
-                                    height: 12,
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFFF6B35).withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: FractionallySizedBox(
-                                      alignment: Alignment.centerLeft,
-                                      widthFactor: _counterController.value * (_displayedDays / 30).clamp(0.0, 1.0),
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          gradient: const LinearGradient(
-                                            colors: [Color(0xFFFF6B35), Color(0xFFFF8E53)],
-                                          ),
-                                          borderRadius: BorderRadius.circular(6),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Text(
-                                    _streakLabel,
-                                    style: GoogleFonts.inter(
-                                      color: const Color(0xFF777777),
-                                      fontSize: (screenWidth * 0.032).clamp(11.0, 14.0),
-                                      fontWeight: FontWeight.w500,
-                                      letterSpacing: 0.3,
-                                    ),
-                                  ),
-                                ],
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 24),
-                      
-                      // Explanation Card
-                      _AnimatedFade(
-                        controller: _fadeController,
-                        delay: 0.4,
-                        child: Container(
-                          padding: const EdgeInsets.all(24),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.06),
-                                blurRadius: 15,
-                                offset: const Offset(0, 6),
-                              ),
-                            ],
-                          ),
-                          child: Text(
-                            _streakBlurb,
+                    mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(height: screenHeight * 0.05),
+                    
+                    // Main headline
+                    _AnimatedFade(
+                      controller: _fadeController,
+                      delay: 0.0,
+                      child: Column(
+                        children: [
+                          Text(
+                            'Your Longest Chat Streak',
                             textAlign: TextAlign.center,
                             style: GoogleFonts.inter(
-                              color: const Color(0xFF555555),
-                              fontSize: (screenWidth * 0.038).clamp(14.0, 16.0),
+                              color: const Color(0xFF1F1F21),
+                              fontSize: (screenWidth * 0.08).clamp(28.0, 36.0),
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.2,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Your consistency streak that shows dedication.',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.inter(
+                              color: const Color(0xFF636366),
+                              fontSize: (screenWidth * 0.04).clamp(14.0, 16.0),
                               fontWeight: FontWeight.w400,
-                              height: 1.6,
                               letterSpacing: 0.2,
                             ),
                           ),
-                        ),
+                        ],
                       ),
+                    ),
+                    
+                    SizedBox(height: screenHeight * 0.03),
                       
-                      SizedBox(height: screenHeight * 0.05),
-                      
-                      // Share button - floating outside of cards
+                      // Hero Card with Streak Display
                       _AnimatedFade(
                         controller: _fadeController,
-                        delay: 0.7,
-                        child: Center(
-                          child: ShareToStoryButton(
-                          shareText: _shareText,
+                        delay: 0.2,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(36),
+                          child: BackdropFilter(
+                            filter: ui.ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+                            child: Container(
+                              width: double.infinity,
+                              padding: EdgeInsets.all((screenWidth * 0.05).clamp(20.0, 28.0)),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.white.withOpacity(0.75),
+                                    Colors.white.withOpacity(0.55),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(36),
+                                border: Border.all(color: Colors.white.withOpacity(0.4), width: 1),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF8E8E93).withOpacity(0.12),
+                                    blurRadius: 30,
+                                    offset: const Offset(0, 18),
+                                  ),
+                                ],
+                              ),
+                              child: AnimatedBuilder(
+                                animation: _counterController,
+                                builder: (context, child) {
+                                  return Column(
+                                    children: [
+                                      // Days display
+                                      Text(
+                                        '$_displayedDays',
+                                        style: GoogleFonts.inter(
+                                          color: const Color(0xFFFF6B35),
+                                          fontSize: (screenWidth * 0.10).clamp(32.0, 48.0),
+                                          fontWeight: FontWeight.w800,
+                                          letterSpacing: -0.5,
+                                          height: 0.9,
+                                        ),
+                                      ),
+                                      SizedBox(height: (screenHeight * 0.005).clamp(2.0, 4.0)),
+                                      Text(
+                                        'days in a row',
+                                        style: GoogleFonts.inter(
+                                          color: const Color(0xFF555555),
+                                          fontSize: (screenWidth * 0.032).clamp(12.0, 15.0),
+                                          fontWeight: FontWeight.w500,
+                                          letterSpacing: 0.3,
+                                          height: 1.2,
+                                        ),
+                                      ),
+                                      SizedBox(height: (screenHeight * 0.015).clamp(10.0, 16.0)),
+                                      
+                                      // Progress bar
+                                      Container(
+                                        width: double.infinity,
+                                        height: 10,
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFFF6B35).withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: FractionallySizedBox(
+                                          alignment: Alignment.centerLeft,
+                                          widthFactor: _counterController.value * (_displayedDays / 30).clamp(0.0, 1.0),
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              gradient: const LinearGradient(
+                                                colors: [Color(0xFFFF6B35), Color(0xFFFF8E53)],
+                                              ),
+                                              borderRadius: BorderRadius.circular(6),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      SizedBox(height: (screenHeight * 0.008).clamp(4.0, 8.0)),
+                                      Text(
+                                        _streakLabel,
+                                        style: GoogleFonts.inter(
+                                          color: const Color(0xFF777777),
+                                          fontSize: (screenWidth * 0.030).clamp(11.0, 13.0),
+                                          fontWeight: FontWeight.w500,
+                                          letterSpacing: 0.3,
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              ),
+                            ),
                           ),
                         ),
                       ),
                       
-                      SizedBox(height: screenHeight * 0.04),
-                    ],
-                  ),
+                    SizedBox(height: screenHeight * 0.03),
+                    
+                    // Explanation Card (same background as hero card)
+                    _AnimatedFade(
+                      controller: _fadeController,
+                      delay: 0.4,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(28),
+                        child: BackdropFilter(
+                          filter: ui.ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+                          child: Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.all((screenWidth * 0.05).clamp(18.0, 20.0)),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.white.withOpacity(0.75),
+                                  Colors.white.withOpacity(0.55),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(28),
+                              border: Border.all(color: Colors.white.withOpacity(0.4), width: 1),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF8E8E93).withOpacity(0.12),
+                                  blurRadius: 30,
+                                  offset: const Offset(0, 18),
+                                ),
+                              ],
+                            ),
+                            child: Text(
+                              _streakBlurb,
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.inter(
+                                color: const Color(0xFF1F1F21),
+                                fontSize: (screenWidth * 0.036).clamp(13.0, 15.0),
+                                fontWeight: FontWeight.w400,
+                                height: 1.6,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    
+                    SizedBox(height: screenHeight * 0.04),
+                    
+                    // Small Share to Story button
+                    _AnimatedFade(
+                      controller: _fadeController,
+                      delay: 0.6,
+                      child: SmallShareToStoryButton(
+                        shareText: _getShareText(),
+                        screenshotKey: _screenshotKey,
+                        accentGradient: const [Color(0xFFFF8E53), Color(0xFFFFB366)],
+                      ),
+                    ),
+                    
+                    SizedBox(height: screenHeight * 0.04),
+                  ],
                 ),
               ),
             ),
+          ),
+          ),
           ],
         ),
       ),
     );
+  }
+
+  String _getShareText() {
+    final days = widget.streakDays;
+    if (days <= 0) {
+      return "My longest ChatGPT streak: 0 days — ready to start building! 🔥 #ChatGPTWrapped";
+    }
+    if (days < 5) {
+      return "My longest ChatGPT streak: $days days in a row! Building the habit one day at a time. 🔥 #ChatGPTWrapped";
+    }
+    if (days < 14) {
+      return "My longest ChatGPT streak: $days days straight! Consistency is key. 🔥 #ChatGPTWrapped";
+    }
+    if (days < 30) {
+      return "My longest ChatGPT streak: $days days on lock! Discipline and dedication. 🔥 #ChatGPTWrapped";
+    }
+    return "My longest ChatGPT streak: $days days without skipping! Elite consistency unlocked. 🔥 #ChatGPTWrapped";
   }
 }
 
@@ -399,3 +443,4 @@ class _SparklePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
+

@@ -1,7 +1,10 @@
 import 'dart:math';
+import 'dart:ui' as ui;
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:gpt_wrapped2/widgets/share_button.dart';
+import 'package:gpt_wrapped2/widgets/instagram_share_button.dart';
 
 class ChatEraScreen extends StatefulWidget {
   final int totalHours;
@@ -22,6 +25,7 @@ class _ChatEraScreenState extends State<ChatEraScreen>
   late AnimationController _fadeController;
   late AnimationController _counterController;
   late AnimationController _floatController;
+  final GlobalKey _screenshotKey = GlobalKey();
   
   int _displayedHours = 0;
   int _displayedMinutes = 0;
@@ -161,60 +165,83 @@ class _ChatEraScreenState extends State<ChatEraScreen>
           
           // Main content
           SafeArea(
-            child: SingleChildScrollView(
+            child: RepaintBoundary(
+              key: _screenshotKey,
+              child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+                padding: EdgeInsets.symmetric(
+                  horizontal: (screenWidth * 0.06).clamp(20.0, 24.0),
+                  vertical: (screenHeight * 0.025).clamp(16.0, 20.0),
+                ),
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    SizedBox(height: screenHeight * 0.05),
+                    SizedBox(height: screenHeight * 0.04),
                     
                     // Main headline
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.0,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      child: Column(
                         children: [
                           Text(
                             'Your Chat Era',
                             textAlign: TextAlign.center,
                             style: GoogleFonts.inter(
-                              color: Colors.black,
-                              fontSize: (screenWidth * 0.065).clamp(20.0, 28.0),
+                              color: const Color(0xFF1F1F21),
+                              fontSize: (screenWidth * 0.08).clamp(26.0, 34.0),
                               fontWeight: FontWeight.w700,
-                              letterSpacing: 0.8,
-                              height: 1.1,
+                              letterSpacing: -0.2,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'The time you\'ve invested in conversations that matter.',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.inter(
+                              color: const Color(0xFF636366),
+                              fontSize: (screenWidth * 0.04).clamp(14.0, 16.0),
+                              fontWeight: FontWeight.w400,
+                              letterSpacing: 0.2,
                             ),
                           ),
                         ],
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.04),
+                    SizedBox(height: screenHeight * 0.05),
                     
                     // Time Display Card with Circular Progress
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.2,
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.08),
-                              blurRadius: 20,
-                              offset: const Offset(0, 8),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(28),
+                        child: BackdropFilter(
+                          filter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                          child: Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.all((screenWidth * 0.05).clamp(18.0, 26.0)),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.white.withOpacity(0.75),
+                                  Colors.white.withOpacity(0.55),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(28),
+                              border: Border.all(color: Colors.white.withOpacity(0.4), width: 1),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF8E8E93).withOpacity(0.12),
+                                  blurRadius: 24,
+                                  offset: const Offset(0, 12),
+                                ),
+                              ],
                             ),
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.04),
-                              blurRadius: 40,
-                              offset: const Offset(0, 16),
-                            ),
-                          ],
-                        ),
                         child: AnimatedBuilder(
                           animation: _counterController,
                           builder: (context, child) {
@@ -246,28 +273,31 @@ class _ChatEraScreenState extends State<ChatEraScreen>
                                   ],
                                 ),
                                 
-                                const SizedBox(height: 16),
+                                SizedBox(height: (screenWidth * 0.03).clamp(12.0, 16.0)),
                                 
                                 // Time Result
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: (screenWidth * 0.05).clamp(16.0, 20.0),
+                                    vertical: (screenWidth * 0.025).clamp(10.0, 12.0),
+                                  ),
                                   decoration: BoxDecoration(
                                     gradient: const LinearGradient(
                                       colors: [Color(0xFF667eea), Color(0xFF4ECDC4)],
                                     ),
-                                    borderRadius: BorderRadius.circular(20),
+                                    borderRadius: BorderRadius.circular(18),
                                   ),
                                   child: Text(
                                     '${widget.totalHours}h ${widget.totalMinutes}m',
                                     style: GoogleFonts.inter(
                                       color: Colors.white,
-                                      fontSize: (screenWidth * 0.055).clamp(20.0, 24.0),
+                                      fontSize: (screenWidth * 0.05).clamp(18.0, 22.0),
                                       fontWeight: FontWeight.w700,
                                       letterSpacing: 0.5,
                                     ),
                                   ),
                                 ),
-                                const SizedBox(height: 12),
+                                SizedBox(height: (screenWidth * 0.025).clamp(10.0, 12.0)),
                                 Text(
                                   _commitmentLabel,
                                   textAlign: TextAlign.center,
@@ -282,54 +312,69 @@ class _ChatEraScreenState extends State<ChatEraScreen>
                             );
                           },
                         ),
-                      ),
-                    ),
-                    
-                    SizedBox(height: screenHeight * 0.04),
-                    
-                    // Description
-                    _AnimatedFade(
-                      controller: _fadeController,
-                      delay: 0.4,
-                      child: Container(
-                        padding: const EdgeInsets.all(18),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.08),
-                              blurRadius: 15,
-                              offset: const Offset(0, 6),
-                            ),
-                          ],
-                        ),
-                        child: Text(
-                          _eraDescription,
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.inter(
-                            color: Colors.black,
-                            fontSize: (screenWidth * 0.038).clamp(14.0, 16.0),
-                            fontWeight: FontWeight.w400,
-                            height: 1.6,
-                            letterSpacing: 0.2,
                           ),
                         ),
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.02),
+                    SizedBox(height: screenHeight * 0.03),
                     
-                    // Share button - floating outside of cards
+                    // Description
                     _AnimatedFade(
                       controller: _fadeController,
-                      delay: 1.0,
-                      child: Center(
-                        child: ShareToStoryButton(
-                          shareText: _shareText,
-                          primaryColor: const Color(0xFFE0F2F7),
-                          secondaryColor: const Color(0xFFCCEEF5),
+                      delay: 0.4,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(28),
+                        child: BackdropFilter(
+                          filter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                          child: Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.all((screenWidth * 0.05).clamp(18.0, 20.0)),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.white.withOpacity(0.75),
+                                  Colors.white.withOpacity(0.55),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(28),
+                              border: Border.all(color: Colors.white.withOpacity(0.4), width: 1),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF8E8E93).withOpacity(0.12),
+                                  blurRadius: 30,
+                                  offset: const Offset(0, 18),
+                                ),
+                              ],
+                            ),
+                            child: Text(
+                              _eraDescription,
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.inter(
+                                color: const Color(0xFF636366),
+                                fontSize: (screenWidth * 0.04).clamp(14.0, 16.0),
+                                fontWeight: FontWeight.w400,
+                                height: 1.5,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                          ),
                         ),
+                      ),
+                    ),
+                    
+                    SizedBox(height: screenHeight * 0.03),
+                    
+                    // Share button with same background as other cards
+                    _AnimatedFade(
+                      controller: _fadeController,
+                      delay: 0.6,
+                      child: SmallShareToStoryButton(
+                        shareText: _shareText,
+                        screenshotKey: _screenshotKey,
+                        accentGradient: const [Color(0xFF667eea), Color(0xFF4ECDC4)],
                       ),
                     ),
                     
@@ -338,6 +383,7 @@ class _ChatEraScreenState extends State<ChatEraScreen>
                 ),
               ),
             ),
+          ),
           ),
         ],
       ),
@@ -456,6 +502,7 @@ class _ChatParticlesPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
 
+
 // Circular Progress Chart Widget
 class _CircularProgressChart extends StatelessWidget {
   final AnimationController controller;
@@ -477,7 +524,7 @@ class _CircularProgressChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final chartSize = (screenWidth * 0.22).clamp(90.0, 110.0);
+    final chartSize = (screenWidth * 0.20).clamp(80.0, 100.0);
     
     return AnimatedBuilder(
       animation: controller,

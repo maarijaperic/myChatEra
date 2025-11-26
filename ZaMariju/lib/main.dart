@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:gpt_wrapped2/screen_login.dart';
+import 'package:gpt_wrapped2/screen_splash.dart';
+import 'package:gpt_wrapped2/screen_welcome.dart';
 import 'package:gpt_wrapped2/screen_intro.dart';
 import 'package:gpt_wrapped2/card_navigator.dart';
 import 'package:gpt_wrapped2/screen_analyzing_loading.dart';
@@ -23,8 +24,9 @@ import 'package:gpt_wrapped2/screen_past_life_persona.dart';
 import 'package:gpt_wrapped2/screen_mbti_personality.dart';
 import 'package:gpt_wrapped2/screen_wrapped.dart';
 import 'package:gpt_wrapped2/screen_comparison.dart';
-import 'package:gpt_wrapped2/screen_subscription.dart';
 import 'package:gpt_wrapped2/screen_social_sharing.dart';
+import 'package:gpt_wrapped2/screen_subscription.dart';
+import 'package:gpt_wrapped2/screen_premium_analyzing.dart';
 // Temporarily disabled data storage - requires Developer Mode on Windows
 // import 'package:gpt_wrapped2/services/data_storage.dart';
 import 'package:gpt_wrapped2/models/chat_data.dart';
@@ -34,22 +36,23 @@ import 'package:gpt_wrapped2/services/ai_analyzer.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Proxy URL configuration
-  // For local development: Set your local IP address
-  // For production: Set your deployed server URL (e.g., Railway, Render)
+  // Proxy URL configuration (FastAPI Backend)
+  // For local development:
+  //   - Android emulator: 'http://10.0.2.2:3000'
+  //   - iOS Simulator: 'http://localhost:3000'
+  //   - Physical phone (same WiFi): 'http://192.168.x.x:3000' (find IP with ipconfig)
   // 
-  // To find your local IP: ipconfig (Windows) or ifconfig (Mac/Linux)
-  // Example: AIAnalyzer.setProxyUrl('http://192.168.1.100:3000');
-  // 
-  // For Android emulator: 'http://10.0.2.2:3000'
-  // For iOS Simulator: 'http://localhost:3000'
-  // For production: 'https://your-app.railway.app' or similar
+  // For production (Google Cloud Run):
+  //   - 'https://your-service-xxxx.run.app'
   //
-  // IMPORTANT: Replace with your actual proxy server URL!
-  // You can also use environment variables or build configurations
+  // To find your local IP: ipconfig (Windows) or ifconfig (Mac/Linux)
+  // Example for physical phone: AIAnalyzer.setProxyUrl('http://192.168.1.100:3000');
+  //
+  // IMPORTANT: Make sure FastAPI backend is running on port 3000!
+  // You can also use environment variables: flutter run --dart-define=PROXY_URL=http://localhost:3000
   const String proxyUrl = String.fromEnvironment(
     'PROXY_URL',
-    defaultValue: 'https://gentle-blessing-production.up.railway.app', // Railway production URL
+    defaultValue: 'http://192.168.0.12:3000', // Local FastAPI server accessible to phone on same WiFi
   );
   AIAnalyzer.setProxyUrl(proxyUrl);
   
@@ -155,11 +158,9 @@ class _GPTWrappedHomeState extends State<GPTWrappedHome> {
     navigatorContext.pushReplacement(
       MaterialPageRoute(
         builder: (context) => AnalyzingLoadingScreen(
-          onAnalysisComplete: (stats, premiumInsights) {
+          onAnalysisComplete: (stats, premiumInsights, parsedConversations) {
             print('🔴 PREMIUM_DEBUG: onAnalysisComplete - premiumInsights is null: ${premiumInsights == null}');
-            if (premiumInsights != null) {
-              print('🔴 PREMIUM_DEBUG: onAnalysisComplete - personalityType: ${premiumInsights.personalityType}');
-            }
+            print('🔴 PREMIUM_DEBUG: onAnalysisComplete - parsedConversations: ${parsedConversations != null}');
             
             if (mounted) {
               setState(() {
@@ -169,7 +170,7 @@ class _GPTWrappedHomeState extends State<GPTWrappedHome> {
             }
             
             // After analysis, show intro screen with real stats
-            // IMPORTANT: Pass premiumInsights directly from callback, not from state
+            // IMPORTANT: Pass premiumInsights and conversations directly from callback, not from state
             navigatorContext.pushReplacement(
               MaterialPageRoute(
                 builder: (newContext) => IntroScreen(
@@ -183,7 +184,8 @@ class _GPTWrappedHomeState extends State<GPTWrappedHome> {
                           return _FreeWrappedNavigator(
                             onPremiumTap: _startPremiumWrapped,
                             stats: stats, // Use real analyzed stats
-                            premiumInsights: premiumInsights, // Pass directly from callback, not from state!
+                            premiumInsights: premiumInsights, // Will be null initially, set when user subscribes
+                            parsedConversations: parsedConversations, // Pass conversations for premium analysis
                           );
                         },
                       ),
@@ -208,7 +210,17 @@ class _GPTWrappedHomeState extends State<GPTWrappedHome> {
     //     ),
     //   );
     // }
-    return LoginScreen(onLoginSuccess: _onLoginSuccess);
+    return SplashScreen(
+      onComplete: () {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => WelcomeScreen(
+              onGetStarted: _onLoginSuccess,
+            ),
+          ),
+        );
+      },
+    );
   }
 }
 
@@ -216,40 +228,97 @@ class _FreeWrappedNavigator extends StatelessWidget {
   final VoidCallback onPremiumTap;
   final ChatStats? stats;
   final PremiumInsights? premiumInsights;
+  final List<ConversationData>? parsedConversations;
 
   const _FreeWrappedNavigator({
     required this.onPremiumTap,
     this.stats,
     this.premiumInsights,
+    this.parsedConversations,
   });
 
-  void _handlePremiumTap(BuildContext context) {
+  void _handlePremiumTap(BuildContext context, List<ConversationData>? conversations) {
     print('🔴 PREMIUM_DEBUG: _handlePremiumTap CALLED');
     print('🔴 PREMIUM_DEBUG: _handlePremiumTap - premiumInsights is null: ${premiumInsights == null}');
+    print('🔴 PREMIUM_DEBUG: _handlePremiumTap - conversations: ${conversations != null}');
     
-    if (premiumInsights == null) {
-      print('🔴 PREMIUM_DEBUG: _handlePremiumTap - premiumInsights is NULL, showing error');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Premium insights not ready yet. Please try again in a moment.'),
+    // If premium insights already exist, navigate directly
+    if (premiumInsights != null) {
+      print('🔴 PREMIUM_DEBUG: _handlePremiumTap - Using cached premium insights');
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) {
+            return _PremiumWrappedNavigator(
+              insights: premiumInsights!,
+            );
+          },
         ),
       );
       return;
     }
     
-    // PREMIUM_DEBUG: Check if insights are being passed correctly
-    print('🔴 PREMIUM_DEBUG: _handlePremiumTap - personalityType: ${premiumInsights!.personalityType}');
-    print('🔴 PREMIUM_DEBUG: _handlePremiumTap - mbtiType: ${premiumInsights!.mbtiType}');
-    print('🔴 PREMIUM_DEBUG: _handlePremiumTap - zodiacName: ${premiumInsights!.zodiacName}');
-    print('🔴 PREMIUM_DEBUG: _handlePremiumTap - Navigating to _PremiumWrappedNavigator');
-    
+    // If no premium insights, show subscription screen which will trigger analysis
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) {
-          print('🔴 PREMIUM_DEBUG: Building _PremiumWrappedNavigator widget');
-          print('🔴 PREMIUM_DEBUG: Passing insights with personalityType: ${premiumInsights!.personalityType}');
-          return _PremiumWrappedNavigator(
-            insights: premiumInsights!,
+          return SubscriptionScreen(
+            onSubscribe: () async {
+              // Start premium analysis when user subscribes
+              if (conversations == null || conversations.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('No conversations available for analysis.'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+                return;
+              }
+              
+              final conversationsWithMessages =
+                  conversations.where((conv) => conv.messages.isNotEmpty).toList();
+              
+              if (conversationsWithMessages.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('No conversations with messages found.'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+                return;
+              }
+              
+              // Close subscription screen and show premium analyzing screen
+              Navigator.of(context).pop(); // Close subscription screen
+              
+              // Show premium analyzing screen
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => PremiumAnalyzingScreen(
+                    conversations: conversationsWithMessages,
+                    onAnalysisComplete: (premiumInsights) {
+                      // Navigate to premium screens when analysis completes
+                      Navigator.of(context).pop(); // Close analyzing screen
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => _PremiumWrappedNavigator(
+                            insights: premiumInsights,
+                          ),
+                        ),
+                      );
+                    },
+                    onError: (errorMessage) {
+                      // Show error message
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(errorMessage),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              );
+            },
           );
         },
       ),
@@ -336,116 +405,107 @@ class _FreeWrappedNavigator extends StatelessWidget {
           onSubscribe: () {
             print('🔴 PREMIUM_DEBUG: TypeABPreviewScreen onSubscribe clicked');
             print('🔴 PREMIUM_DEBUG: premiumInsights is null: ${premiumInsights == null}');
-            _handlePremiumTap(context);
+            print('🔴 PREMIUM_DEBUG: parsedConversations: ${parsedConversations != null}');
+            _handlePremiumTap(context, parsedConversations);
           },
         ),
-        // Index 8 - Choose Your Plan
-        SubscriptionScreen(
-          onSubscribe: () {
-            print('🔴 PREMIUM_DEBUG: SubscriptionScreen onSubscribe clicked');
-            print('🔴 PREMIUM_DEBUG: premiumInsights is null: ${premiumInsights == null}');
-            _handlePremiumTap(context);
-          },
-        ),
-        // Index 9 - MBTI Personality
-        const MBTIPersonalityScreen(
+        // Index 8 - MBTI Personality
+        MBTIPersonalityScreen(
           question: 'What is your MBTI personality type according to ChatGPT?',
-          mbtiType: 'ENFP',
-          mbtiEmoji: '🎭',
-          personalityName: 'The Enthusiast',
-          explanation: 'According to the analysis of your conversations, ChatGPT detected that you are an ENFP (Extroverted, Intuitive, Feeling, Perceiving). You are an enthusiastic, creative and sociable person who is motivated by possibilities. You have a great ability to connect with others and always seek new experiences and challenges. Your positive energy and your ability to inspire others are your greatest strengths.',
+          mbtiType: premiumInsights?.mbtiType ?? 'ENFP',
+          mbtiEmoji: premiumInsights?.mbtiEmoji ?? '🎭',
+          personalityName: premiumInsights?.personalityName ?? 'The Enthusiast',
+          explanation: premiumInsights?.mbtiExplanation ?? 'According to the analysis of your conversations, ChatGPT detected that you are an ENFP (Extroverted, Intuitive, Feeling, Perceiving). You are an enthusiastic, creative and sociable person who is motivated by possibilities. You have a great ability to connect with others and always seek new experiences and challenges. Your positive energy and your ability to inspire others are your greatest strengths.',
           subtitle: 'Your personality is unique, like a work of art 🎨',
         ),
-        // Index 10 - Type A vs Type B Personality
-        const TypeABPersonalityScreen(
+        // Index 9 - Type A vs Type B Personality
+        TypeABPersonalityScreen(
           question: 'Are you Type A or Type B according to ChatGPT?',
-          personalityType: 'TYPE A',
-          typeEmoji: '⚡',
-          typeAPercentage: 70,
-          typeBPercentage: 30,
-          explanation: 'Based on your conversations, GPT detected strong Type A traits. You\'re ambitious, organized, and impatient—probably asking follow-up questions before the first answer even finishes. You multitask like a pro, demand efficiency, and low-key stress about everything. But hey, at least you get stuff done. 💪',
-          subtitle: 'Knowing yourself is the first step to growth 🌟',
+          personalityType: premiumInsights?.personalityType ?? 'TYPE A',
+          typeEmoji: _getTypeEmoji(premiumInsights?.personalityType ?? 'TYPE A'),
+          typeAPercentage: premiumInsights?.typeAPercentage ?? 70,
+          typeBPercentage: premiumInsights?.typeBPercentage ?? 30,
+          explanation: premiumInsights?.typeExplanation ?? 'Based on your conversations, GPT detected strong Type A traits. You\'re ambitious, organized, and impatient—probably asking follow-up questions before the first answer even finishes. You multitask like a pro, demand efficiency, and low-key stress about everything. But hey, at least you get stuff done. 💪',
+          subtitle: _getPersonalitySubtitle(premiumInsights?.personalityType ?? 'TYPE A'),
         ),
-        // Index 11 - Red Green Flags
-        const RedGreenFlagsScreen(
+        // Index 10 - Red Green Flags
+        RedGreenFlagsScreen(
           question: 'What are your red and green flags according to ChatGPT?',
           greenFlagTitle: 'Green Flags 🟢',
           redFlagTitle: 'Red Flags 🔴',
-          greenFlags: [
-            'You always apologize when you make a mistake',
-            'You are very creative with your prompts',
-            'You ask very intelligent questions',
-            'You have a good sense of humor',
-            'You are patient with long answers',
-          ],
-          redFlags: [
-            'Sometimes you don\'t read the full answers',
-            'You ask for the same thing several times in a row',
-            'You don\'t specify what you want clearly',
-            'You get frustrated when you don\'t understand something',
-            'Sometimes you are very impatient',
-          ],
+          greenFlags: premiumInsights?.greenFlags.isNotEmpty == true 
+              ? premiumInsights!.greenFlags 
+              : [
+                  'You always apologize when you make a mistake',
+                  'You are very creative with your prompts',
+                  'You ask very intelligent questions',
+                  'You have a good sense of humor',
+                  'You are patient with long answers',
+                ],
+          redFlags: premiumInsights?.redFlags.isNotEmpty == true 
+              ? premiumInsights!.redFlags 
+              : [
+                  'Sometimes you don\'t read the full answers',
+                  'You ask for the same thing several times in a row',
+                  'You don\'t specify what you want clearly',
+                  'You get frustrated when you don\'t understand something',
+                  'Sometimes you are very impatient',
+                ],
           subtitle: 'Self-love also includes recognizing our areas for improvement 💚❤️',
         ),
-        // Index 12 - Guess Zodiac
-        const GuessZodiacScreen(
+        // Index 11 - Guess Zodiac
+        GuessZodiacScreen(
           question: 'What is your zodiac sign according to ChatGPT?',
-          zodiacSign: 'Scorpio ♏',
-          zodiacEmoji: '🦂',
-          zodiacName: 'Scorpio',
-          explanation: 'Based on your chats, you\'re giving major Scorpio energy 🦂✨ Intense conversations? Check. Deep questions at 3 AM? Check. Reading between every single line? That\'s so you. GPT says you\'re the friend who turns small talk into therapy sessions. Mysterious vibes only. 💅',
+          zodiacSign: premiumInsights?.zodiacSign ?? 'Scorpio ♏',
+          zodiacEmoji: premiumInsights?.zodiacEmoji ?? '🦂',
+          zodiacName: premiumInsights?.zodiacName ?? 'Scorpio',
+          explanation: premiumInsights?.zodiacExplanation ?? 'Based on your chats, you\'re giving major Scorpio energy 🦂✨ Intense conversations? Check. Deep questions at 3 AM? Check. Reading between every single line? That\'s so you. GPT says you\'re the friend who turns small talk into therapy sessions. Mysterious vibes only. 💅',
           subtitle: 'The stars don\'t lie... and neither does ChatGPT! ⭐',
         ),
-        // Index 13 - Introvert Extrovert
-        const IntrovertExtrovertScreen(
+        // Index 12 - Introvert Extrovert
+        IntrovertExtrovertScreen(
           question: 'Are you an introvert or extrovert according to ChatGPT?',
-          personalityType: 'AMBIVERT',
-          introvertPercentage: 55,
-          extrovertPercentage: 45,
-          explanation: 'According to your conversations, ChatGPT detected that you have a balanced personality. You are an ambivert: you enjoy both moments of solitary reflection and social interactions. You have the ability to adapt to different situations, being introspective when you need to process information and sociable when you want to share ideas.',
-          subtitle: 'The perfect balance between introspection and sociability 🧠💬',
+          personalityType: premiumInsights?.introExtroType ?? 'AMBIVERT',
+          introvertPercentage: premiumInsights?.introvertPercentage ?? 55,
+          extrovertPercentage: premiumInsights?.extrovertPercentage ?? 45,
+          explanation: premiumInsights?.introExtroExplanation ?? 'According to your conversations, ChatGPT detected that you have a balanced personality. You are an ambivert: you enjoy both moments of solitary reflection and social interactions. You have the ability to adapt to different situations, being introspective when you need to process information and sociable when you want to share ideas.',
+          subtitle: _getIntroExtroSubtitle(premiumInsights?.introExtroType ?? 'AMBIVERT'),
         ),
-        // Index 14 - Advice Most Asked
-        const AdviceMostAskedScreen(
+        // Index 13 - Advice Most Asked
+        AdviceMostAskedScreen(
           question: 'What advice have you asked ChatGPT for the most?',
-          mostAskedAdvice: 'How to improve my personal relationships',
-          adviceCategory: 'RELATIONSHIPS',
-          adviceEmoji: '💕',
-          explanation: 'According to the analysis of your conversations, you have sought advice about personal relationships more than any other topic. This shows that you value human connections and always seek to improve the way you relate to others. Your curiosity to better understand social dynamics is admirable.',
+          mostAskedAdvice: premiumInsights?.mostAskedAdvice ?? 'How to improve my personal relationships',
+          adviceCategory: premiumInsights?.adviceCategory ?? 'RELATIONSHIPS',
+          adviceEmoji: premiumInsights?.adviceEmoji ?? '💕',
+          explanation: premiumInsights?.adviceExplanation ?? 'According to the analysis of your conversations, you have sought advice about personal relationships more than any other topic. This shows that you value human connections and always seek to improve the way you relate to others. Your curiosity to better understand social dynamics is admirable.',
           subtitle: 'Wisdom is knowing what to ask 💡',
         ),
-        // Index 15 - Love Language
-        const LoveLanguageScreen(
+        // Index 14 - Love Language
+        LoveLanguageScreen(
           question: 'What\'s your love language according to ChatGPT?',
-          loveLanguage: 'Words of Affirmation',
-          languageEmoji: '💬',
-          explanation: 'Based on your chats, GPT noticed you light up when validated. You seek reassurance, ask follow-up questions to make sure you\'re understood, and appreciate detailed explanations. You love when GPT acknowledges your ideas and reflects them back. Basically, you\'re the type who needs to hear "You\'re doing great!" even from an AI. And honestly? You are. 💕',
+          loveLanguage: premiumInsights?.loveLanguage ?? 'Words of Affirmation',
+          languageEmoji: premiumInsights?.languageEmoji ?? '💬',
+          explanation: premiumInsights?.loveLanguageExplanation ?? 'Based on your chats, GPT noticed you light up when validated. You seek reassurance, ask follow-up questions to make sure you\'re understood, and appreciate detailed explanations. You love when GPT acknowledges your ideas and reflects them back. Basically, you\'re the type who needs to hear "You\'re doing great!" even from an AI. And honestly? You are. 💕',
           subtitle: 'Love is spoken in many languages 💕',
-          loveLanguagePercentages: {
-            'Words of Affirmation': 35,
-            'Quality Time': 25,
-            'Acts of Service': 20,
-            'Physical Touch': 15,
-            'Receiving Gifts': 5,
-          },
+          loveLanguagePercentages: _getLoveLanguageDistribution(premiumInsights?.loveLanguage ?? 'Words of Affirmation'),
         ),
-        // Index 16 - Past Life Persona (Last premium screen)
-        const PastLifePersonaScreen(
+        // Index 15 - Past Life Persona (Last premium screen)
+        PastLifePersonaScreen(
           question: 'Who were you in a past life according to ChatGPT?',
-          personaTitle: 'Renaissance Philosopher-Artist',
-          personaEmoji: '🎨',
-          era: '15TH CENTURY FLORENCE',
-          description: 'You were a Renaissance thinker who questioned everything and created beauty from chaos. Your conversations reveal a mind that blends logic with creativity, always seeking deeper meaning. Like Da Vinci, you jump between disciplines—art, science, philosophy—never satisfied with surface-level answers. You probably had a dramatic scarf and too many unfinished projects.',
+          personaTitle: premiumInsights?.personaTitle ?? 'Renaissance Philosopher-Artist',
+          personaEmoji: premiumInsights?.personaEmoji ?? '🎨',
+          era: premiumInsights?.era ?? '15TH CENTURY FLORENCE',
+          description: premiumInsights?.personaDescription ?? 'You were a Renaissance thinker who questioned everything and created beauty from chaos. Your conversations reveal a mind that blends logic with creativity, always seeking deeper meaning. Like Da Vinci, you jump between disciplines—art, science, philosophy—never satisfied with surface-level answers. You probably had a dramatic scarf and too many unfinished projects.',
           subtitle: 'History echoes in who we are today ✨',
         ),
-        // Index 18 - Your 2025 in Wrapped
+        // Index 16 - Your 2025 in Wrapped
         const WrappedStatsScreen(
           question: 'Your 2025 in Wrapped',
           statNumber: 2025,
           unit: 'YEAR',
           poeticMessage: 'Get ready for another year of growth, discovery, and countless conversations with an AI that will know you even better! Here\'s to asking even more interesting questions! 🎉',
         ),
-        // Index 19 - Your GPT Wrapped
+        // Index 17 - Your GPT Wrapped
         const ComparisonStatsScreen(
           question: 'Your GPT Wrapped',
           firstName: 'You',
@@ -456,12 +516,74 @@ class _FreeWrappedNavigator extends StatelessWidget {
           secondEmoji: '🤖',
           poeticMessage: 'You\'ve created a beautiful partnership with AI this year. While others see ChatGPT as a tool, you\'ve made it your conversation partner, creative collaborator, and digital confidant. Here\'s to many more meaningful exchanges! 🌟',
         ),
-        // Index 20 - Share with People
+        // Index 18 - Share with People
         const SocialSharingScreen(),
       ],
       startIndex: 0,
-      premiumStartIndex: 21, // Prevent tapping past index 20
+      premiumStartIndex: 19, // Prevent tapping past index 18
     );
+  }
+
+  String _getTypeEmoji(String type) {
+    switch (type.toUpperCase()) {
+      case 'TYPE A':
+        return '⚡';
+      case 'TYPE B':
+        return '🌊';
+      default:
+        return '🌟';
+    }
+  }
+
+  String _getPersonalitySubtitle(String type) {
+    switch (type.toUpperCase()) {
+      case 'TYPE A':
+        return 'You sprint through life with unstoppable energy ⚡';
+      case 'TYPE B':
+        return 'You flow through life with chill confidence 🌈';
+      default:
+        return 'Knowing yourself is the first step to growth 🌟';
+    }
+  }
+
+  String _getIntroExtroSubtitle(String type) {
+    switch (type.toUpperCase()) {
+      case 'INTROVERT':
+        return 'Your quiet power lights up deep conversations 🌙';
+      case 'EXTROVERT':
+        return 'Your social battery charges the room 🔋';
+      default:
+        return 'The perfect balance between introspection and sociability 🧠💬';
+    }
+  }
+
+  Map<String, int> _getLoveLanguageDistribution(String primary) {
+    final defaultOrder = [
+      'Words of Affirmation',
+      'Quality Time',
+      'Acts of Service',
+      'Physical Touch',
+      'Receiving Gifts',
+    ];
+
+    final normalizedPrimary = primary.trim().toLowerCase();
+    final primaryKey = defaultOrder.firstWhere(
+      (lang) => lang.toLowerCase() == normalizedPrimary,
+      orElse: () => defaultOrder.first,
+    );
+
+    final distribution = <String, int>{};
+    for (final lang in defaultOrder) {
+      distribution[lang] = lang == primaryKey ? 40 : 15;
+    }
+
+    final total = distribution.values.reduce((a, b) => a + b);
+    if (total != 100) {
+      final diff = 100 - total;
+      distribution[primaryKey] = (distribution[primaryKey]! + diff).clamp(0, 100);
+    }
+
+    return distribution;
   }
 }
 

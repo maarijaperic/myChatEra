@@ -46,8 +46,8 @@ class _SplashScreenState extends State<SplashScreen>
 
     _controller.forward();
 
-    // Navigate after 2 seconds
-    Timer(const Duration(milliseconds: 2000), () {
+    // Navigate after 1.5 seconds
+    Timer(const Duration(milliseconds: 1500), () {
       widget.onComplete();
     });
   }
@@ -62,7 +62,7 @@ class _SplashScreenState extends State<SplashScreen>
     // Try to load logo from assets, fallback to placeholder
     try {
       return Image.asset(
-        'assets/images/logo.png',
+        'assets/images/logo_transparentno.png',
         width: 150,
         height: 150,
         fit: BoxFit.contain,
@@ -121,31 +121,6 @@ class _SplashScreenState extends State<SplashScreen>
                       ),
                     ),
                     
-                    const SizedBox(height: 40),
-                    
-                    // App Name
-                    const Text(
-                      'MyChatEra',
-                      style: TextStyle(
-                        fontSize: 36,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF2D2D2D),
-                        letterSpacing: 1.5,
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 12),
-                    
-                    // Tagline
-                    Text(
-                      'Your ChatGPT Journey, Wrapped',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF2D2D2D).withOpacity(0.6),
-                        letterSpacing: 0.5,
-                      ),
-                    ),
                   ],
                 ),
               ),

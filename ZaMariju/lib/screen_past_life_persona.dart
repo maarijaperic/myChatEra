@@ -1,7 +1,10 @@
 import 'dart:math';
+import 'dart:ui' as ui;
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:gpt_wrapped2/widgets/share_button.dart';
+import 'package:gpt_wrapped2/widgets/instagram_share_button.dart';
 
 class PastLifePersonaScreen extends StatefulWidget {
   final String question;
@@ -28,7 +31,8 @@ class PastLifePersonaScreen extends StatefulWidget {
 class _PastLifePersonaScreenState extends State<PastLifePersonaScreen>
     with TickerProviderStateMixin {
   late AnimationController _fadeController;
-  late AnimationController _bubblesController;
+  late AnimationController _particlesController;
+  final GlobalKey _screenshotKey = GlobalKey();
   
   @override
   void initState() {
@@ -39,9 +43,9 @@ class _PastLifePersonaScreenState extends State<PastLifePersonaScreen>
       duration: const Duration(milliseconds: 1500),
     );
     
-    _bubblesController = AnimationController(
+    _particlesController = AnimationController(
+      duration: const Duration(seconds: 4),
       vsync: this,
-      duration: const Duration(milliseconds: 3000),
     )..repeat();
     
     _startAnimations();
@@ -55,7 +59,7 @@ class _PastLifePersonaScreenState extends State<PastLifePersonaScreen>
   @override
   void dispose() {
     _fadeController.dispose();
-    _bubblesController.dispose();
+    _particlesController.dispose();
     super.dispose();
   }
 
@@ -84,12 +88,12 @@ class _PastLifePersonaScreenState extends State<PastLifePersonaScreen>
             ),
           ),
           
-          // Animated particles
+          // Subtle animated particles (like Share with People)
           AnimatedBuilder(
-            animation: _bubblesController,
+            animation: _particlesController,
             builder: (context, child) {
               return CustomPaint(
-                painter: _PastLifeParticlesPainter(_bubblesController.value),
+                painter: _SubtleParticlesPainter(_particlesController.value),
                 child: Container(),
               );
             },
@@ -97,136 +101,72 @@ class _PastLifePersonaScreenState extends State<PastLifePersonaScreen>
           
           // Main content
           SafeArea(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+            child: RepaintBoundary(
+              key: _screenshotKey,
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: (screenWidth * 0.06).clamp(20.0, 24.0),
+                  vertical: (screenHeight * 0.025).clamp(16.0, 20.0),
+                ),
                 child: Column(
                   children: [
-                    SizedBox(height: screenHeight * 0.08),
+                    SizedBox(height: screenHeight * 0.03),
                     
-                    // Main headline
+                    // Header + hero card
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.0,
-                      child: Text(
-                        'Who were you in a past life?',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.inter(
-                          color: Colors.black,
-                          fontSize: (screenWidth * 0.058).clamp(16.0, screenWidth > 600 ? 28.0 : 26.0),
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.8,
-                          height: 1.1,
-                        ),
+                      child: Column(
+                        children: [
+                          Text(
+                            'Your Past Life',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.inter(
+                              color: const Color(0xFF1F1F21),
+                              fontSize: (screenWidth * 0.08).clamp(28.0, 36.0),
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.2,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            widget.question,
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.inter(
+                              color: const Color(0xFF636366),
+                              fontSize: (screenWidth * 0.04).clamp(14.0, 16.0),
+                              fontWeight: FontWeight.w400,
+                              letterSpacing: 0.2,
+                            ),
+                          ),
+                          SizedBox(height: screenHeight * 0.02),
+                          _PastLifeHeroCard(
+                            screenWidth: screenWidth,
+                            personaTitle: widget.personaTitle,
+                            personaEmoji: widget.personaEmoji,
+                            era: widget.era,
+                          ),
+                        ],
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.06),
+                    SizedBox(height: screenHeight * 0.025),
                     
-                    // Past Life Persona Card
+                    // Message card (like Share with People)
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.2,
                       child: Container(
-                        margin: EdgeInsets.symmetric(horizontal: (screenWidth * 0.04).clamp(12.0, 16.0)),
-                        padding: EdgeInsets.all((screenWidth * 0.045).clamp(16.0, 20.0)),
+                        padding: EdgeInsets.all((screenWidth * 0.04).clamp(18.0, 20.0)),
                         decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular((screenWidth * 0.06).clamp(20.0, 28.0)),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.06),
-                              blurRadius: 15,
-                              offset: const Offset(0, 6),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          children: [
-                            // Top Label (Tag) - A PAST LIFE PERSONA
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: (screenWidth * 0.035).clamp(10.0, 14.0),
-                                vertical: (screenWidth * 0.012).clamp(4.0, 6.0),
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF6E9DA),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    'A PAST LIFE PERSONA',
-                                    textAlign: TextAlign.center,
-                                    style: GoogleFonts.inter(
-                                      color: const Color(0xFF8B7E74),
-                                      fontSize: (screenWidth * 0.03).clamp(11.0, 12.0),
-                                      fontWeight: FontWeight.w500,
-                                      letterSpacing: 0.5,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  const Text(
-                                    '🕐',
-                                    style: TextStyle(color: Color(0xFF8B7E74)),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            
-                            SizedBox(height: (screenHeight * 0.01).clamp(8.0, 12.0)),
-                            
-                            // Subheader Line - Era
-                            Text(
-                              widget.era,
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.inter(
-                                color: const Color(0xFFC08A58),
-                                fontSize: (screenWidth * 0.035).clamp(13.0, 14.0),
-                                fontWeight: FontWeight.w500,
-                                letterSpacing: 1.2,
-                                height: 1.2,
-                              ),
-                            ),
-                            
-                            SizedBox(height: (screenHeight * 0.015).clamp(10.0, 16.0)),
-                            
-                            // Main Title - Persona Title with clock emoji
-                            Text(
-                              '${widget.personaTitle} 🕐',
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.inter(
-                                color: const Color(0xFF3C2F25),
-                                fontSize: (screenWidth * 0.048).clamp(18.0, 20.0),
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 0.3,
-                                height: 1.3,
-                              ),
-                            ),
-                            
-                            SizedBox(height: (screenHeight * 0.02).clamp(12.0, 20.0)),
-                            
-                            // Body Text
-                            const SizedBox.shrink(),
-                          ],
-                        ),
-                      ),
-                    ),
-                    
-                    SizedBox(height: screenHeight * 0.04),
-                    
-                    // Description Card
-                    _AnimatedFade(
-                      controller: _fadeController,
-                      delay: 0.4,
-                      child: Container(
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(24),
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFFFFFFF), Color(0xFFF6F7FF)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.06),
@@ -236,36 +176,35 @@ class _PastLifePersonaScreenState extends State<PastLifePersonaScreen>
                           ],
                         ),
                         child: Text(
-                          widget.description,
+                          '${widget.description} Exploring your past life persona offers a unique perspective on your current personality and interests. These insights can reveal patterns and traits that have carried through time, helping you understand yourself on a deeper level. Embrace the wisdom of your past self and let it guide your present journey.',
                           textAlign: TextAlign.center,
                           style: GoogleFonts.inter(
                             color: const Color(0xFF555555),
-                            fontSize: (screenWidth * 0.038).clamp(14.0, 16.0),
+                            fontSize: (screenWidth * 0.036).clamp(13.0, 15.0),
                             fontWeight: FontWeight.w400,
-                            height: 1.6,
+                            height: 1.5,
                             letterSpacing: 0.2,
                           ),
                         ),
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.05),
+                    SizedBox(height: screenHeight * 0.025),
                     
-                    // Share button
+                    // Small Share to Story button
                     _AnimatedFade(
                       controller: _fadeController,
-                      delay: 0.8,
-                      child: Center(
-                        child: ShareToStoryButton(
-                          shareText: 'In my past life, I was a ${widget.personaTitle} in ${widget.era}. ${widget.subtitle} ✨ #ChatGPTWrapped',
-                          primaryColor: const Color(0xFFE0F2F7),
-                          secondaryColor: const Color(0xFFCCEEF5),
-                        ),
+                      delay: 0.4,
+                      child: SmallShareToStoryButton(
+                        shareText: 'In my past life, I was a ${widget.personaTitle} in ${widget.era}. ${widget.subtitle} ✨ #ChatGPTWrapped',
+                        screenshotKey: _screenshotKey,
+                        accentGradient: const [Color(0xFFFF8FB1), Color(0xFFFFB5D8)],
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.04),
+                    SizedBox(height: screenHeight * 0.03),
                   ],
+                ),
                 ),
               ),
             ),
@@ -314,11 +253,103 @@ class _AnimatedFade extends StatelessWidget {
   }
 }
 
-// Past Life particles painter - bubbles and sparkles floating
-class _PastLifeParticlesPainter extends CustomPainter {
+// Past Life Hero Card (like Share Hero Card)
+class _PastLifeHeroCard extends StatelessWidget {
+  final double screenWidth;
+  final String personaTitle;
+  final String personaEmoji;
+  final String era;
+
+  const _PastLifeHeroCard({
+    required this.screenWidth,
+    required this.personaTitle,
+    required this.personaEmoji,
+    required this.era,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isLargeScreen = screenWidth > 600;
+    final cardPadding = (screenWidth * 0.035).clamp(14.0, isLargeScreen ? 20.0 : 18.0);
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular((screenWidth * 0.055).clamp(18.0, 24.0)),
+      child: BackdropFilter(
+        filter: ui.ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+        child: Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(cardPadding),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Colors.white.withOpacity(0.75),
+                Colors.white.withOpacity(0.55),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            border: Border.all(color: Colors.white.withOpacity(0.4), width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF8E8E93).withOpacity(0.12),
+                blurRadius: 30,
+                offset: const Offset(0, 18),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              // Emoji
+              Text(
+                personaEmoji,
+                style: TextStyle(
+                  fontSize: (screenWidth * 0.09).clamp(36.0, isLargeScreen ? 48.0 : 46.0),
+                ),
+              ),
+              SizedBox(height: (screenWidth * 0.025).clamp(10.0, 14.0)),
+              // Era
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF6E9DA),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Text(
+                  era.toUpperCase(),
+                  style: GoogleFonts.inter(
+                    color: const Color(0xFF8B7E74),
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 1.0,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              // Persona Title
+              Text(
+                personaTitle,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                  color: const Color(0xFF3C2F25),
+                  fontSize: (screenWidth * 0.048).clamp(18.0, isLargeScreen ? 26.0 : 22.0),
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.3,
+                  height: 1.2,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// Subtle particles painter (like Share with People)
+class _SubtleParticlesPainter extends CustomPainter {
   final double animationValue;
 
-  _PastLifeParticlesPainter(this.animationValue);
+  _SubtleParticlesPainter(this.animationValue);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -326,58 +357,20 @@ class _PastLifeParticlesPainter extends CustomPainter {
       ..color = Colors.white.withOpacity(0.4)
       ..style = PaintingStyle.fill;
 
-    // Draw floating bubbles
+    // Draw subtle floating dots
     for (int i = 0; i < 20; i++) {
       final x = (i * 47.0) % size.width;
       final y = (i * 31.0) % size.height;
       final timeOffset = (animationValue * 2 * pi) + (i * 0.4);
-      final float = sin(timeOffset) * 15;
-      final bubbleY = y + float;
-      final opacity = 0.2 + 0.3 * sin(timeOffset);
-      final bubbleSize = 3.0 + (2.0 * sin(timeOffset));
-      
+      final float = 0.3 + 0.4 * sin(timeOffset);
+      final dotSize = 1.0 + (1.5 * float);
+
       canvas.drawCircle(
-        Offset(x, bubbleY),
-        bubbleSize,
-        paint..color = Colors.white.withOpacity(opacity),
+        Offset(x, y),
+        dotSize,
+        paint..color = Colors.white.withOpacity(float * 0.6),
       );
     }
-    
-    // Add floating sparkles
-    for (int i = 0; i < 15; i++) {
-      final x = (i * 67.0 + 30) % size.width;
-      final y = (i * 43.0 + 20) % size.height;
-      final timeOffset = (animationValue * 2 * pi) + (i * 0.6);
-      final twinkle = 0.3 + 0.7 * sin(timeOffset);
-      final starSize = 1.0 + (1.5 * twinkle);
-      
-      _drawStar(canvas, Offset(x, y), starSize, paint..color = Colors.white.withOpacity(twinkle * 0.6));
-    }
-  }
-
-  void _drawStar(Canvas canvas, Offset center, double size, Paint paint) {
-    final path = Path();
-    final outerRadius = size;
-    final innerRadius = size * 0.4;
-    
-    for (int i = 0; i < 5; i++) {
-      final angle = (i * 2 * pi / 5) - (pi / 2);
-      final outerX = center.dx + cos(angle) * outerRadius;
-      final outerY = center.dy + sin(angle) * outerRadius;
-      final innerAngle = angle + (pi / 5);
-      final innerX = center.dx + cos(innerAngle) * innerRadius;
-      final innerY = center.dy + sin(innerAngle) * innerRadius;
-      
-      if (i == 0) {
-        path.moveTo(outerX, outerY);
-      } else {
-        path.lineTo(outerX, outerY);
-      }
-      path.lineTo(innerX, innerY);
-    }
-    path.close();
-    
-    canvas.drawPath(path, paint);
   }
 
   @override

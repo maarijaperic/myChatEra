@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
+import 'package:flutter/rendering.dart';
 
 class CardNavigator extends StatefulWidget {
   final List<Widget> screens;
@@ -98,9 +100,13 @@ class _CardNavigatorState extends State<CardNavigator>
           ),
 
           // Tap zones for navigation (left and right)
-          // Disable tap zones on screens with buttons
+          // Limited to center area of screen to avoid interfering with buttons
           if (_shouldEnableTapZones())
-            Positioned.fill(
+            Positioned(
+              top: MediaQuery.of(context).size.height * 0.2, // Start at 20% from top
+              bottom: MediaQuery.of(context).size.height * 0.2, // End at 20% from bottom
+              left: 0,
+              right: 0,
               child: Row(
                 children: [
                   // Left tap zone (33% of screen width) - Go Previous
@@ -146,19 +152,43 @@ class _CardNavigatorState extends State<CardNavigator>
 
   bool _shouldEnableTapZones() {
     // Disable tap zones on screens with buttons to allow button clicks
-    if (widget.premiumStartIndex != null) {
-      // Disable on the screen before premium (has "Go Premium" button)
-      if (_currentIndex == widget.premiumStartIndex! - 1) {
-        return false;
-      }
+    final currentScreen = widget.screens[_currentIndex];
+    final screenType = currentScreen.runtimeType.toString();
+
+    // List of screens that are known to have interactive buttons (like share buttons)
+    const screensWithButtons = [
+      'DailyDoseScreen',
+      'CuriosityIndexScreen',
+      'ChatStreakScreen',
+      'LoveLanguageScreen',
+      'PastLifePersonaScreen',
+      'AdviceMostAskedScreen',
+      'IntrovertExtrovertScreen',
+      'MostUsedWordScreen',
+      'ChatEraScreen',
+      'ChatDaysTrackerScreen',
+      'GptOClockScreen',
+      'MBTIPersonalityScreen',
+      'TypeABPersonalityScreen',
+      'RedGreenFlagsScreen',
+      'GuessZodiacScreen',
+      'MovieTitleScreen',
+      'TypeABPreviewScreen', // Disable tap zones on Unlock Premium screen
+    ];
+
+    if (screensWithButtons.contains(screenType)) {
+      return false;
     }
-    // Disable on last screen (has "Back to Main" button)
+
+    // Original logic for premium and last screen
+    if (widget.premiumStartIndex != null &&
+        _currentIndex == widget.premiumStartIndex! - 1) {
+      return false;
+    }
     if (_currentIndex == widget.screens.length - 1) {
       return false;
     }
-    // Disable tap zones on SubscriptionScreen (check by widget type)
-    final currentScreen = widget.screens[_currentIndex];
-    if (currentScreen.runtimeType.toString() == 'SubscriptionScreen') {
+    if (screenType == 'SubscriptionScreen') {
       return false;
     }
     return true;

@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:gpt_wrapped2/widgets/share_button.dart';
 
 class SocialSharingScreen extends StatefulWidget {
   const SocialSharingScreen({super.key});
@@ -125,7 +126,10 @@ class _SocialSharingScreenState extends State<SocialSharingScreen>
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               child: Padding(
-                padding: const EdgeInsets.all(24.0),
+                padding: EdgeInsets.symmetric(
+                  horizontal: (screenWidth * 0.06).clamp(20.0, 24.0),
+                  vertical: (screenHeight * 0.025).clamp(16.0, 20.0),
+                ),
                 child: Column(
                   children: [
                     SizedBox(height: screenHeight * 0.08),
@@ -220,11 +224,8 @@ class _SocialSharingScreenState extends State<SocialSharingScreen>
                                 onTap: () {},
                               ),
                               const SizedBox(height: 12),
-                              _ShareOptionButton(
-                                icon: CupertinoIcons.share_up,
-                                title: 'Share to Story',
-                                subtitle: 'Post directly to Instagram',
-                                onTap: () {},
+                              ShareToStoryButton(
+                                shareText: 'Just shared my GPT Wrapped story! #GPTWrapped',
                               ),
                             ],
                           ),
@@ -239,7 +240,7 @@ class _SocialSharingScreenState extends State<SocialSharingScreen>
                       controller: _fadeController,
                       delay: 0.6,
                       child: Container(
-                        padding: const EdgeInsets.all(24),
+                        padding: EdgeInsets.all((screenWidth * 0.05).clamp(20.0, 24.0)),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(24),
                           gradient: const LinearGradient(
@@ -277,7 +278,10 @@ class _SocialSharingScreenState extends State<SocialSharingScreen>
                       delay: 0.8,
                       child: Center(
                         child: CupertinoButton.filled(
-                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 18),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: (screenWidth * 0.08).clamp(24.0, 32.0),
+                            vertical: (screenHeight * 0.022).clamp(14.0, 18.0),
+                          ),
                           borderRadius: BorderRadius.circular(28),
                           onPressed: () {},
                           child: Text(
@@ -320,10 +324,16 @@ class _ShareOptionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+        padding: EdgeInsets.symmetric(
+          horizontal: (screenWidth * 0.045).clamp(14.0, 18.0),
+          vertical: (screenHeight * 0.02).clamp(12.0, 16.0),
+        ),
         decoration: BoxDecoration(
           color: Colors.white.withOpacity(0.75),
           borderRadius: BorderRadius.circular(18),
@@ -531,7 +541,7 @@ class _ShareHeroCard extends StatelessWidget {
                     Align(
                       alignment: Alignment.bottomLeft,
                       child: Padding(
-                        padding: const EdgeInsets.all(20.0),
+                        padding: EdgeInsets.all((screenWidth * 0.05).clamp(16.0, 20.0)),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,

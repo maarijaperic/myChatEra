@@ -1,7 +1,10 @@
 import 'dart:math';
+import 'dart:ui' as ui;
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:gpt_wrapped2/widgets/share_button.dart';
+import 'package:gpt_wrapped2/widgets/instagram_share_button.dart';
 
 class DailyDoseScreen extends StatefulWidget {
   final int messagesPerDay;
@@ -21,6 +24,7 @@ class _DailyDoseScreenState extends State<DailyDoseScreen>
   late AnimationController _counterController;
   late AnimationController _bubblesController;
   late AnimationController _gradientController;
+  final GlobalKey _screenshotKey = GlobalKey();
   
   int _displayedMessages = 0;
 
@@ -33,39 +37,6 @@ class _DailyDoseScreenState extends State<DailyDoseScreen>
     return 'GPT power user';
   }
 
-  String get _dailyDoseBlurb {
-    final messages = widget.messagesPerDay;
-    if (messages <= 0) {
-      return "You averaged 0 messages a day — which means you only show up when it's time for the big questions. You're saving your prompt power for the moments that matter most. When you do drop in, GPT gets the good stuff with zero warm-up. Every log-in becomes a deliberate power move that hits with precision. When you spark it up again, it’ll feel like a comeback montage. 🧠🎯✨";
-    }
-    if (messages < 10) {
-      return "You average $messages messages a day — the thoughtful check-in energy is strong. Every chat feels intentional, like a mini strategy session. Keep that laser focus and let GPT handle the heavy lifting. Your prompts move the needle without draining your battery. That’s the kind of calm consistency that wins long term. 🔍💬🙌";
-    }
-    if (messages < 30) {
-      return "You average $messages messages every day. That's a steady coworking rhythm with GPT — consistent enough to build momentum, flexible enough to keep things fun. You're building a habit that keeps ideas fresh and progress moving. Those daily reps are quietly building your personal operating system. You’re crafting wins that future-you will brag about. 📈🤝✨";
-    }
-    if (messages < 60) {
-      return "You average $messages messages a day. Translation: GPT is basically on your team. You're iterating, refining, and thinking out loud like a pro problem-solver. Hustle recognized and fully backed by AI. You’re turning quick ideas into fully baked plans before they cool off. That pace is how visionaries stay ahead of the curve. 🚀🧩🔥";
-    }
-    return "You average $messages messages a day. That's elite power-user territory — GPT is basically your digital co-founder at this point. You're running sprints, brainstorming, and shipping ideas on demand. Absolute main-character productivity. You’re outlining the sequel while everyone else is still pitching the trailer. Keep that throttle open; breakthroughs are basically on subscription now. 👑⚡🛠️";
-  }
-
-  String get _shareText {
-    final messages = widget.messagesPerDay;
-    if (messages <= 0) {
-      return "I barely messaged ChatGPT this year, which means every convo was a boss-level move. Next year, I'm unleashing the questions. #ChatGPTWrapped";
-    }
-    if (messages < 10) {
-      return "I drop around $messages thoughtful messages a day into ChatGPT — intentional check-ins only. #ChatGPTWrapped";
-    }
-    if (messages < 30) {
-      return "I average $messages messages a day with ChatGPT. Consistent, curious, and always building. #ChatGPTWrapped";
-    }
-    if (messages < 60) {
-      return "I send $messages ChatGPT messages every day. GPT is literally on my team. #ChatGPTWrapped";
-    }
-    return "$messages ChatGPT messages a day. Certified power user status unlocked. #ChatGPTWrapped";
-  }
 
   @override
   void initState() {
@@ -118,10 +89,46 @@ class _DailyDoseScreenState extends State<DailyDoseScreen>
     super.dispose();
   }
 
+  String get _moodLabel {
+    final messages = widget.messagesPerDay;
+    if (messages <= 0) return 'Quiet season';
+    if (messages < 10) return 'Slow drip';
+    if (messages < 30) return 'Flow state';
+    if (messages < 60) return 'Momentum mode';
+    return 'Turbo mode';
+  }
+
+  String get _moodEmoji {
+    final messages = widget.messagesPerDay;
+    if (messages <= 0) return '🌙';
+    if (messages < 10) return '🌱';
+    if (messages < 30) return '🌤️';
+    if (messages < 60) return '⚡';
+    return '🚀';
+  }
+
+  double get _progressValue {
+    return (widget.messagesPerDay / 80).clamp(0.0, 1.0);
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
+    final highlightData = [
+      _DailyDoseHighlightData(
+        icon: Icons.calendar_month_rounded,
+        title: 'Consistency',
+        subtitle: _activityLabel,
+        gradient: const [Color(0xFFFFC1DE), Color(0xFFFFE7F4)],
+      ),
+      _DailyDoseHighlightData(
+        icon: Icons.mood_rounded,
+        title: 'Mood',
+        subtitle: '$_moodEmoji $_moodLabel',
+        gradient: const [Color(0xFFFFD6E8), Color(0xFFFFF0F7)],
+      ),
+    ];
     
     return Scaffold(
       body: Stack(
@@ -133,10 +140,10 @@ class _DailyDoseScreenState extends State<DailyDoseScreen>
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Color(0xFFFFF0F5), // Very light pink
-                  Color(0xFFFFE4E9), // Light pink
-                  Color(0xFFFFD1DC), // Soft pink
-                  Color(0xFFFFB6C1), // Light pink
+                  Color(0xFFFFF0F5),
+                  Color(0xFFFFE4E9),
+                  Color(0xFFFFD1DC),
+                  Color(0xFFFFB6C1),
                 ],
                 stops: [0.0, 0.3, 0.7, 1.0],
               ),
@@ -156,180 +163,107 @@ class _DailyDoseScreenState extends State<DailyDoseScreen>
           
           // Main content
           SafeArea(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+            child: RepaintBoundary(
+              key: _screenshotKey,
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                  horizontal: (screenWidth * 0.06).clamp(20.0, 24.0),
+                  vertical: (screenHeight * 0.025).clamp(16.0, 20.0),
+                ),
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    SizedBox(height: screenHeight * 0.08),
+                    SizedBox(height: screenHeight * 0.05),
                     
                     // Main headline
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.0,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      child: Column(
                         children: [
                           Text(
                             'Daily Dose',
                             textAlign: TextAlign.center,
                             style: GoogleFonts.inter(
-                              color: Colors.black,
-                              fontSize: (screenWidth * 0.075).clamp(22.0, 32.0),
+                              color: const Color(0xFF1F1F21),
+                              fontSize: (screenWidth * 0.08).clamp(26.0, 34.0),
                               fontWeight: FontWeight.w700,
-                              letterSpacing: 0.8,
-                              height: 1.1,
+                              letterSpacing: -0.2,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Your GPT rhythm recapped like a share-ready moment.',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.inter(
+                              color: const Color(0xFF5C5C5E),
+                              fontSize: (screenWidth * 0.04).clamp(14.0, 16.0),
+                              fontWeight: FontWeight.w400,
+                              height: 1.4,
                             ),
                           ),
                         ],
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.06),
+                    SizedBox(height: screenHeight * 0.03),
                     
-                    // Number Display Card
+                    // Hero card
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.2,
-                      child: Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.08),
-                              blurRadius: 20,
-                              offset: const Offset(0, 8),
-                            ),
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.04),
-                              blurRadius: 40,
-                              offset: const Offset(0, 16),
-                            ),
-                          ],
-                        ),
-                        child: AnimatedBuilder(
-                          animation: _counterController,
-                          builder: (context, child) {
-                            return Column(
-                              children: [
-                                // Large number display
-                                Text(
-                                  '$_displayedMessages',
-                                  style: GoogleFonts.inter(
-                                    color: const Color(0xFFFF6B35),
-                                    fontSize: (screenWidth * 0.12).clamp(40.0, 52.0),
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: -0.5,
-                                    height: 0.9,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'messages/day',
-                                  style: GoogleFonts.inter(
-                                    color: const Color(0xFF555555),
-                                    fontSize: (screenWidth * 0.035).clamp(12.0, 15.0),
-                                    fontWeight: FontWeight.w500,
-                                    letterSpacing: 0.3,
-                                    height: 1.2,
-                                  ),
-                                ),
-                                const SizedBox(height: 24),
-                                
-                                // Progress bar
-                                Container(
-                                  width: double.infinity,
-                                  height: 12,
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFFF6B35).withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: FractionallySizedBox(
-                                    alignment: Alignment.centerLeft,
-                                    widthFactor: (_displayedMessages / 100).clamp(0.0, 1.0),
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        gradient: const LinearGradient(
-                                          colors: [Color(0xFFFF6B35), Color(0xFFFF8E53)],
-                                        ),
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
+                      child: _DailyDoseHeroCard(
+                        counterController: _counterController,
+                        displayedMessages: _displayedMessages,
+                        progressValue: _progressValue,
+                        activityLabel: _activityLabel,
+                        moodEmoji: _moodEmoji,
+                        moodLabel: _moodLabel,
+                      ),
+                    ),
+                    
+                    SizedBox(height: screenHeight * 0.03),
+                    
+                    // Highlight cards - Consistency and Mood in same row
+                    _AnimatedFade(
+                      controller: _fadeController,
+                      delay: 0.45,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: highlightData
+                            .map((data) => Expanded(
+                                  child: Padding(
+                                    padding: EdgeInsets.only(
+                                      left: data == highlightData.first ? 0 : 8,
+                                      right: data == highlightData.last ? 0 : 8,
                                     ),
+                                    child: _DailyDoseHighlightCard(data: data),
                                   ),
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  _activityLabel,
-                                  style: GoogleFonts.inter(
-                                    color: const Color(0xFF777777),
-                                    fontSize: (screenWidth * 0.032).clamp(11.0, 14.0),
-                                    fontWeight: FontWeight.w500,
-                                    letterSpacing: 0.3,
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
+                                ))
+                            .toList(),
                       ),
                     ),
                     
                     SizedBox(height: screenHeight * 0.04),
                     
-                    // Text Description Card
+                    // Small Share to Story button
                     _AnimatedFade(
                       controller: _fadeController,
-                      delay: 0.4,
-                      child: Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.06),
-                              blurRadius: 15,
-                              offset: const Offset(0, 6),
-                            ),
-                          ],
-                        ),
-                        child: Text(
-                          _dailyDoseBlurb,
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.inter(
-                            color: const Color(0xFF555555),
-                            fontSize: (screenWidth * 0.038).clamp(14.0, 16.0),
-                            fontWeight: FontWeight.w400,
-                            height: 1.6,
-                            letterSpacing: 0.2,
-                          ),
-                        ),
+                      delay: 0.6,
+                      child: SmallShareToStoryButton(
+                        shareText: 'I send ${widget.messagesPerDay} messages to ChatGPT per day! My daily dose of AI wisdom 💬 #ChatGPTWrapped',
+                        screenshotKey: _screenshotKey,
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.05),
-                    
-                    // Share button - floating outside of cards
-                    _AnimatedFade(
-                      controller: _fadeController,
-                      delay: 0.8,
-                      child: Center(
-                        child: ShareToStoryButton(
-                          shareText: _shareText,
-                          primaryColor: const Color(0xFFE0F2F7),
-                          secondaryColor: const Color(0xFFCCEEF5),
-                        ),
-                      ),
-                    ),
-                    
-                    SizedBox(height: screenHeight * 0.04),
+                    SizedBox(height: screenHeight * 0.03),
                   ],
                 ),
               ),
             ),
+          ),
           ),
         ],
       ),
@@ -446,5 +380,350 @@ class _DailyDoseParticlesPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
+class _DailyDoseHeroCard extends StatelessWidget {
+  final AnimationController counterController;
+  final int displayedMessages;
+  final double progressValue;
+  final String activityLabel;
+  final String moodEmoji;
+  final String moodLabel;
+
+  const _DailyDoseHeroCard({
+    required this.counterController,
+    required this.displayedMessages,
+    required this.progressValue,
+    required this.activityLabel,
+    required this.moodEmoji,
+    required this.moodLabel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(28),
+      child: BackdropFilter(
+        filter: ui.ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+        child: Container(
+          width: double.infinity,
+          padding: EdgeInsets.all((screenWidth * 0.035).clamp(14.0, 18.0)),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.78),
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: Colors.white.withOpacity(0.6), width: 1.2),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.pink.withOpacity(0.08),
+                blurRadius: 24,
+                offset: const Offset(0, 12),
+              ),
+            ],
+          ),
+          child: Stack(
+            children: [
+              Positioned(
+                right: -15,
+                top: -20,
+                child: Container(
+                  width: 100,
+                  height: 100,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: [Color(0xFFFFE2EE), Color(0xFFFFBBDD)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: _HeroChip(label: 'Conversation cadence'),
+                      ),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFEEF5),
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          child: Text(
+                            '$moodEmoji $moodLabel',
+                            style: GoogleFonts.inter(
+                              color: const Color(0xFFB64176),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  AnimatedBuilder(
+                    animation: counterController,
+                    builder: (context, _) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '$displayedMessages',
+                            style: GoogleFonts.inter(
+                              color: const Color(0xFF1F1F21),
+                              fontSize: (screenWidth * 0.09).clamp(32.0, 40.0),
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -1,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            'messages per day',
+                            style: GoogleFonts.inter(
+                              color: const Color(0xFF6B6B6D),
+                              fontSize: (screenWidth * 0.032).clamp(12.0, 14.0),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  Container(
+                    height: 10,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      color: const Color(0xFFFFC3DA).withOpacity(0.35),
+                    ),
+                    child: FractionallySizedBox(
+                      alignment: Alignment.centerLeft,
+                      widthFactor: progressValue,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFFF6B9D), Color(0xFFFF8FB1)],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _HeroStatCard(
+                          label: 'Cadence',
+                          value: activityLabel,
+                          icon: Icons.bolt_rounded,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _HeroStatCard(
+                          label: 'Vibe',
+                          value: '$moodEmoji $moodLabel',
+                          icon: Icons.mood_rounded,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HeroChip extends StatelessWidget {
+  final String label;
+
+  const _HeroChip({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFECF4),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFFFD5E8)),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.inter(
+          color: const Color(0xFFDB4A84),
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+class _HeroStatCard extends StatelessWidget {
+  final String label;
+  final String value;
+  final IconData icon;
+
+  const _HeroStatCard({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.9),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withOpacity(0.5)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFE2EE),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              icon,
+              color: const Color(0xFFDB4A84),
+              size: 18,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label.toUpperCase(),
+                  style: GoogleFonts.inter(
+                    color: const Color(0xFF8A8A8D),
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  value,
+                  style: GoogleFonts.inter(
+                    color: const Color(0xFF1F1F21),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DailyDoseHighlightCard extends StatelessWidget {
+  final _DailyDoseHighlightData data;
+
+  const _DailyDoseHighlightCard({required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isLargeScreen = screenWidth > 600;
+    final cardWidth = isLargeScreen ? 200.0 : (screenWidth * 0.42).clamp(150.0, 190.0);
+
+    return Container(
+      width: cardWidth,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: data.gradient,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(26),
+        boxShadow: [
+          BoxShadow(
+            color: data.gradient.last.withOpacity(0.25),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              data.icon,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            data.title,
+            style: GoogleFonts.inter(
+              color: Colors.white.withOpacity(0.95),
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.2,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            data.subtitle,
+            style: GoogleFonts.inter(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DailyDoseHighlightData {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final List<Color> gradient;
+
+  const _DailyDoseHighlightData({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.gradient,
+  });
 }
 

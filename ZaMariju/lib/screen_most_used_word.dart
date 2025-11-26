@@ -1,7 +1,10 @@
 import 'dart:math';
+import 'dart:ui' as ui;
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:gpt_wrapped2/widgets/share_button.dart';
+import 'package:gpt_wrapped2/widgets/instagram_share_button.dart';
 
 class MostUsedWordScreen extends StatefulWidget {
   final String mostUsedWord;
@@ -22,6 +25,7 @@ class _MostUsedWordScreenState extends State<MostUsedWordScreen>
   late AnimationController _fadeController;
   late AnimationController _counterController;
   late AnimationController _bubblesController;
+  final GlobalKey _screenshotKey = GlobalKey();
   
   int _displayedWordCount = 0;
 
@@ -50,23 +54,21 @@ class _MostUsedWordScreenState extends State<MostUsedWordScreen>
     return 'Iconic brand voice';
   }
 
-  String get _wordBlurb {
-    final word = _cleanWord;
+  String _getPersonaLabel() {
     final count = widget.wordCount;
-
-    if (count <= 0 || word.trim().isEmpty) {
-      return "You didn't lean on a single word — every message was a remix. Linguistic chameleon energy. You show up with context instead of catchphrases, so every prompt feels like a new adventure. GPT has to stay on its toes with you, and honestly it lives for the variety. That versatility turns every response into a fresh exploration. You're proof that range is a superpower.";
+    if (count <= 0) {
+      return 'Versatile';
     }
     if (count < 30) {
-      return '"$word" showed up $count times. You deploy it strategically — a go-to move when the idea really matters. It drops only when you need maximum clarity, like your secret handshake with GPT. That kind of precision keeps your conversations crisp and effective. Each drop lands like a clarified intention. GPT has learned to lean in whenever it sees it.';
+      return 'Precise';
     }
     if (count < 80) {
-      return 'You said "$word" $count times. That word is basically your handshake; GPT knows the assignment as soon as it pops up. You carve entire conversation arcs around it, and it never loses its spark. That\'s how you build your own language of progress. It anchors the narrative so every idea has a home. GPT responds like it\'s hearing a trusted cue.';
+      return 'Distinctive';
     }
     if (count < 150) {
-      return '"$word" came up $count times — the signature flavor in your prompts. It\'s part vibe, part brand, all you. Every time it surfaces, GPT shifts into your preferred lane instantly. That\'s artistic direction right there. You\'re not just repeating yourself — you\'re refining a theme. That level of curation is how language becomes a signature.';
+      return 'Memorable';
     }
-    return 'You dropped "$word" $count times. That\'s not just a word, it\'s a whole identity. GPT hears it and already knows your direction before the rest of the prompt lands. You\'ve basically built a verbal universe around it. The word carries your intent like a recognizable signature. That kind of consistency turns dialogue into a personal brand.';
+    return 'Iconic';
   }
 
   String get _shareText {
@@ -165,164 +167,220 @@ class _MostUsedWordScreenState extends State<MostUsedWordScreen>
           
           // Main content
           SafeArea(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Padding(
+            child: RepaintBoundary(
+              key: _screenshotKey,
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Padding(
                 padding: EdgeInsets.symmetric(
-                  horizontal: (screenWidth * 0.06).clamp(16.0, 32.0),
-                  vertical: (screenHeight * 0.025).clamp(16.0, 24.0),
+                  horizontal: (screenWidth * 0.06).clamp(20.0, 24.0),
+                  vertical: (screenHeight * 0.025).clamp(16.0, 20.0),
                 ),
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    SizedBox(height: (screenHeight * 0.08).clamp(20.0, 60.0)),
+                    SizedBox(height: screenHeight * 0.03),
                     
                     // Main headline
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.0,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      child: Column(
                         children: [
-                          Flexible(
-                            child: Text(
-                              'Your Signature Word',
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.inter(
-                                color: Colors.black,
-                                fontSize: (screenWidth * 0.065).clamp(18.0, screenWidth > 600 ? 32.0 : 28.0),
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.8,
-                                height: 1.1,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
+                          Text(
+                            'Your Signature Word',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.inter(
+                              color: const Color(0xFF1F1F21),
+                              fontSize: (screenWidth * 0.08).clamp(28.0, 36.0),
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.2,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'The word that defined your year with GPT, captured like a shareable moment.',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.inter(
+                              color: const Color(0xFF636366),
+                              fontSize: (screenWidth * 0.04).clamp(14.0, 16.0),
+                              fontWeight: FontWeight.w400,
+                              letterSpacing: 0.2,
                             ),
                           ),
                         ],
                       ),
                     ),
                     
-                    SizedBox(height: (screenHeight * 0.06).clamp(20.0, 48.0)),
+                    SizedBox(height: screenHeight * 0.045),
                     
-                    // Word Card
+                    // Word Hero Card (styled like Share screen)
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.2,
-                      child: Container(
-                        width: double.infinity,
-                        padding: EdgeInsets.all((screenWidth * 0.045).clamp(14.0, 24.0)),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular((screenWidth * 0.05).clamp(18.0, 24.0)),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.06),
-                              blurRadius: 15,
-                              offset: const Offset(0, 6),
-                            ),
-                          ],
-                        ),
-                        child: AnimatedBuilder(
-                          animation: _counterController,
-                          builder: (context, child) {
-                            return Column(
-                              children: [
-                                // Word display
-                                Text(
-                                  _cleanWord,
-                                  style: GoogleFonts.inter(
-                                    color: const Color(0xFFFF6B35),
-                                    fontSize: (screenWidth * 0.12).clamp(36.0, screenWidth > 600 ? 68.0 : 60.0),
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: -0.5,
-                                    height: 0.9,
-                                  ),
-                                ),
-                                SizedBox(height: (screenHeight * 0.015).clamp(10.0, 16.0)),
-                                Text(
-                                  '$_displayedWordCount',
-                                  style: GoogleFonts.inter(
-                                    color: const Color(0xFF4ECDC4),
-                                    fontSize: (screenWidth * 0.08).clamp(28.0, screenWidth > 600 ? 52.0 : 48.0),
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: -0.5,
-                                    height: 0.9,
-                                  ),
-                                ),
-                                SizedBox(height: (screenHeight * 0.005).clamp(2.0, 6.0)),
-                                Text(
-                                  'times',
-                                  style: GoogleFonts.inter(
-                                    color: const Color(0xFF555555),
-                                    fontSize: (screenWidth * 0.035).clamp(11.0, screenWidth > 600 ? 18.0 : 16.0),
-                                    fontWeight: FontWeight.w500,
-                                    letterSpacing: 0.3,
-                                    height: 1.2,
-                                  ),
-                                ),
-                                SizedBox(height: (screenHeight * 0.01).clamp(6.0, 12.0)),
-                                Text(
-                                  _wordStyleLabel,
-                                  style: GoogleFonts.inter(
-                                    color: const Color(0xFF555555),
-                                    fontSize: (screenWidth * 0.035).clamp(11.0, screenWidth > 600 ? 18.0 : 16.0),
-                                    fontWeight: FontWeight.w500,
-                                    letterSpacing: 0.3,
-                                    height: 1.2,
-                                  ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular((screenWidth * 0.08).clamp(26.0, 36.0)),
+                        child: BackdropFilter(
+                          filter: ui.ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+                          child: Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.all((screenWidth * 0.06).clamp(22.0, 32.0)),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.white.withOpacity(0.75),
+                                  Colors.white.withOpacity(0.55),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular((screenWidth * 0.08).clamp(26.0, 36.0)),
+                              border: Border.all(color: Colors.white.withOpacity(0.4), width: 1),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF8E8E93).withOpacity(0.12),
+                                  blurRadius: 30,
+                                  offset: const Offset(0, 18),
                                 ),
                               ],
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                    
-                    SizedBox(height: (screenHeight * 0.04).clamp(16.0, 32.0)),
-                    
-                    // Description Card
-                    _AnimatedFade(
-                      controller: _fadeController,
-                      delay: 0.4,
-                      child: Container(
-                        padding: EdgeInsets.all((screenWidth * 0.045).clamp(14.0, 24.0)),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular((screenWidth * 0.05).clamp(18.0, 24.0)),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.06),
-                              blurRadius: 15,
-                              offset: const Offset(0, 6),
                             ),
-                          ],
-                        ),
-                        child: Text(
-                          _wordBlurb,
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.inter(
-                            color: const Color(0xFF555555),
-                            fontSize: (screenWidth * 0.038).clamp(13.0, screenWidth > 600 ? 18.0 : 16.0),
-                            fontWeight: FontWeight.w400,
-                            height: 1.6,
-                            letterSpacing: 0.2,
+                            child: AnimatedBuilder(
+                              animation: _counterController,
+                              builder: (context, child) {
+                                return Column(
+                                  children: [
+                                    // Word display
+                                    Text(
+                                      _cleanWord,
+                                      style: GoogleFonts.inter(
+                                        color: const Color(0xFFFF6B35),
+                                        fontSize: (screenWidth * 0.12).clamp(40.0, 56.0),
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: -0.5,
+                                        height: 0.9,
+                                      ),
+                                    ),
+                                    SizedBox(height: (screenHeight * 0.015).clamp(8.0, 16.0)),
+                                    Text(
+                                      '$_displayedWordCount',
+                                      style: GoogleFonts.inter(
+                                        color: const Color(0xFF4ECDC4),
+                                        fontSize: (screenWidth * 0.08).clamp(28.0, 44.0),
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: -0.5,
+                                        height: 0.9,
+                                      ),
+                                    ),
+                                    SizedBox(height: (screenHeight * 0.005).clamp(2.0, 4.0)),
+                                    Text(
+                                      'times',
+                                      style: GoogleFonts.inter(
+                                        color: const Color(0xFF555555),
+                                        fontSize: (screenWidth * 0.035).clamp(12.0, 16.0),
+                                        fontWeight: FontWeight.w500,
+                                        letterSpacing: 0.3,
+                                        height: 1.2,
+                                      ),
+                                    ),
+                                    SizedBox(height: (screenHeight * 0.01).clamp(6.0, 10.0)),
+                                    Text(
+                                      _wordStyleLabel,
+                                      style: GoogleFonts.inter(
+                                        color: const Color(0xFF555555),
+                                        fontSize: (screenWidth * 0.035).clamp(12.0, 16.0),
+                                        fontWeight: FontWeight.w500,
+                                        letterSpacing: 0.3,
+                                        height: 1.2,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
                           ),
                         ),
                       ),
                     ),
                     
-                    SizedBox(height: (screenHeight * 0.05).clamp(20.0, 40.0)),
+                    SizedBox(height: screenHeight * 0.06),
                     
-                    // Share button
+                    // Word Stats Cards (2 rows, 2 cards per row)
                     _AnimatedFade(
                       controller: _fadeController,
-                      delay: 0.8,
-                      child: Center(
-                        child: ShareToStoryButton(
-                          shareText: _shareText,
-                          primaryColor: const Color(0xFFE0F2F7),
-                          secondaryColor: const Color(0xFFCCEEF5),
-                        ),
+                      delay: 0.4,
+                      child: Column(
+                        children: [
+                          // First row
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.only(right: 8),
+                                  child: _WordStatCard(
+                                    icon: Icons.text_fields,
+                                    title: 'Word',
+                                    subtitle: _cleanWord,
+                                    gradient: const [Color(0xFFFF8FB1), Color(0xFFFFC8DD)],
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.only(left: 8),
+                                  child: _WordStatCard(
+                                    icon: Icons.trending_up,
+                                    title: 'Frequency',
+                                    subtitle: '${widget.wordCount} uses',
+                                    gradient: const [Color(0xFF7DD6FF), Color(0xFFB5F1FF)],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          // Second row
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.only(right: 8),
+                                  child: _WordStatCard(
+                                    icon: Icons.star,
+                                    title: 'Impact',
+                                    subtitle: _wordStyleLabel,
+                                    gradient: const [Color(0xFF6FE3AA), Color(0xFFA9F5CE)],
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.only(left: 8),
+                                  child: _WordStatCard(
+                                    icon: Icons.person,
+                                    title: 'Persona',
+                                    subtitle: _getPersonaLabel(),
+                                    gradient: const [Color(0xFFFFD93D), Color(0xFFFFE88C)],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    
+                    SizedBox(height: screenHeight * 0.04),
+                    
+                    // Small Share to Story button
+                    _AnimatedFade(
+                      controller: _fadeController,
+                      delay: 0.6,
+                      child: SmallShareToStoryButton(
+                        shareText: _shareText,
+                        screenshotKey: _screenshotKey,
+                        accentGradient: const [Color(0xFF8B6F47), Color(0xFFA0826D)],
                       ),
                     ),
                     
@@ -331,6 +389,7 @@ class _MostUsedWordScreenState extends State<MostUsedWordScreen>
                 ),
               ),
             ),
+          ),
           ),
         ],
       ),
@@ -444,4 +503,88 @@ class _WordParticlesPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
+// Word Stat Card (styled like Share channel cards)
+class _WordStatCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final List<Color> gradient;
+
+  const _WordStatCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.gradient,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isLargeScreen = screenWidth > 600;
+    final cardWidth = isLargeScreen ? 190.0 : (screenWidth * 0.42).clamp(150.0, 190.0);
+
+    return Container(
+      width: cardWidth,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: gradient,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: [
+          BoxShadow(
+            color: gradient.last.withOpacity(0.25),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              icon,
+              color: Colors.white,
+              size: 18,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            title,
+            style: GoogleFonts.inter(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              height: 1.2,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Flexible(
+            child: Text(
+              subtitle,
+              style: GoogleFonts.inter(
+                color: Colors.white.withOpacity(0.85),
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 2,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

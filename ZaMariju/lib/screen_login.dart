@@ -7,10 +7,12 @@ import 'dart:async';
 
 class LoginScreen extends StatefulWidget {
   final Function(List<dynamic>? conversations) onLoginSuccess;
+  final bool autoShowWebView;
 
   const LoginScreen({
     super.key,
     required this.onLoginSuccess,
+    this.autoShowWebView = false,
   });
 
   @override
@@ -58,6 +60,16 @@ class _LoginScreenState extends State<LoginScreen>
     ));
 
     _controller.forward();
+
+    // Automatically show web view if requested
+    if (widget.autoShowWebView) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        setState(() {
+          _showWebView = true;
+          _status = 'Opening ChatGPT login...';
+        });
+      });
+    }
   }
 
   @override

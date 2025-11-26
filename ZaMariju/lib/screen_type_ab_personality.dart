@@ -1,7 +1,10 @@
-import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:gpt_wrapped2/widgets/share_button.dart';
 import 'dart:math';
+import 'dart:ui' as ui;
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:gpt_wrapped2/widgets/instagram_share_button.dart';
 
 class TypeABPersonalityScreen extends StatefulWidget {
   final String question;
@@ -32,6 +35,7 @@ class _TypeABPersonalityScreenState extends State<TypeABPersonalityScreen>
   late AnimationController _fadeController;
   late AnimationController _chartController;
   late AnimationController _particlesController;
+  final GlobalKey _screenshotKey = GlobalKey();
 
   @override
   void initState() {
@@ -74,34 +78,22 @@ class _TypeABPersonalityScreenState extends State<TypeABPersonalityScreen>
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-    final isLargeScreen = screenWidth > 600;
-    
-    // Responsive padding
-    final horizontalPadding = (screenWidth * 0.06).clamp(16.0, 32.0);
-    final verticalPadding = (screenHeight * 0.025).clamp(16.0, 24.0);
-    
-    // Responsive spacing
-    final topSpacing = (screenHeight * 0.08).clamp(20.0, 60.0);
-    final sectionSpacing = (screenHeight * 0.04).clamp(16.0, 32.0);
-    final largeSpacing = (screenHeight * 0.06).clamp(20.0, 48.0);
-    final smallSpacing = (screenHeight * 0.02).clamp(8.0, 16.0);
-    final mediumSpacing = (screenHeight * 0.03).clamp(12.0, 24.0);
     
     return Scaffold(
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Light pastel blue gradient background
+          // Soft pastel gradient background (like Share with People)
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
                 colors: [
-                  Color(0xFFE0F2F7), // Very light blue
-                  Color(0xFFCCEEF5), // Light blue
-                  Color(0xFFB8E8F0), // Soft blue
-                  Color(0xFFA3E2EB), // Pastel blue
+                  Color(0xFFFFF5FB),
+                  Color(0xFFF4F1FF),
+                  Color(0xFFEFF6FF),
+                  Color(0xFFEAF9FF),
                 ],
                 stops: [0.0, 0.3, 0.7, 1.0],
               ),
@@ -121,132 +113,75 @@ class _TypeABPersonalityScreenState extends State<TypeABPersonalityScreen>
           
           // Main content
           SafeArea(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
+            child: RepaintBoundary(
+              key: _screenshotKey,
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: (screenWidth * 0.06).clamp(20.0, 24.0),
+                  vertical: (screenHeight * 0.025).clamp(16.0, 20.0),
+                ),
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    SizedBox(height: topSpacing),
+                    SizedBox(height: screenHeight * 0.03),
                     
-                    // Main heading
+                    // Header + hero card
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.0,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      child: Column(
                         children: [
-                          Flexible(
-                            child: Text(
-                              'Are you Type A or Type B?',
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.inter(
-                                color: Colors.black,
-                                fontSize: (screenWidth * 0.065).clamp(18.0, isLargeScreen ? 32.0 : 28.0),
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.8,
-                                height: 1.1,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 2,
+                          Text(
+                            'Type A or Type B?',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.inter(
+                              color: const Color(0xFF1F1F21),
+                              fontSize: (screenWidth * 0.08).clamp(28.0, 36.0),
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.2,
                             ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Discover your personality type based on your ChatGPT behavior.',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.inter(
+                              color: const Color(0xFF636366),
+                              fontSize: (screenWidth * 0.04).clamp(14.0, 16.0),
+                              fontWeight: FontWeight.w400,
+                              letterSpacing: 0.2,
+                            ),
+                          ),
+                          SizedBox(height: screenHeight * 0.03),
+                          _TypeABHeroCard(
+                            screenWidth: screenWidth,
+                            screenHeight: screenHeight,
+                            chartController: _chartController,
+                            typeAPercentage: widget.typeAPercentage,
+                            typeBPercentage: widget.typeBPercentage,
+                            personalityType: widget.personalityType,
                           ),
                         ],
                       ),
                     ),
                     
-                    SizedBox(height: largeSpacing),
+                    SizedBox(height: screenHeight * 0.025),
                     
-                    // Type A/B Progress Charts Card
-                    _AnimatedFade(
-                      controller: _fadeController,
-                      delay: 0.2,
-                      child: Container(
-                        padding: EdgeInsets.all((screenWidth * 0.035).clamp(12.0, 20.0)),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular((screenWidth * 0.06).clamp(20.0, 28.0)),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.08),
-                              blurRadius: 20,
-                              offset: const Offset(0, 8),
-                            ),
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.04),
-                              blurRadius: 40,
-                              offset: const Offset(0, 16),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          children: [
-                            // Two circular charts side by side
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                // Type A Chart
-                                _CircularProgressChart(
-                                  controller: _chartController,
-                                  percentage: widget.typeAPercentage,
-                                  label: 'Type A',
-                                  color: const Color(0xFFFF6B35),
-                                  icon: Icons.flash_on_rounded,
-                                ),
-                                
-                                // Type B Chart
-                                _CircularProgressChart(
-                                  controller: _chartController,
-                                  percentage: widget.typeBPercentage,
-                                  label: 'Type B',
-                                  color: const Color(0xFF4ECDC4),
-                                  icon: Icons.spa_rounded,
-                                ),
-                              ],
-                            ),
-                            
-                            SizedBox(height: (screenHeight * 0.015).clamp(10.0, 16.0)),
-                            
-                            // Personality Type Result
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: (screenWidth * 0.04).clamp(14.0, 20.0),
-                                vertical: (screenHeight * 0.012).clamp(8.0, 14.0),
-                              ),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: widget.typeAPercentage > widget.typeBPercentage
-                                      ? [const Color(0xFFFF6B35), const Color(0xFFFF8A65)]
-                                      : [const Color(0xFF4ECDC4), const Color(0xFF7EDDD6)],
-                                ),
-                                borderRadius: BorderRadius.circular((screenWidth * 0.05).clamp(18.0, 24.0)),
-                              ),
-                              child: Text(
-                                widget.personalityType,
-                                style: GoogleFonts.inter(
-                                  color: Colors.white,
-                                  fontSize: (screenWidth * 0.055).clamp(18.0, isLargeScreen ? 28.0 : 24.0),
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    
-                    SizedBox(height: mediumSpacing),
-                    
-                    // Explanation Card
+                    // Message card (like Share with People)
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.4,
                       child: Container(
-                        padding: EdgeInsets.all((screenWidth * 0.035).clamp(12.0, 20.0)),
+                        padding: EdgeInsets.all((screenWidth * 0.05).clamp(20.0, 24.0)),
                         decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular((screenWidth * 0.05).clamp(18.0, 24.0)),
+                          borderRadius: BorderRadius.circular(24),
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFFFFFFF), Color(0xFFF6F7FF)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.06),
@@ -255,59 +190,153 @@ class _TypeABPersonalityScreenState extends State<TypeABPersonalityScreen>
                             ),
                           ],
                         ),
-                        child: Text(
-                          widget.explanation,
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.inter(
-                            color: const Color(0xFF555555),
-                            fontSize: (screenWidth * 0.038).clamp(13.0, isLargeScreen ? 18.0 : 16.0),
-                            fontWeight: FontWeight.w400,
-                            height: 1.6,
-                            letterSpacing: 0.2,
-                          ),
+                        child: Column(
+                          children: [
+                            Text(
+                              '${widget.explanation} Understanding your personality type helps you leverage your strengths and work on areas that need growth.',
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.inter(
+                                color: const Color(0xFF555555),
+                                fontSize: (screenWidth * 0.038).clamp(14.0, 16.0),
+                                fontWeight: FontWeight.w400,
+                                height: 1.6,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
                     
-                    SizedBox(height: mediumSpacing),
+                    SizedBox(height: screenHeight * 0.02),
                     
-                    // Subtitle
+                    // Small Share to Story button
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.6,
-                      child: Text(
-                        widget.subtitle,
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.inter(
-                          color: const Color(0xFF777777),
-                          fontSize: (screenWidth * 0.035).clamp(12.0, isLargeScreen ? 18.0 : 16.0),
-                          fontWeight: FontWeight.w500,
-                          fontStyle: FontStyle.italic,
-                          letterSpacing: 0.3,
-                        ),
+                      child: SmallShareToStoryButton(
+                        shareText: 'ChatGPT says I\'m ${widget.personalityType} (${widget.typeAPercentage}% Type A, ${widget.typeBPercentage}% Type B). ${widget.typeEmoji} #ChatGPTWrapped',
+                        screenshotKey: _screenshotKey,
+                        accentGradient: const [Color(0xFFFF8FB1), Color(0xFFFFB5D8)],
                       ),
                     ),
                     
-                    SizedBox(height: smallSpacing),
-                    
-                    // Share button - floating outside of cards
-                    _AnimatedFade(
-                      controller: _fadeController,
-                      delay: 0.8,
-                      child: Center(
-                        child: ShareToStoryButton(
-                          shareText: 'ChatGPT says I\'m ${widget.personalityType} (${widget.typeAPercentage}% Type A, ${widget.typeBPercentage}% Type B). ${widget.subtitle} ${widget.typeEmoji} #ChatGPTWrapped',
-                        ),
-                      ),
-                    ),
-                    
-                    SizedBox(height: sectionSpacing),
+                    SizedBox(height: screenHeight * 0.03),
                   ],
+                ),
                 ),
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// Type A/B Hero Card (like Share Hero Card)
+class _TypeABHeroCard extends StatelessWidget {
+  final double screenWidth;
+  final double screenHeight;
+  final AnimationController chartController;
+  final int typeAPercentage;
+  final int typeBPercentage;
+  final String personalityType;
+
+  const _TypeABHeroCard({
+    required this.screenWidth,
+    required this.screenHeight,
+    required this.chartController,
+    required this.typeAPercentage,
+    required this.typeBPercentage,
+    required this.personalityType,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isLargeScreen = screenWidth > 600;
+    final cardPadding = (screenWidth * 0.04).clamp(16.0, isLargeScreen ? 24.0 : 20.0);
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular((screenWidth * 0.06).clamp(20.0, 28.0)),
+      child: BackdropFilter(
+        filter: ui.ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+        child: Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(cardPadding),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Colors.white.withOpacity(0.75),
+                Colors.white.withOpacity(0.55),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            border: Border.all(color: Colors.white.withOpacity(0.4), width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF8E8E93).withOpacity(0.12),
+                blurRadius: 30,
+                offset: const Offset(0, 18),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              // Two circular charts side by side
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  // Type A Chart
+                  _CircularProgressChart(
+                    controller: chartController,
+                    percentage: typeAPercentage,
+                    label: 'Type A',
+                    color: const Color(0xFFFF6B35),
+                    icon: Icons.flash_on_rounded,
+                  ),
+                  
+                  // Type B Chart
+                  _CircularProgressChart(
+                    controller: chartController,
+                    percentage: typeBPercentage,
+                    label: 'Type B',
+                    color: const Color(0xFF4ECDC4),
+                    icon: Icons.spa_rounded,
+                  ),
+                ],
+              ),
+              
+              SizedBox(height: (screenHeight * 0.015).clamp(12.0, 18.0)),
+              
+              // Personality Type Result
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: (screenWidth * 0.05).clamp(16.0, 20.0),
+                  vertical: (screenHeight * 0.01).clamp(8.0, 12.0),
+                ),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: typeAPercentage > typeBPercentage
+                        ? [const Color(0xFFFF6B35), const Color(0xFFFF8A65)]
+                        : [const Color(0xFF4ECDC4), const Color(0xFF7EDDD6)],
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  personalityType,
+                  style: GoogleFonts.inter(
+                    color: Colors.white,
+                    fontSize: (screenWidth * 0.05).clamp(20.0, isLargeScreen ? 28.0 : 24.0),
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -334,11 +363,11 @@ class _CircularProgressChart extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     final isLargeScreen = screenWidth > 600;
-    final chartSize = (screenWidth * 0.22).clamp(80.0, isLargeScreen ? 140.0 : 120.0);
-    final strokeWidth = (chartSize * 0.07).clamp(5.0, 9.0);
-    final iconSize = (chartSize * 0.22).clamp(16.0, isLargeScreen ? 28.0 : 24.0);
-    final percentageFontSize = (chartSize * 0.16).clamp(14.0, isLargeScreen ? 24.0 : 20.0);
-    final labelFontSize = (chartSize * 0.12).clamp(10.0, isLargeScreen ? 16.0 : 14.0);
+    final chartSize = (screenWidth * 0.18).clamp(70.0, isLargeScreen ? 110.0 : 100.0);
+    final strokeWidth = (chartSize * 0.07).clamp(5.0, 8.0);
+    final iconSize = (chartSize * 0.22).clamp(14.0, isLargeScreen ? 24.0 : 20.0);
+    final percentageFontSize = (chartSize * 0.16).clamp(12.0, isLargeScreen ? 20.0 : 18.0);
+    final labelFontSize = (chartSize * 0.12).clamp(9.0, isLargeScreen ? 14.0 : 12.0);
     
     return AnimatedBuilder(
       animation: controller,
