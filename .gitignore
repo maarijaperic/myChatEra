@@ -126,6 +126,12 @@ fastlane/Preview.html
 fastlane/screenshots/
 fastlane/test_output/
 
+# Python virtual environments
+**/.venv/
+**/venv/
+**/env/
+**/ENV/
+
 # Miscellaneous
 *.class
 *.log

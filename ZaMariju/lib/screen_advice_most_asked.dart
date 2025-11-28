@@ -69,35 +69,35 @@ class _AdviceMostAskedScreenState extends State<AdviceMostAskedScreen>
     final screenHeight = MediaQuery.of(context).size.height;
     
     return Scaffold(
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          // Gradient background (keep current colors)
-          const _AdviceGradientBackground(),
-          
-          // Subtle animated particles (like Share with People)
-          AnimatedBuilder(
-            animation: _particlesController,
-            builder: (context, child) {
-              return CustomPaint(
-                painter: _SubtleParticlesPainter(_particlesController.value),
-                child: Container(),
-              );
-            },
-          ),
-          
-          // Main content
-          SafeArea(
-            child: RepaintBoundary(
-              key: _screenshotKey,
+      body: RepaintBoundary(
+        key: _screenshotKey,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Gradient background (keep current colors)
+            const _AdviceGradientBackground(),
+            
+            // Subtle animated particles (like Share with People)
+            AnimatedBuilder(
+              animation: _particlesController,
+              builder: (context, child) {
+                return CustomPaint(
+                  painter: _SubtleParticlesPainter(_particlesController.value),
+                  child: Container(),
+                );
+              },
+            ),
+            
+            // Main content
+            SafeArea(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: (screenWidth * 0.06).clamp(20.0, 24.0),
-                  vertical: (screenHeight * 0.025).clamp(16.0, 20.0),
-                ),
-                child: Column(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: (screenWidth * 0.06).clamp(20.0, 24.0),
+                    vertical: (screenHeight * 0.025).clamp(16.0, 20.0),
+                  ),
+                  child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SizedBox(height: screenHeight * 0.03),
@@ -211,11 +211,11 @@ class _AdviceMostAskedScreenState extends State<AdviceMostAskedScreen>
                     SizedBox(height: screenHeight * 0.04),
                   ],
                 ),
-                ),
               ),
             ),
           ),
-        ],
+          ],
+        ),
       ),
     );
   }

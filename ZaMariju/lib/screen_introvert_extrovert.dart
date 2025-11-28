@@ -78,52 +78,52 @@ class _IntrovertExtrovertScreenState extends State<IntrovertExtrovertScreen>
     final screenHeight = MediaQuery.of(context).size.height;
     
     return Scaffold(
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          // Light pink gradient background (keep current)
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFFFFF0F5), // Very light pink
-                  Color(0xFFFFE4E9), // Light pink
-                  Color(0xFFFFD1DC), // Soft pink
-                  Color(0xFFFFB6C1), // Light pink
-                ],
-                stops: [0.0, 0.3, 0.7, 1.0],
+      body: RepaintBoundary(
+        key: _screenshotKey,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Light pink gradient background (keep current)
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0xFFFFF0F5), // Very light pink
+                    Color(0xFFFFE4E9), // Light pink
+                    Color(0xFFFFD1DC), // Soft pink
+                    Color(0xFFFFB6C1), // Light pink
+                  ],
+                  stops: [0.0, 0.3, 0.7, 1.0],
+                ),
               ),
             ),
-          ),
-          
-          // Subtle animated particles (like Share with People)
-          AnimatedBuilder(
-            animation: _particlesController,
-            builder: (context, child) {
-              return CustomPaint(
-                painter: _SubtleParticlesPainter(_particlesController.value),
-                child: Container(),
-              );
-            },
-          ),
-          
-          // Main content
-          SafeArea(
-            child: RepaintBoundary(
-              key: _screenshotKey,
+            
+            // Subtle animated particles (like Share with People)
+            AnimatedBuilder(
+              animation: _particlesController,
+              builder: (context, child) {
+                return CustomPaint(
+                  painter: _SubtleParticlesPainter(_particlesController.value),
+                  child: Container(),
+                );
+              },
+            ),
+            
+            // Main content
+            SafeArea(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: (screenWidth * 0.06).clamp(20.0, 24.0),
-                  vertical: (screenHeight * 0.02).clamp(16.0, 20.0),
-                ),
-                child: Column(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: (screenWidth * 0.05).clamp(16.0, 20.0),
+                    vertical: (screenHeight * 0.015).clamp(12.0, 16.0),
+                  ),
+                  child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    SizedBox(height: screenHeight * 0.04),
+                    SizedBox(height: (screenHeight * 0.06).clamp(30.0, 40.0)), // Povećano sa 0.02
                     
                     // Header + hero card
                     _AnimatedFade(
@@ -136,23 +136,23 @@ class _IntrovertExtrovertScreenState extends State<IntrovertExtrovertScreen>
                             textAlign: TextAlign.center,
                             style: GoogleFonts.inter(
                               color: const Color(0xFF1F1F21),
-                              fontSize: (screenWidth * 0.08).clamp(28.0, 36.0),
+                              fontSize: (screenWidth * 0.065).clamp(22.0, 28.0),
                               fontWeight: FontWeight.w700,
                               letterSpacing: -0.2,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 6),
                           Text(
                             widget.question,
                             textAlign: TextAlign.center,
                             style: GoogleFonts.inter(
                               color: const Color(0xFF636366),
-                              fontSize: (screenWidth * 0.04).clamp(14.0, 16.0),
+                              fontSize: (screenWidth * 0.035).clamp(12.0, 14.0),
                               fontWeight: FontWeight.w400,
                               letterSpacing: 0.2,
                             ),
                           ),
-                          SizedBox(height: screenHeight * 0.03),
+                          SizedBox(height: (screenHeight * 0.025).clamp(16.0, 20.0)), // Povećano sa 0.02
                           _IntrovertExtrovertHeroCard(
                             screenWidth: screenWidth,
                             screenHeight: screenHeight,
@@ -165,7 +165,7 @@ class _IntrovertExtrovertScreenState extends State<IntrovertExtrovertScreen>
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.03),
+                    SizedBox(height: (screenHeight * 0.03).clamp(18.0, 24.0)), // Povećano sa 0.02
                     
                     // Message card (like Share with People)
                     _AnimatedFade(
@@ -173,11 +173,11 @@ class _IntrovertExtrovertScreenState extends State<IntrovertExtrovertScreen>
                       delay: 0.2,
                       child: Container(
                         padding: EdgeInsets.symmetric(
-                          horizontal: (screenWidth * 0.04).clamp(16.0, 20.0),
-                          vertical: (screenHeight * 0.018).clamp(14.0, 18.0),
+                          horizontal: (screenWidth * 0.04).clamp(14.0, 18.0),
+                          vertical: (screenHeight * 0.015).clamp(12.0, 16.0),
                         ),
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(24),
+                          borderRadius: BorderRadius.circular(20),
                           gradient: const LinearGradient(
                             colors: [Color(0xFFFFFFFF), Color(0xFFF6F7FF)],
                             begin: Alignment.topLeft,
@@ -186,8 +186,8 @@ class _IntrovertExtrovertScreenState extends State<IntrovertExtrovertScreen>
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.06),
-                              blurRadius: 15,
-                              offset: const Offset(0, 6),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
                             ),
                           ],
                         ),
@@ -196,16 +196,16 @@ class _IntrovertExtrovertScreenState extends State<IntrovertExtrovertScreen>
                           textAlign: TextAlign.center,
                           style: GoogleFonts.inter(
                             color: const Color(0xFF555555),
-                            fontSize: (screenWidth * 0.036).clamp(13.5, 15.5),
+                            fontSize: (screenWidth * 0.032).clamp(12.0, 14.0),
                             fontWeight: FontWeight.w400,
-                            height: 1.5,
-                            letterSpacing: 0.2,
+                            height: 1.4,
+                            letterSpacing: 0.1,
                           ),
                         ),
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.04),
+                    SizedBox(height: (screenHeight * 0.025).clamp(16.0, 20.0)),
                     
                     // Small Share to Story button
                     _AnimatedFade(
@@ -218,14 +218,14 @@ class _IntrovertExtrovertScreenState extends State<IntrovertExtrovertScreen>
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.03),
+                    SizedBox(height: (screenHeight * 0.02).clamp(12.0, 16.0)),
                   ],
                 ),
               ),
             ),
           ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -252,10 +252,10 @@ class _IntrovertExtrovertHeroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isLargeScreen = screenWidth > 600;
-    final cardPadding = (screenWidth * 0.045).clamp(16.0, isLargeScreen ? 28.0 : 22.0);
+    final cardPadding = (screenWidth * 0.04).clamp(14.0, isLargeScreen ? 24.0 : 18.0);
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular((screenWidth * 0.07).clamp(24.0, 32.0)),
+      borderRadius: BorderRadius.circular((screenWidth * 0.06).clamp(20.0, 28.0)),
       child: BackdropFilter(
         filter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
@@ -274,12 +274,13 @@ class _IntrovertExtrovertHeroCard extends StatelessWidget {
             boxShadow: [
               BoxShadow(
                 color: const Color(0xFF8E8E93).withOpacity(0.12),
-                blurRadius: 24,
-                offset: const Offset(0, 12),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
               ),
             ],
           ),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               // Two circular charts side by side
               Row(
@@ -305,13 +306,13 @@ class _IntrovertExtrovertHeroCard extends StatelessWidget {
                 ],
               ),
               
-              SizedBox(height: (screenHeight * 0.015).clamp(12.0, 18.0)),
+              SizedBox(height: (screenHeight * 0.012).clamp(10.0, 14.0)),
               
               // Personality Type Result
               Container(
                 padding: EdgeInsets.symmetric(
-                  horizontal: (screenWidth * 0.05).clamp(16.0, 20.0),
-                  vertical: (screenHeight * 0.01).clamp(10.0, 12.0),
+                  horizontal: (screenWidth * 0.04).clamp(14.0, 18.0),
+                  vertical: (screenHeight * 0.008).clamp(8.0, 10.0),
                 ),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -321,13 +322,13 @@ class _IntrovertExtrovertHeroCard extends StatelessWidget {
                             ? [const Color(0xFF667eea), const Color(0xFF8B9AFF)]
                             : [const Color(0xFFFF6B9D), const Color(0xFFFF8E9E)],
                   ),
-                  borderRadius: BorderRadius.circular(22),
+                  borderRadius: BorderRadius.circular(18),
                 ),
                 child: Text(
                   personalityType,
                   style: GoogleFonts.inter(
                     color: Colors.white,
-                    fontSize: (screenWidth * 0.055).clamp(20.0, isLargeScreen ? 28.0 : 24.0),
+                    fontSize: (screenWidth * 0.045).clamp(16.0, isLargeScreen ? 24.0 : 20.0),
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.5,
                   ),
@@ -362,11 +363,11 @@ class _CircularProgressChart extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     final isLargeScreen = screenWidth > 600;
-    final chartSize = (screenWidth * 0.20).clamp(70.0, isLargeScreen ? 120.0 : 100.0);
-    final strokeWidth = (chartSize * 0.08).clamp(5.0, 8.0);
-    final iconSize = (chartSize * 0.22).clamp(14.0, isLargeScreen ? 26.0 : 22.0);
-    final percentageFontSize = (chartSize * 0.16).clamp(12.0, isLargeScreen ? 22.0 : 18.0);
-    final labelFontSize = (chartSize * 0.12).clamp(10.0, isLargeScreen ? 14.0 : 12.0);
+    final chartSize = (screenWidth * 0.18).clamp(60.0, isLargeScreen ? 110.0 : 85.0);
+    final strokeWidth = (chartSize * 0.08).clamp(4.0, 7.0);
+    final iconSize = (chartSize * 0.20).clamp(12.0, isLargeScreen ? 24.0 : 18.0);
+    final percentageFontSize = (chartSize * 0.15).clamp(10.0, isLargeScreen ? 20.0 : 16.0);
+    final labelFontSize = (chartSize * 0.11).clamp(9.0, isLargeScreen ? 13.0 : 11.0);
     
     return AnimatedBuilder(
       animation: controller,
@@ -414,7 +415,7 @@ class _CircularProgressChart extends StatelessWidget {
                         color: color,
                         size: iconSize,
                       ),
-                      SizedBox(height: (chartSize * 0.03).clamp(2.0, 6.0)),
+                      SizedBox(height: (chartSize * 0.025).clamp(2.0, 4.0)),
                       Text(
                         '$animatedPercentage%',
                         style: GoogleFonts.inter(
@@ -429,7 +430,7 @@ class _CircularProgressChart extends StatelessWidget {
               ),
             ),
             
-            SizedBox(height: (screenHeight * 0.012).clamp(8.0, 14.0)),
+            SizedBox(height: (screenHeight * 0.01).clamp(6.0, 10.0)),
             
             // Label
             Text(

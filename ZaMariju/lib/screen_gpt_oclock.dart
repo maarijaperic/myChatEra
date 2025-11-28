@@ -156,48 +156,48 @@ class _GptOClockScreenState extends State<GptOClockScreen>
     final screenHeight = MediaQuery.of(context).size.height;
     
     return Scaffold(
-      body: Stack(
-        children: [
-          // Light pastel blue gradient background
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFFE0F2F7), // Very light blue
-                  Color(0xFFCCEEF5), // Light blue
-                  Color(0xFFB8E8F0), // Soft blue
-                  Color(0xFFA3E2EB), // Pastel blue
-                ],
-                stops: [0.0, 0.3, 0.7, 1.0],
+      body: RepaintBoundary(
+        key: _screenshotKey,
+        child: Stack(
+          children: [
+            // Light pastel blue gradient background
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFFE0F2F7), // Very light blue
+                    Color(0xFFCCEEF5), // Light blue
+                    Color(0xFFB8E8F0), // Soft blue
+                    Color(0xFFA3E2EB), // Pastel blue
+                  ],
+                  stops: [0.0, 0.3, 0.7, 1.0],
+                ),
               ),
             ),
-          ),
-          
-          // Animated particles
-          AnimatedBuilder(
-            animation: _bubblesController,
-            builder: (context, child) {
-              return CustomPaint(
-                painter: _PeakTimeParticlesPainter(_bubblesController.value),
-                child: Container(),
-              );
-            },
-          ),
-          
-          // Main content
-          SafeArea(
-            child: RepaintBoundary(
-              key: _screenshotKey,
+            
+            // Animated particles
+            AnimatedBuilder(
+              animation: _bubblesController,
+              builder: (context, child) {
+                return CustomPaint(
+                  painter: _PeakTimeParticlesPainter(_bubblesController.value),
+                  child: Container(),
+                );
+              },
+            ),
+            
+            // Main content
+            SafeArea(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: (screenWidth * 0.06).clamp(20.0, 24.0),
-                  vertical: (screenHeight * 0.025).clamp(16.0, 20.0),
-                ),
-                child: Column(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: (screenWidth * 0.06).clamp(20.0, 24.0),
+                    vertical: (screenHeight * 0.025).clamp(16.0, 20.0),
+                  ),
+                  child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SizedBox(height: screenHeight * 0.04),
@@ -298,11 +298,11 @@ class _GptOClockScreenState extends State<GptOClockScreen>
                     SizedBox(height: screenHeight * 0.04),
                   ],
                 ),
-                ),
               ),
             ),
           ),
-        ],
+          ],
+        ),
       ),
     );
   }

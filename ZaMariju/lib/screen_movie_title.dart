@@ -71,49 +71,49 @@ class _MovieTitleScreenState extends State<MovieTitleScreen>
     final screenHeight = MediaQuery.of(context).size.height;
     
     return Scaffold(
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          // Light purple/pink gradient background (keep current colors)
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFFFFF0F8), // Very light pink
-                  Color(0xFFFFE5F0), // Light pink
-                  Color(0xFFFFD6E8), // Soft pink
-                  Color(0xFFFFC8E0), // Pastel pink
-                ],
-                stops: [0.0, 0.3, 0.7, 1.0],
+      body: RepaintBoundary(
+        key: _screenshotKey,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Light purple/pink gradient background (keep current colors)
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0xFFFFF0F8), // Very light pink
+                    Color(0xFFFFE5F0), // Light pink
+                    Color(0xFFFFD6E8), // Soft pink
+                    Color(0xFFFFC8E0), // Pastel pink
+                  ],
+                  stops: [0.0, 0.3, 0.7, 1.0],
+                ),
               ),
             ),
-          ),
-          
-          // Subtle animated particles (like Share with People)
-          AnimatedBuilder(
-            animation: _particlesController,
-            builder: (context, child) {
-              return CustomPaint(
-                painter: _SubtleParticlesPainter(_particlesController.value),
-                child: Container(),
-              );
-            },
-          ),
-          
-          // Main content
-          SafeArea(
-            child: RepaintBoundary(
-              key: _screenshotKey,
+            
+            // Subtle animated particles (like Share with People)
+            AnimatedBuilder(
+              animation: _particlesController,
+              builder: (context, child) {
+                return CustomPaint(
+                  painter: _SubtleParticlesPainter(_particlesController.value),
+                  child: Container(),
+                );
+              },
+            ),
+            
+            // Main content
+            SafeArea(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: (screenWidth * 0.06).clamp(20.0, 24.0),
-                  vertical: (screenHeight * 0.025).clamp(16.0, 20.0),
-                ),
-                child: Column(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: (screenWidth * 0.06).clamp(20.0, 24.0),
+                    vertical: (screenHeight * 0.025).clamp(16.0, 20.0),
+                  ),
+                  child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SizedBox(height: screenHeight * 0.03),
@@ -226,11 +226,11 @@ class _MovieTitleScreenState extends State<MovieTitleScreen>
                     SizedBox(height: screenHeight * 0.03),
                   ],
                 ),
-                ),
               ),
             ),
           ),
-        ],
+          ],
+        ),
       ),
     );
   }

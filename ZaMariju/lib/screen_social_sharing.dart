@@ -4,9 +4,19 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:gpt_wrapped2/widgets/share_button.dart';
+import 'package:gpt_wrapped2/models/chat_data.dart';
+import 'package:gpt_wrapped2/services/premium_processor.dart';
+import 'package:gpt_wrapped2/screen_preview_analysis.dart';
 
 class SocialSharingScreen extends StatefulWidget {
-  const SocialSharingScreen({super.key});
+  final ChatStats? stats;
+  final PremiumInsights? premiumInsights;
+
+  const SocialSharingScreen({
+    super.key,
+    this.stats,
+    this.premiumInsights,
+  });
 
   @override
   State<SocialSharingScreen> createState() => _SocialSharingScreenState();
@@ -50,44 +60,6 @@ class _SocialSharingScreenState extends State<SocialSharingScreen>
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-    final shareChannels = const [
-      _ShareChannelData(
-        icon: CupertinoIcons.camera_fill,
-        title: 'Instagram Story',
-        subtitle: '1080 × 1920 ready',
-        gradient: const [
-          Color(0xFFFF8FB1),
-          Color(0xFFFFC8DD),
-        ],
-      ),
-      _ShareChannelData(
-        icon: CupertinoIcons.paperplane_fill,
-        title: 'Messages',
-        subtitle: 'Send to close friends',
-        gradient: const [
-          Color(0xFF7DD6FF),
-          Color(0xFFB5F1FF),
-        ],
-      ),
-      _ShareChannelData(
-        icon: CupertinoIcons.chat_bubble_2_fill,
-        title: 'WhatsApp',
-        subtitle: 'Share as chat card',
-        gradient: const [
-          Color(0xFF6FE3AA),
-          Color(0xFFA9F5CE),
-        ],
-      ),
-      _ShareChannelData(
-        icon: CupertinoIcons.link,
-        title: 'Public Link',
-        subtitle: 'Copy your Wrapped link',
-        gradient: const [
-          Color(0xFF8D9CFF),
-          Color(0xFFBEC8FF),
-        ],
-      ),
-    ];
     
     return Scaffold(
       body: Stack(
@@ -162,83 +134,44 @@ class _SocialSharingScreenState extends State<SocialSharingScreen>
                             ),
                           ),
                           SizedBox(height: screenHeight * 0.045),
-                          _ShareHeroCard(screenWidth: screenWidth),
+                          _ShareHeroCard(
+                            screenWidth: screenWidth,
+                            onPreviewTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => PreviewAnalysisScreen(
+                                    stats: widget.stats,
+                                    premiumInsights: widget.premiumInsights,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
                         ],
                       ),
                     ),
                     
                     SizedBox(height: screenHeight * 0.06),
                     
-                    // Share channels chips
+                    // Share to Story Button (functional)
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.2,
-                      child: Wrap(
-                        alignment: WrapAlignment.center,
-                        spacing: 16,
-                        runSpacing: 16,
-                        children: shareChannels
-                            .map(
-                              (channel) => _ShareChannelCard(
-                                data: channel,
-                              ),
-                            )
-                            .toList(),
-                      ),
-                    ),
-                    
-                    SizedBox(height: screenHeight * 0.07),
-                    
-                    // Share Options section
-                    _AnimatedFade(
-                      controller: _fadeController,
-                      delay: 0.4,
                       child: Column(
                         children: [
-                          // Title
-                          Text(
-                            'Share Options',
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.inter(
-                              color: const Color(0xFF1F1F21),
-                              fontSize: (screenWidth * 0.06).clamp(22.0, 26.0),
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 0.3,
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          // Share buttons
-                          Column(
-                            children: [
-                              _ShareOptionButton(
-                                icon: CupertinoIcons.camera_viewfinder,
-                                title: 'Share Screenshot',
-                                subtitle: 'Save and share your results',
-                                onTap: () {},
-                              ),
-                              const SizedBox(height: 12),
-                              _ShareOptionButton(
-                                icon: CupertinoIcons.link,
-                                title: 'Copy Link',
-                                subtitle: 'Share your wrapped link',
-                                onTap: () {},
-                              ),
-                              const SizedBox(height: 12),
-                              ShareToStoryButton(
-                                shareText: 'Just shared my GPT Wrapped story! #GPTWrapped',
-                              ),
-                            ],
+                          ShareToStoryButton(
+                            shareText: 'Just shared my GPT Wrapped story! #GPTWrapped',
                           ),
                         ],
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.06),
+                    SizedBox(height: screenHeight * 0.05),
                     
                     // Message
                     _AnimatedFade(
                       controller: _fadeController,
-                      delay: 0.6,
+                      delay: 0.4,
                       child: Container(
                         padding: EdgeInsets.all((screenWidth * 0.05).clamp(20.0, 24.0)),
                         decoration: BoxDecoration(
@@ -256,40 +189,95 @@ class _SocialSharingScreenState extends State<SocialSharingScreen>
                             ),
                           ],
                         ),
-                        child: Text(
-                          'Your journey with ChatGPT is worth sharing! Let others discover the magic of AI conversations and inspire them to start their own wrapped journey. 🌟',
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.inter(
-                            color: const Color(0xFF555555),
-                            fontSize: (screenWidth * 0.038).clamp(14.0, 16.0),
-                            fontWeight: FontWeight.w400,
-                            height: 1.6,
-                            letterSpacing: 0.2,
-                          ),
+                        child: Column(
+                          children: [
+                            Text(
+                              'You can always share!',
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.inter(
+                                color: const Color(0xFF1F1F21),
+                                fontSize: (screenWidth * 0.05).clamp(18.0, 22.0),
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'Use the share button on any screen to share your favorite insights directly to Instagram Story. Your journey with ChatGPT is worth sharing! 🌟',
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.inter(
+                                color: const Color(0xFF555555),
+                                fontSize: (screenWidth * 0.038).clamp(14.0, 16.0),
+                                fontWeight: FontWeight.w400,
+                                height: 1.6,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.05),
+                    SizedBox(height: screenHeight * 0.04),
                     
-                    // Main share button
+                    // Stay Tuned Card
                     _AnimatedFade(
                       controller: _fadeController,
-                      delay: 0.8,
-                      child: Center(
-                        child: CupertinoButton.filled(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: (screenWidth * 0.08).clamp(24.0, 32.0),
-                            vertical: (screenHeight * 0.022).clamp(14.0, 18.0),
-                          ),
-                          borderRadius: BorderRadius.circular(28),
-                          onPressed: () {},
-                          child: Text(
-                            'Share your GPT Wrapped',
-                            style: GoogleFonts.inter(
-                              fontSize: 17,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 0.2,
+                      delay: 0.6,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(24),
+                        child: BackdropFilter(
+                          filter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                          child: Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.all((screenWidth * 0.05).clamp(20.0, 28.0)),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  const Color(0xFFFF6B9D).withOpacity(0.15),
+                                  const Color(0xFFFFB4A2).withOpacity(0.15),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              border: Border.all(
+                                color: const Color(0xFFFF6B9D).withOpacity(0.3),
+                                width: 1,
+                              ),
+                              borderRadius: BorderRadius.circular(24),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFFFF6B9D).withOpacity(0.2),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 8),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              children: [
+                                Text(
+                                  '✨ Stay Tuned for More ✨',
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.inter(
+                                    color: const Color(0xFF1F1F21),
+                                    fontSize: (screenWidth * 0.055).clamp(20.0, 26.0),
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'We\'re constantly working on new features and insights to make your ChatGPT experience even more personalized. More analytics, deeper insights, and exciting discoveries are coming soon!',
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.inter(
+                                    color: const Color(0xFF555555),
+                                    fontSize: (screenWidth * 0.038).clamp(14.0, 16.0),
+                                    fontWeight: FontWeight.w400,
+                                    height: 1.5,
+                                    letterSpacing: 0.1,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
@@ -308,106 +296,14 @@ class _SocialSharingScreenState extends State<SocialSharingScreen>
   }
 }
 
-// Share Option Button Widget
-class _ShareOptionButton extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  const _ShareOptionButton({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
-    
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: (screenWidth * 0.045).clamp(14.0, 18.0),
-          vertical: (screenHeight * 0.02).clamp(12.0, 16.0),
-        ),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.75),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: Colors.white.withOpacity(0.4), width: 1),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 14,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFEDEBFF), Color(0xFFDCE7FF)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Icon(
-                icon,
-                color: const Color(0xFF2C2C2E),
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 18),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: GoogleFonts.inter(
-                      color: const Color(0xFF1F1F21),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.2,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    subtitle,
-                    style: GoogleFonts.inter(
-                      color: const Color(0xFF8E8E93),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w400,
-                      letterSpacing: 0.1,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(
-              CupertinoIcons.chevron_forward,
-              color: Color(0xFFAEAEB2),
-              size: 18,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _ShareHeroCard extends StatelessWidget {
   final double screenWidth;
+  final VoidCallback? onPreviewTap;
 
-  const _ShareHeroCard({required this.screenWidth});
+  const _ShareHeroCard({
+    required this.screenWidth,
+    this.onPreviewTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -464,7 +360,7 @@ class _ShareHeroCard extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                     borderRadius: BorderRadius.circular(18),
                     color: const Color(0xFF007AFF).withOpacity(0.08),
-                    onPressed: () {},
+                    onPressed: onPreviewTap,
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -577,94 +473,6 @@ class _ShareHeroCard extends StatelessWidget {
       ),
     );
   }
-}
-
-class _ShareChannelCard extends StatelessWidget {
-  final _ShareChannelData data;
-
-  const _ShareChannelCard({required this.data});
-
-  @override
-  Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isLargeScreen = screenWidth > 600;
-    final cardWidth = isLargeScreen ? 190.0 : 168.0;
-
-    return GestureDetector(
-      onTap: () {},
-      child: Container(
-        width: cardWidth,
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: data.gradient,
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(26),
-          boxShadow: [
-            BoxShadow(
-              color: data.gradient.last.withOpacity(0.28),
-              blurRadius: 18,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                data.icon,
-                color: Colors.white,
-                size: 20,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              data.title,
-              style: GoogleFonts.inter(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                height: 1.2,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              data.subtitle,
-              style: GoogleFonts.inter(
-                color: Colors.white.withOpacity(0.85),
-                fontSize: 13,
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ShareChannelData {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final List<Color> gradient;
-
-  const _ShareChannelData({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.gradient,
-  });
 }
 
 // Animated fade widget

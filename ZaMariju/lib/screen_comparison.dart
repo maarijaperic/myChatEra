@@ -13,6 +13,7 @@ class ComparisonStatsScreen extends StatefulWidget {
   final int secondValue;
   final String secondEmoji;
   final String poeticMessage;
+  final List<Map<String, dynamic>>? monthlyTopics; // Personalizovane mesečne teme
 
   const ComparisonStatsScreen({
     super.key,
@@ -24,6 +25,7 @@ class ComparisonStatsScreen extends StatefulWidget {
     required this.secondValue,
     required this.secondEmoji,
     required this.poeticMessage,
+    this.monthlyTopics,
   });
 
   @override
@@ -40,6 +42,7 @@ class _ComparisonStatsScreenState extends State<ComparisonStatsScreen>
     {
       'month': 'JULY',
       'obsession': 'Summer Vibes',
+      'sentence': 'Embracing the warmth and energy of the season.',
       'emoji': '☀️',
       'color': Color(0xFFFFF5E5),
       'accentColor': Color(0xFFFFB84D),
@@ -47,6 +50,7 @@ class _ComparisonStatsScreenState extends State<ComparisonStatsScreen>
     {
       'month': 'AUGUST',
       'obsession': 'Learning',
+      'sentence': 'Expanding your knowledge and skills daily.',
       'emoji': '📚',
       'color': Color(0xFFE5F5FF),
       'accentColor': Color(0xFF4A90E2),
@@ -54,6 +58,7 @@ class _ComparisonStatsScreenState extends State<ComparisonStatsScreen>
     {
       'month': 'SEPTEMBER',
       'obsession': 'New Hobbies',
+      'sentence': 'Discovering passions and creative outlets.',
       'emoji': '🎨',
       'color': Color(0xFFF0E5FF),
       'accentColor': Color(0xFF9B59B6),
@@ -61,6 +66,7 @@ class _ComparisonStatsScreenState extends State<ComparisonStatsScreen>
     {
       'month': 'OCTOBER',
       'obsession': 'Productivity',
+      'sentence': 'Maximizing efficiency and achieving goals.',
       'emoji': '⚡',
       'color': Color(0xFFFFF0E5),
       'accentColor': Color(0xFFFF8C42),
@@ -68,6 +74,7 @@ class _ComparisonStatsScreenState extends State<ComparisonStatsScreen>
     {
       'month': 'NOVEMBER',
       'obsession': 'Gratitude',
+      'sentence': 'Appreciating life\'s blessings and moments.',
       'emoji': '🙏',
       'color': Color(0xFFE5FFE5),
       'accentColor': Color(0xFF2ECC71),
@@ -75,6 +82,7 @@ class _ComparisonStatsScreenState extends State<ComparisonStatsScreen>
     {
       'month': 'DECEMBER',
       'obsession': 'Reflection',
+      'sentence': 'Looking back and preparing for what\'s ahead.',
       'emoji': '✨',
       'color': Color(0xFFFFE5FF),
       'accentColor': Color(0xFFFF6B9D),
@@ -130,19 +138,19 @@ class _ComparisonStatsScreenState extends State<ComparisonStatsScreen>
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Gradient background (like Share with People)
+          // Off white background (like Share with People)
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Color(0xFFFFF0F6), // Light pastel pink
-                  Color(0xFFFFE8F0), // Light pink
-                  Color(0xFFFFE0EA), // Soft pink
-                  Color(0xFFFFD8E4), // Pastel pink
+                  Color(0xFFFAFAFA), // Off white
+                  Color(0xFFF5F5F5), // Light gray
+                  Color(0xFFF0F0F0), // Soft gray
+                  Color(0xFFEBEBEB), // Medium gray
                 ],
-                stops: [0.0, 0.3, 0.7, 1.0],
+                stops: [0.0, 0.35, 0.65, 1.0],
               ),
             ),
           ),
@@ -214,7 +222,11 @@ class _ComparisonStatsScreenState extends State<ComparisonStatsScreen>
                               Row(
                                 children: List.generate(2, (colIndex) {
                                   final index = rowIndex * 2 + colIndex;
-                                  final monthData = monthlyObsessions[index];
+                                  // Koristi personalizovane teme ako postoje, inače fallback na default
+                                  final monthData = (widget.monthlyTopics != null && 
+                                                   widget.monthlyTopics!.length > index)
+                                      ? widget.monthlyTopics![index]
+                                      : monthlyObsessions[index];
                                   return Expanded(
                                     child: Padding(
                                       padding: EdgeInsets.only(
@@ -225,6 +237,7 @@ class _ComparisonStatsScreenState extends State<ComparisonStatsScreen>
                                       child: _MonthObsessionCard(
                                         month: monthData['month'],
                                         obsession: monthData['obsession'],
+                                        sentence: monthData['sentence'],
                                         emoji: monthData['emoji'],
                                         color: monthData['color'],
                                         accentColor: monthData['accentColor'],
@@ -269,10 +282,11 @@ class _ComparisonStatsScreenState extends State<ComparisonStatsScreen>
   }
 }
 
-// Month Obsession Card Widget (modern design with gradient icon)
+// Month Obsession Card Widget (modern design with pastel colors)
 class _MonthObsessionCard extends StatelessWidget {
   final String month;
   final String obsession;
+  final String sentence;
   final String emoji;
   final Color color;
   final Color accentColor;
@@ -285,6 +299,7 @@ class _MonthObsessionCard extends StatelessWidget {
   const _MonthObsessionCard({
     required this.month,
     required this.obsession,
+    required this.sentence,
     required this.emoji,
     required this.color,
     required this.accentColor,
@@ -294,14 +309,6 @@ class _MonthObsessionCard extends StatelessWidget {
     required this.screenHeight,
     required this.isLargeScreen,
   });
-
-  String _getMonthInitials(String month) {
-    // Get first 2-3 letters of month
-    if (month.length >= 3) {
-      return month.substring(0, 3);
-    }
-    return month;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -313,17 +320,20 @@ class _MonthObsessionCard extends StatelessWidget {
         child: BackdropFilter(
           filter: ui.ImageFilter.blur(sigmaX: 16, sigmaY: 16),
           child: Container(
-            height: (screenHeight * 0.18).clamp(140.0, 200.0),
+            constraints: BoxConstraints(
+              minHeight: (screenHeight * 0.16).clamp(120.0, 180.0),
+              maxHeight: (screenHeight * 0.20).clamp(160.0, 220.0),
+            ),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Colors.white.withOpacity(0.85),
-                  Colors.white.withOpacity(0.65),
+                  color.withOpacity(0.6),
+                  color.withOpacity(0.4),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+              border: Border.all(color: accentColor.withOpacity(0.2), width: 1),
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
@@ -334,68 +344,70 @@ class _MonthObsessionCard extends StatelessWidget {
               ],
             ),
             child: Padding(
-              padding: EdgeInsets.all((screenWidth * 0.04).clamp(16.0, 20.0)),
+              padding: EdgeInsets.all((screenWidth * 0.035).clamp(12.0, 18.0)),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   // Month label
                   Text(
                     month,
                     style: GoogleFonts.inter(
                       color: const Color(0xFF636366),
-                      fontSize: (screenWidth * 0.028).clamp(10.0, isLargeScreen ? 14.0 : 12.0),
+                      fontSize: (screenWidth * 0.026).clamp(9.0, isLargeScreen ? 13.0 : 11.0),
                       fontWeight: FontWeight.w600,
                       letterSpacing: 1.0,
                     ),
                   ),
                   
-                  // Month initials circle and Obsession
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: (screenWidth * 0.12).clamp(48.0, isLargeScreen ? 64.0 : 56.0),
-                        height: (screenWidth * 0.12).clamp(48.0, isLargeScreen ? 64.0 : 56.0),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [accentColor, accentColor.withOpacity(0.7)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
+                  // Emoji, Obsession and Sentence
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Emoji
+                        Text(
+                          emoji,
+                          style: TextStyle(
+                            fontSize: (screenWidth * 0.07).clamp(28.0, isLargeScreen ? 40.0 : 36.0),
                           ),
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: accentColor.withOpacity(0.3),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
                         ),
-                        child: Center(
+                        SizedBox(height: (screenHeight * 0.008).clamp(4.0, 8.0)),
+                        // Obsession
+                        Flexible(
                           child: Text(
-                            _getMonthInitials(month),
+                            obsession,
                             style: GoogleFonts.inter(
-                              color: Colors.white,
-                              fontSize: (screenWidth * 0.04).clamp(16.0, isLargeScreen ? 22.0 : 20.0),
+                              color: const Color(0xFF1F1F21),
+                              fontSize: (screenWidth * 0.04).clamp(14.0, isLargeScreen ? 20.0 : 18.0),
                               fontWeight: FontWeight.w700,
-                              letterSpacing: 0.5,
+                              letterSpacing: -0.2,
+                              height: 1.1,
                             ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                      ),
-                      SizedBox(height: (screenHeight * 0.015).clamp(10.0, 14.0)),
-                      Text(
-                        obsession,
-                        style: GoogleFonts.inter(
-                          color: const Color(0xFF1F1F21),
-                          fontSize: (screenWidth * 0.045).clamp(16.0, isLargeScreen ? 22.0 : 20.0),
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.2,
-                          height: 1.2,
+                        SizedBox(height: (screenHeight * 0.006).clamp(3.0, 5.0)),
+                        // Sentence
+                        Flexible(
+                          child: Text(
+                            sentence,
+                            style: GoogleFonts.inter(
+                              color: const Color(0xFF636366),
+                              fontSize: (screenWidth * 0.03).clamp(10.0, isLargeScreen ? 14.0 : 12.0),
+                              fontWeight: FontWeight.w400,
+                              height: 1.2,
+                              letterSpacing: 0.1,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
               ),

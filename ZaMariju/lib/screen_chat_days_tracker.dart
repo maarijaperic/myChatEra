@@ -132,39 +132,39 @@ class _ChatDaysTrackerScreenState extends State<ChatDaysTrackerScreen>
     final isLargeScreen = screenWidth > 600;
     
     return Scaffold(
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          // Light pastel solid background
-          Container(
-            decoration: const BoxDecoration(
-              color: Color(0xFFB8E0B8), // Light mint - same as bottom gradient color
+      body: RepaintBoundary(
+        key: _screenshotKey,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Light pastel solid background
+            Container(
+              decoration: const BoxDecoration(
+                color: Color(0xFFB8E0B8), // Light mint - same as bottom gradient color
+              ),
             ),
-          ),
-          
-          // Animated particles
-          AnimatedBuilder(
-            animation: _floatController,
-            builder: (context, child) {
-              return CustomPaint(
-                painter: _CalendarParticlesPainter(_floatController.value),
-                child: Container(),
-              );
-            },
-          ),
-          
-          // Main content
-          SafeArea(
-            child: RepaintBoundary(
-              key: _screenshotKey,
+            
+            // Animated particles
+            AnimatedBuilder(
+              animation: _floatController,
+              builder: (context, child) {
+                return CustomPaint(
+                  painter: _CalendarParticlesPainter(_floatController.value),
+                  child: Container(),
+                );
+              },
+            ),
+            
+            // Main content
+            SafeArea(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: (screenWidth * 0.06).clamp(20.0, 24.0),
-                  vertical: (screenHeight * 0.025).clamp(16.0, 20.0),
-                ),
-                child: Column(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: (screenWidth * 0.06).clamp(20.0, 24.0),
+                    vertical: (screenHeight * 0.025).clamp(16.0, 20.0),
+                  ),
+                  child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SizedBox(height: screenHeight * 0.03),
@@ -401,11 +401,11 @@ class _ChatDaysTrackerScreenState extends State<ChatDaysTrackerScreen>
                     SizedBox(height: screenHeight * 0.04),
                   ],
                 ),
-                ),
               ),
             ),
           ),
-        ],
+          ],
+        ),
       ),
     );
   }

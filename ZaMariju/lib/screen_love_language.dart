@@ -89,52 +89,52 @@ class _LoveLanguageScreenState extends State<LoveLanguageScreen>
     final screenHeight = MediaQuery.of(context).size.height;
     
     return Scaffold(
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          // More pastel gradient background (keep current colors)
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFFFFE8F0), // Very light pastel pink
-                  Color(0xFFFFDDE8), // Light pastel pink
-                  Color(0xFFFFD1E0), // Soft pastel pink
-                  Color(0xFFFFC5D8), // Gentle pastel pink
-                ],
-                stops: [0.0, 0.35, 0.65, 1.0],
+      body: RepaintBoundary(
+        key: _screenshotKey,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // More pastel gradient background (keep current colors)
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0xFFFFE8F0), // Very light pastel pink
+                    Color(0xFFFFDDE8), // Light pastel pink
+                    Color(0xFFFFD1E0), // Soft pastel pink
+                    Color(0xFFFFC5D8), // Gentle pastel pink
+                  ],
+                  stops: [0.0, 0.35, 0.65, 1.0],
+                ),
               ),
             ),
-          ),
-          
-          // Subtle animated particles (like Share with People)
-          AnimatedBuilder(
-            animation: _particlesController,
-            builder: (context, child) {
-              return CustomPaint(
-                painter: _SubtleParticlesPainter(_particlesController.value),
-                child: Container(),
-              );
-            },
-          ),
-          
-          // Main content
-          SafeArea(
-            child: RepaintBoundary(
-              key: _screenshotKey,
+            
+            // Subtle animated particles (like Share with People)
+            AnimatedBuilder(
+              animation: _particlesController,
+              builder: (context, child) {
+                return CustomPaint(
+                  painter: _SubtleParticlesPainter(_particlesController.value),
+                  child: Container(),
+                );
+              },
+            ),
+            
+            // Main content
+            SafeArea(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: (screenWidth * 0.06).clamp(20.0, 24.0),
-                  vertical: (screenHeight * 0.025).clamp(16.0, 20.0),
-                ),
-                child: Column(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: (screenWidth * 0.06).clamp(20.0, 24.0),
+                    vertical: (screenHeight * 0.025).clamp(16.0, 20.0),
+                  ),
+                  child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    SizedBox(height: screenHeight * 0.03),
+                    SizedBox(height: screenHeight * 0.05),
                     
                     // Header + hero card
                     _AnimatedFade(
@@ -235,8 +235,8 @@ class _LoveLanguageScreenState extends State<LoveLanguageScreen>
               ),
             ),
           ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -307,7 +307,7 @@ class _LoveLanguageHeroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isLargeScreen = screenWidth > 600;
-    final cardPadding = (screenWidth * 0.04).clamp(14.0, isLargeScreen ? 20.0 : 16.0);
+    final cardPadding = (screenWidth * 0.045).clamp(16.0, isLargeScreen ? 22.0 : 18.0);
 
     return ClipRRect(
       borderRadius: BorderRadius.circular((screenWidth * 0.06).clamp(20.0, 28.0)),

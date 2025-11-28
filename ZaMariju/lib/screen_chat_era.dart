@@ -132,46 +132,46 @@ class _ChatEraScreenState extends State<ChatEraScreen>
     final screenHeight = MediaQuery.of(context).size.height;
     
     return Scaffold(
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          // Light pastel gradient background
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFFE0F2F7), // Very light blue
-                  Color(0xFFCCEEF5), // Light blue
-                  Color(0xFFB8E8F0), // Soft blue
-                  Color(0xFFA3E2EB), // Light blue
-                ],
-                stops: [0.0, 0.35, 0.65, 1.0],
+      body: RepaintBoundary(
+        key: _screenshotKey,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Light pastel gradient background
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0xFFE0F2F7), // Very light blue
+                    Color(0xFFCCEEF5), // Light blue
+                    Color(0xFFB8E8F0), // Soft blue
+                    Color(0xFFA3E2EB), // Light blue
+                  ],
+                  stops: [0.0, 0.35, 0.65, 1.0],
+                ),
               ),
             ),
-          ),
-          
-          // Animated particles
-          AnimatedBuilder(
-            animation: _floatController,
-            builder: (context, child) {
-              return CustomPaint(
-                painter: _ChatParticlesPainter(_floatController.value),
-                child: Container(),
-              );
-            },
-          ),
-          
-          // Main content
-          SafeArea(
-            child: RepaintBoundary(
-              key: _screenshotKey,
+            
+            // Animated particles
+            AnimatedBuilder(
+              animation: _floatController,
+              builder: (context, child) {
+                return CustomPaint(
+                  painter: _ChatParticlesPainter(_floatController.value),
+                  child: Container(),
+                );
+              },
+            ),
+            
+            // Main content
+            SafeArea(
               child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: (screenWidth * 0.06).clamp(20.0, 24.0),
+                physics: const BouncingScrollPhysics(),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: (screenWidth * 0.06).clamp(20.0, 24.0),
                   vertical: (screenHeight * 0.025).clamp(16.0, 20.0),
                 ),
                 child: Column(
@@ -384,8 +384,8 @@ class _ChatEraScreenState extends State<ChatEraScreen>
               ),
             ),
           ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

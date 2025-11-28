@@ -24,7 +24,7 @@ class _SplashScreenState extends State<SplashScreen>
     super.initState();
     
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 2500),
       vsync: this,
     );
 
@@ -46,8 +46,8 @@ class _SplashScreenState extends State<SplashScreen>
 
     _controller.forward();
 
-    // Navigate after 1.5 seconds
-    Timer(const Duration(milliseconds: 1500), () {
+    // Navigate after 2.5 seconds
+    Timer(const Duration(milliseconds: 2500), () {
       widget.onComplete();
     });
   }

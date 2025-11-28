@@ -73,52 +73,52 @@ class _GuessZodiacScreenState extends State<GuessZodiacScreen>
     final screenHeight = MediaQuery.of(context).size.height;
     
     return Scaffold(
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          // Soft pastel gradient background (like Share with People)
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFFFFF5FB),
-                  Color(0xFFF4F1FF),
-                  Color(0xFFEFF6FF),
-                  Color(0xFFEAF9FF),
-                ],
-                stops: [0.0, 0.3, 0.7, 1.0],
+      body: RepaintBoundary(
+        key: _screenshotKey,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Soft pastel gradient background (like Share with People)
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0xFFFFF5FB),
+                    Color(0xFFF4F1FF),
+                    Color(0xFFEFF6FF),
+                    Color(0xFFEAF9FF),
+                  ],
+                  stops: [0.0, 0.3, 0.7, 1.0],
+                ),
               ),
             ),
-          ),
-          
-          // Subtle animated particles (like Share with People)
-          AnimatedBuilder(
-            animation: _particlesController,
-            builder: (context, child) {
-              return CustomPaint(
-                painter: _SubtleParticlesPainter(_particlesController.value),
-                child: Container(),
-              );
-            },
-          ),
-          
-          // Main content
-          SafeArea(
-            child: RepaintBoundary(
-              key: _screenshotKey,
+            
+            // Subtle animated particles (like Share with People)
+            AnimatedBuilder(
+              animation: _particlesController,
+              builder: (context, child) {
+                return CustomPaint(
+                  painter: _SubtleParticlesPainter(_particlesController.value),
+                  child: Container(),
+                );
+              },
+            ),
+            
+            // Main content
+            SafeArea(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: (screenWidth * 0.06).clamp(20.0, 24.0),
-                  vertical: (screenHeight * 0.025).clamp(16.0, 20.0),
-                ),
-                child: Column(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: (screenWidth * 0.054).clamp(18.0, 21.6), // 0.06 * 0.9
+                    vertical: (screenHeight * 0.0225).clamp(14.4, 18.0), // 0.025 * 0.9
+                  ),
+                  child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    SizedBox(height: screenHeight * 0.04),
+                    SizedBox(height: screenHeight * 0.05), // Povećano sa 0.036
                     
                     // Header + hero card
                     _AnimatedFade(
@@ -131,23 +131,23 @@ class _GuessZodiacScreenState extends State<GuessZodiacScreen>
                             textAlign: TextAlign.center,
                             style: GoogleFonts.inter(
                               color: const Color(0xFF1F1F21),
-                              fontSize: (screenWidth * 0.08).clamp(28.0, 36.0),
+                              fontSize: (screenWidth * 0.072).clamp(25.2, 32.4), // 0.08 * 0.9
                               fontWeight: FontWeight.w700,
                               letterSpacing: -0.2,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 7), // 8 * 0.9
                           Text(
                             widget.question,
                             textAlign: TextAlign.center,
                             style: GoogleFonts.inter(
                               color: const Color(0xFF636366),
-                              fontSize: (screenWidth * 0.04).clamp(14.0, 16.0),
+                              fontSize: (screenWidth * 0.036).clamp(12.6, 14.4), // 0.04 * 0.9
                               fontWeight: FontWeight.w400,
                               letterSpacing: 0.2,
                             ),
                           ),
-                          SizedBox(height: screenHeight * 0.045),
+                          SizedBox(height: screenHeight * 0.0405), // 0.045 * 0.9
                           _ZodiacHeroCard(
                             screenWidth: screenWidth,
                             zodiacSign: widget.zodiacSign,
@@ -158,7 +158,7 @@ class _GuessZodiacScreenState extends State<GuessZodiacScreen>
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.03),
+                    SizedBox(height: screenHeight * 0.03), // Povećano sa 0.027
                     
                     // Message card (like Share with People)
                     _AnimatedFade(
@@ -166,8 +166,8 @@ class _GuessZodiacScreenState extends State<GuessZodiacScreen>
                       delay: 0.2,
                       child: Container(
                         padding: EdgeInsets.symmetric(
-                          horizontal: (screenWidth * 0.04).clamp(16.0, 18.0),
-                          vertical: (screenHeight * 0.018).clamp(14.0, 16.0),
+                          horizontal: (screenWidth * 0.045).clamp(16.0, 20.0), // Povećano
+                          vertical: (screenHeight * 0.025).clamp(18.0, 24.0), // Povećano
                         ),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(24),
@@ -185,20 +185,20 @@ class _GuessZodiacScreenState extends State<GuessZodiacScreen>
                           ],
                         ),
                         child: Text(
-                          '${_removeEmojis(widget.explanation)} Your conversations reveal patterns that align with this zodiac sign\'s characteristics, showing how your communication style reflects your astrological nature.${widget.subtitle.isNotEmpty ? ' ${_removeEmojis(widget.subtitle)}' : ''}',
+                          widget.explanation,
                           textAlign: TextAlign.center,
                           style: GoogleFonts.inter(
                             color: const Color(0xFF555555),
-                            fontSize: (screenWidth * 0.034).clamp(12.5, 14.5),
+                            fontSize: (screenWidth * 0.038).clamp(14.0, 16.0), // Povećano sa 0.0306
                             fontWeight: FontWeight.w400,
-                            height: 1.4,
+                            height: 1.6, // Povećano sa 1.4
                             letterSpacing: 0.2,
                           ),
                         ),
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.025),
+                    SizedBox(height: screenHeight * 0.03), // Povećano sa 0.0225
                     
                     // Small Share to Story button
                     _AnimatedFade(
@@ -211,14 +211,14 @@ class _GuessZodiacScreenState extends State<GuessZodiacScreen>
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.04),
+                    SizedBox(height: screenHeight * 0.036), // 0.04 * 0.9
                   ],
-                ),
                 ),
               ),
             ),
           ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -279,12 +279,12 @@ class _ZodiacHeroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isLargeScreen = screenWidth > 600;
-    final cardPadding = (screenWidth * 0.035).clamp(14.0, isLargeScreen ? 24.0 : 18.0);
+    final cardPadding = (screenWidth * 0.0315).clamp(12.6, isLargeScreen ? 21.6 : 16.2); // 0.035 * 0.9
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular((screenWidth * 0.06).clamp(22.0, 28.0)),
+      borderRadius: BorderRadius.circular((screenWidth * 0.054).clamp(19.8, 25.2)), // 0.06 * 0.9
       child: BackdropFilter(
-        filter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        filter: ui.ImageFilter.blur(sigmaX: 18, sigmaY: 18), // 20 * 0.9
         child: Container(
           width: double.infinity,
           padding: EdgeInsets.all(cardPadding),
@@ -301,8 +301,8 @@ class _ZodiacHeroCard extends StatelessWidget {
             boxShadow: [
               BoxShadow(
                 color: const Color(0xFF8E8E93).withOpacity(0.12),
-                blurRadius: 24,
-                offset: const Offset(0, 12),
+                blurRadius: 21.6, // 24 * 0.9
+                offset: const Offset(0, 10.8), // 12 * 0.9
               ),
             ],
           ),
@@ -311,9 +311,9 @@ class _ZodiacHeroCard extends StatelessWidget {
               // Circular Progress with Emoji (smaller)
               Builder(
                 builder: (context) {
-                  final progressSize = (screenWidth * 0.18).clamp(70.0, isLargeScreen ? 110.0 : 90.0);
-                  final strokeWidth = (progressSize * 0.07).clamp(5.0, 7.0);
-                  final emojiSize = (progressSize * 0.32).clamp(22.0, isLargeScreen ? 40.0 : 32.0);
+                  final progressSize = (screenWidth * 0.162).clamp(63.0, isLargeScreen ? 99.0 : 81.0); // 0.18 * 0.9
+                  final strokeWidth = (progressSize * 0.07).clamp(4.5, 6.3); // 5.0-7.0 * 0.9
+                  final emojiSize = (progressSize * 0.32).clamp(19.8, isLargeScreen ? 36.0 : 28.8); // 22.0-40.0 * 0.9
                   return SizedBox(
                     width: progressSize,
                     height: progressSize,
@@ -352,45 +352,45 @@ class _ZodiacHeroCard extends StatelessWidget {
                   );
                 },
               ),
-              SizedBox(height: (screenWidth * 0.025).clamp(10.0, 14.0)),
+              SizedBox(height: (screenWidth * 0.0225).clamp(9.0, 12.6)), // 0.025 * 0.9
               // Zodiac Sign (smaller)
               Text(
                 zodiacSign,
                 style: GoogleFonts.inter(
                   color: const Color(0xFF9C27B0),
-                  fontSize: (screenWidth * 0.075).clamp(24.0, isLargeScreen ? 40.0 : 32.0),
+                  fontSize: (screenWidth * 0.0675).clamp(21.6, isLargeScreen ? 36.0 : 28.8), // 0.075 * 0.9
                   fontWeight: FontWeight.w800,
                   letterSpacing: -0.5,
                   height: 0.9,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 3.6), // 4 * 0.9
               // Zodiac Name (smaller)
               Text(
                 zodiacName,
                 style: GoogleFonts.inter(
                   color: const Color(0xFF1F1F21),
-                  fontSize: (screenWidth * 0.038).clamp(14.0, isLargeScreen ? 18.0 : 16.0),
+                  fontSize: (screenWidth * 0.0342).clamp(12.6, isLargeScreen ? 16.2 : 14.4), // 0.038 * 0.9
                   fontWeight: FontWeight.w700,
                   height: 1.2,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 3.6), // 4 * 0.9
               // Match percentage (smaller)
               Container(
                 padding: EdgeInsets.symmetric(
-                  horizontal: (screenWidth * 0.03).clamp(10.0, 12.0),
-                  vertical: (screenWidth * 0.01).clamp(4.0, 5.0),
+                  horizontal: (screenWidth * 0.027).clamp(9.0, 10.8), // 0.03 * 0.9
+                  vertical: (screenWidth * 0.009).clamp(3.6, 4.5), // 0.01 * 0.9
                 ),
                 decoration: BoxDecoration(
                   color: const Color(0xFF9C27B0).withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(14.4), // 16 * 0.9
                 ),
                 child: Text(
                   '92% Match',
                   style: GoogleFonts.inter(
                     color: const Color(0xFF9C27B0),
-                    fontSize: (screenWidth * 0.030).clamp(11.0, 12.0),
+                    fontSize: (screenWidth * 0.027).clamp(9.9, 10.8), // 0.030 * 0.9
                     fontWeight: FontWeight.w600,
                   ),
                 ),

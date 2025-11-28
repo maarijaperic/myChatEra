@@ -69,52 +69,52 @@ class _MBTIPersonalityScreenState extends State<MBTIPersonalityScreen>
     final screenHeight = MediaQuery.of(context).size.height;
     
     return Scaffold(
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          // Soft pastel gradient background (lighter shade)
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFFFFF5FB),
-                  Color(0xFFF4F1FF),
-                  Color(0xFFEFF6FF),
-                  Color(0xFFEAF9FF),
-                ],
-                stops: [0.0, 0.3, 0.7, 1.0],
+      body: RepaintBoundary(
+        key: _screenshotKey,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Soft pastel gradient background (lighter shade)
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0xFFFFF5FB),
+                    Color(0xFFF4F1FF),
+                    Color(0xFFEFF6FF),
+                    Color(0xFFEAF9FF),
+                  ],
+                  stops: [0.0, 0.3, 0.7, 1.0],
+                ),
               ),
             ),
-          ),
-          
-          // Subtle animated particles (like Share with People)
-          AnimatedBuilder(
-            animation: _bubblesController,
-            builder: (context, child) {
-              return CustomPaint(
-                painter: _SubtleParticlesPainter(_bubblesController.value),
-                child: Container(),
-              );
-            },
-          ),
-          
-          // Main content
-          SafeArea(
-            child: RepaintBoundary(
-              key: _screenshotKey,
+            
+            // Subtle animated particles (like Share with People)
+            AnimatedBuilder(
+              animation: _bubblesController,
+              builder: (context, child) {
+                return CustomPaint(
+                  painter: _SubtleParticlesPainter(_bubblesController.value),
+                  child: Container(),
+                );
+              },
+            ),
+            
+            // Main content
+            SafeArea(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: (screenWidth * 0.06).clamp(20.0, 24.0),
-                  vertical: (screenHeight * 0.02).clamp(16.0, 20.0),
-                ),
-                child: Column(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: (screenWidth * 0.06).clamp(20.0, 24.0),
+                    vertical: (screenHeight * 0.02).clamp(16.0, 20.0),
+                  ),
+                  child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    SizedBox(height: screenHeight * 0.04),
+                    SizedBox(height: screenHeight * 0.06),
                     
                     // Header + hero card
                     _AnimatedFade(
@@ -191,6 +191,19 @@ class _MBTIPersonalityScreenState extends State<MBTIPersonalityScreen>
                                 letterSpacing: 0.2,
                               ),
                             ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'Your conversations reveal unique insights about who you are.',
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.inter(
+                                color: const Color(0xFF555555),
+                                fontSize: (screenWidth * 0.036).clamp(13.0, 15.0),
+                                fontWeight: FontWeight.w400,
+                                height: 1.5,
+                                letterSpacing: 0.2,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -212,11 +225,11 @@ class _MBTIPersonalityScreenState extends State<MBTIPersonalityScreen>
                     SizedBox(height: screenHeight * 0.03),
                   ],
                 ),
-                ),
               ),
             ),
           ),
-        ],
+          ],
+        ),
       ),
     );
   }

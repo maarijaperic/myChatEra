@@ -52,7 +52,7 @@ void main() async {
   // You can also use environment variables: flutter run --dart-define=PROXY_URL=http://localhost:3000
   const String proxyUrl = String.fromEnvironment(
     'PROXY_URL',
-    defaultValue: 'http://192.168.0.12:3000', // Local FastAPI server accessible to phone on same WiFi
+    defaultValue: 'https://openai-proxy-server-301757777366.europe-west1.run.app', // Google Cloud Run backend
   );
   AIAnalyzer.setProxyUrl(proxyUrl);
   
@@ -151,52 +151,28 @@ class _GPTWrappedHomeState extends State<GPTWrappedHome> {
   }
 
   Future<void> _onLoginSuccess(List<dynamic>? conversations) async {
-    // After login, analyze conversations and show loading screen
+    print('🟢 _onLoginSuccess called with ${conversations?.length ?? 0} conversations');
+    
+    // This callback is now called from IntroScreen.onStart, so we have a valid context
+    // Get the current navigator context
     final navigatorContext = Navigator.of(context);
     
-    // Show analyzing screen while processing
-    navigatorContext.pushReplacement(
+    print('🟢 Navigating to _FreeWrappedNavigator from IntroScreen');
+    // Navigate directly to wrapped screens
+    // Note: stats, premiumInsights, and parsedConversations should be passed from AnalyzingLoadingScreen
+    // But since we're calling this from IntroScreen, we need to get them from somewhere
+    // For now, we'll create the navigator with null values and let it use demo data
+    navigatorContext.push(
       MaterialPageRoute(
-        builder: (context) => AnalyzingLoadingScreen(
-          onAnalysisComplete: (stats, premiumInsights, parsedConversations) {
-            print('🔴 PREMIUM_DEBUG: onAnalysisComplete - premiumInsights is null: ${premiumInsights == null}');
-            print('🔴 PREMIUM_DEBUG: onAnalysisComplete - parsedConversations: ${parsedConversations != null}');
-            
-            if (mounted) {
-              setState(() {
-                _premiumInsights = premiumInsights;
-              });
-              print('🔴 PREMIUM_DEBUG: onAnalysisComplete - _premiumInsights set in state');
-            }
-            
-            // After analysis, show intro screen with real stats
-            // IMPORTANT: Pass premiumInsights and conversations directly from callback, not from state
-            navigatorContext.pushReplacement(
-              MaterialPageRoute(
-                builder: (newContext) => IntroScreen(
-                  onStart: () {
-                    print('🔴 PREMIUM_DEBUG: IntroScreen onStart - premiumInsights is null: ${premiumInsights == null}');
-                    // Navigate to wrapped screens with analyzed stats
-                    navigatorContext.push(
-                      MaterialPageRoute(
-                        builder: (context) {
-                          print('🔴 PREMIUM_DEBUG: Creating _FreeWrappedNavigator with premiumInsights: ${premiumInsights != null}');
-                          return _FreeWrappedNavigator(
-                            onPremiumTap: _startPremiumWrapped,
-                            stats: stats, // Use real analyzed stats
-                            premiumInsights: premiumInsights, // Will be null initially, set when user subscribes
-                            parsedConversations: parsedConversations, // Pass conversations for premium analysis
-                          );
-                        },
-                      ),
-                    );
-                  },
-                ),
-              ),
-            );
-          },
-          conversations: conversations,
-        ),
+        builder: (context) {
+          print('🔴 PREMIUM_DEBUG: Creating _FreeWrappedNavigator');
+                          return FreeWrappedNavigator(
+            onPremiumTap: _startPremiumWrapped,
+            stats: null, // Will be set from AnalyzingLoadingScreen callback
+            premiumInsights: null, // Will be null initially, set when user subscribes
+            parsedConversations: null, // Will be set from AnalyzingLoadingScreen callback
+          );
+        },
       ),
     );
   }
@@ -224,13 +200,14 @@ class _GPTWrappedHomeState extends State<GPTWrappedHome> {
   }
 }
 
-class _FreeWrappedNavigator extends StatelessWidget {
+// Make _FreeWrappedNavigator accessible from other files
+class FreeWrappedNavigator extends StatelessWidget {
   final VoidCallback onPremiumTap;
   final ChatStats? stats;
   final PremiumInsights? premiumInsights;
   final List<ConversationData>? parsedConversations;
 
-  const _FreeWrappedNavigator({
+  const FreeWrappedNavigator({
     required this.onPremiumTap,
     this.stats,
     this.premiumInsights,
@@ -334,6 +311,14 @@ class _FreeWrappedNavigator extends StatelessWidget {
       print('🔴 PREMIUM_DEBUG: _FreeWrappedNavigator - premiumInsights.mbtiType: ${premiumInsights!.mbtiType}');
     }
     
+    // Generate monthly topics from conversations
+    final monthlyTopicsJanJun = parsedConversations != null && parsedConversations!.isNotEmpty
+        ? AIAnalyzer.analyzeMonthlyTopics(parsedConversations!, startMonth: 1)
+        : null;
+    final monthlyTopicsJulDec = parsedConversations != null && parsedConversations!.isNotEmpty
+        ? AIAnalyzer.analyzeMonthlyTopics(parsedConversations!, startMonth: 7)
+        : null;
+    
     // Use real stats if available, otherwise use demo data
     final hours = stats?.totalHours ?? 127;
     final minutes = stats?.totalMinutes ?? 42;
@@ -435,22 +420,10 @@ class _FreeWrappedNavigator extends StatelessWidget {
           redFlagTitle: 'Red Flags 🔴',
           greenFlags: premiumInsights?.greenFlags.isNotEmpty == true 
               ? premiumInsights!.greenFlags 
-              : [
-                  'You always apologize when you make a mistake',
-                  'You are very creative with your prompts',
-                  'You ask very intelligent questions',
-                  'You have a good sense of humor',
-                  'You are patient with long answers',
-                ],
+              : [], // Empty list - user needs to subscribe for premium insights
           redFlags: premiumInsights?.redFlags.isNotEmpty == true 
               ? premiumInsights!.redFlags 
-              : [
-                  'Sometimes you don\'t read the full answers',
-                  'You ask for the same thing several times in a row',
-                  'You don\'t specify what you want clearly',
-                  'You get frustrated when you don\'t understand something',
-                  'Sometimes you are very impatient',
-                ],
+              : [], // Empty list - user needs to subscribe for premium insights
           subtitle: 'Self-love also includes recognizing our areas for improvement 💚❤️',
         ),
         // Index 11 - Guess Zodiac
@@ -499,14 +472,15 @@ class _FreeWrappedNavigator extends StatelessWidget {
           subtitle: 'History echoes in who we are today ✨',
         ),
         // Index 16 - Your 2025 in Wrapped
-        const WrappedStatsScreen(
+        WrappedStatsScreen(
           question: 'Your 2025 in Wrapped',
           statNumber: 2025,
           unit: 'YEAR',
           poeticMessage: 'Get ready for another year of growth, discovery, and countless conversations with an AI that will know you even better! Here\'s to asking even more interesting questions! 🎉',
+          monthlyTopics: monthlyTopicsJanJun,
         ),
         // Index 17 - Your GPT Wrapped
-        const ComparisonStatsScreen(
+        ComparisonStatsScreen(
           question: 'Your GPT Wrapped',
           firstName: 'You',
           firstValue: 127,
@@ -515,9 +489,13 @@ class _FreeWrappedNavigator extends StatelessWidget {
           secondValue: 89,
           secondEmoji: '🤖',
           poeticMessage: 'You\'ve created a beautiful partnership with AI this year. While others see ChatGPT as a tool, you\'ve made it your conversation partner, creative collaborator, and digital confidant. Here\'s to many more meaningful exchanges! 🌟',
+          monthlyTopics: monthlyTopicsJulDec,
         ),
         // Index 18 - Share with People
-        const SocialSharingScreen(),
+        SocialSharingScreen(
+          stats: stats,
+          premiumInsights: premiumInsights,
+        ),
       ],
       startIndex: 0,
       premiumStartIndex: 19, // Prevent tapping past index 18
@@ -689,14 +667,15 @@ class _PremiumWrappedNavigator extends StatelessWidget {
           subtitle: 'History echoes in who we are today ✨',
         ),
         // Index 9 - Your 2025 in Wrapped
-        const WrappedStatsScreen(
+        WrappedStatsScreen(
           question: 'Your 2025 in Wrapped',
           statNumber: 2025,
           unit: 'YEAR',
           poeticMessage: 'Get ready for another year of growth, discovery, and countless conversations with an AI that will know you even better! Here\'s to asking even more interesting questions! 🎉',
+          monthlyTopics: null, // Premium navigator doesn't have access to conversations
         ),
         // Index 10 - Your GPT Wrapped
-        const ComparisonStatsScreen(
+        ComparisonStatsScreen(
           question: 'Your GPT Wrapped',
           firstName: 'You',
           firstValue: 127,
@@ -705,9 +684,13 @@ class _PremiumWrappedNavigator extends StatelessWidget {
           secondValue: 89,
           secondEmoji: '🤖',
           poeticMessage: 'You\'ve created a beautiful partnership with AI this year. While others see ChatGPT as a tool, you\'ve made it your conversation partner, creative collaborator, and digital confidant. Here\'s to many more meaningful exchanges! 🌟',
+          monthlyTopics: null, // Premium navigator doesn't have access to conversations
         ),
         // Index 11 - Share with People
-        const SocialSharingScreen(),
+        SocialSharingScreen(
+          stats: null, // Premium navigator doesn't have stats
+          premiumInsights: insights,
+        ),
       ],
       startIndex: 0,
     );

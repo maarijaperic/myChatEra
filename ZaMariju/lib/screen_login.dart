@@ -4,6 +4,9 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
+import 'package:gpt_wrapped2/screen_analyzing_loading.dart';
+import 'package:gpt_wrapped2/screen_intro.dart';
+import 'package:gpt_wrapped2/main.dart' show FreeWrappedNavigator;
 
 class LoginScreen extends StatefulWidget {
   final Function(List<dynamic>? conversations) onLoginSuccess;
@@ -33,6 +36,7 @@ class _LoginScreenState extends State<LoginScreen>
   String? _accessToken;
   List<dynamic>? _conversations; // Stored for potential future use
   String _status = '';
+  Timer? _loadTimeoutTimer;
 
   @override
   void initState() {
@@ -77,6 +81,7 @@ class _LoginScreenState extends State<LoginScreen>
     _controller.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _loadTimeoutTimer?.cancel();
     super.dispose();
   }
 
@@ -130,6 +135,7 @@ class _LoginScreenState extends State<LoginScreen>
     setState(() {
       _showWebView = true;
       _status = 'Opening ChatGPT login...';
+      _isLoading = true;
     });
   }
 
@@ -217,55 +223,81 @@ class _LoginScreenState extends State<LoginScreen>
     if (_webViewController == null || !mounted) return;
 
     final fullConversations = <Map<String, dynamic>>[];
-    int fetchedCount = 0;
     final totalCount = conversationList.length;
+    const batchSize = 4; // Fetch 4 conversations in parallel
 
-    for (var conv in conversationList) {
-      if (conv is! Map<String, dynamic>) continue;
-      
-      final id = (conv['id'] as String?) ?? '';
-      if (id.isEmpty) {
-        fullConversations.add(conv);
-        continue;
-      }
+    // Process conversations in batches
+    for (int i = 0; i < conversationList.length; i += batchSize) {
+      if (!mounted) return;
 
-      try {
-        // Update status
-        if (!mounted) return;
-        setState(() {
-          _status = 'Loading messages... ${fetchedCount + 1}/$totalCount';
-        });
+      // Get batch of conversations
+      final batch = conversationList.skip(i).take(batchSize).toList();
+      final batchFutures = <Future<Map<String, dynamic>?>>[];
 
-        // Fetch full conversation with messages
-        final fullConv = await _fetchSingleConversation(id);
-        if (fullConv != null) {
-          fullConversations.add(fullConv);
-        } else {
-          // If fetch failed, include metadata only
-          fullConversations.add(conv);
+      // Start fetching all conversations in batch in parallel
+      for (var conv in batch) {
+        if (conv is! Map<String, dynamic>) {
+          batchFutures.add(Future.value(conv));
+          continue;
+        }
+        
+        final id = (conv['id'] as String?) ?? '';
+        if (id.isEmpty) {
+          batchFutures.add(Future.value(conv));
+          continue;
         }
 
-        fetchedCount++;
-        
-        // Small delay to avoid rate limiting
-        await Future.delayed(const Duration(milliseconds: 300));
-      } catch (e) {
-        print('Error fetching conversation $id: $e');
-        // Include metadata only if fetch fails
-        fullConversations.add(conv);
+        // Add fetch future to batch
+        batchFutures.add(_fetchSingleConversation(id).then((fullConv) {
+          return fullConv ?? conv; // Return full conversation or fallback to metadata
+        }).catchError((e) {
+          print('Error fetching conversation $id: $e');
+          return conv; // Return metadata on error
+        }));
+      }
+
+      // Wait for all conversations in batch to complete
+      final batchResults = await Future.wait(batchFutures);
+      // Filter out null values and add to fullConversations
+      for (final result in batchResults) {
+        if (result != null) {
+          fullConversations.add(result);
+        }
+      }
+
+      // Update status with percentage
+      if (mounted) {
+        final progress = (fullConversations.length / totalCount * 100).round();
+        setState(() {
+          _status = 'Loading messages... $progress%';
+        });
+      }
+
+      // Small delay between batches to avoid rate limiting
+      if (i + batchSize < conversationList.length) {
+        await Future.delayed(const Duration(milliseconds: 200));
       }
     }
 
-    if (!mounted) return;
-    setState(() {
-      _conversations = fullConversations;
-      _status = 'Fetched ${fullConversations.length} conversations with messages ✓';
-      _isLoading = false;
-    });
+    // Store conversations first
+    _conversations = fullConversations;
+    
+    if (mounted) {
+      setState(() {
+        _status = 'Loading complete ✓';
+        _isLoading = false;
+      });
+    }
 
     // Auto-complete login after fetching
     Future.delayed(const Duration(milliseconds: 500), () {
-      if (!mounted) return;
+      print('🔵 Future.delayed callback - mounted: $mounted');
+      if (!mounted) {
+        print('⚠️ Widget not mounted, calling _completeLogin anyway');
+        _completeLogin();
+        return;
+      }
+      print('🔵 Calling _completeLogin');
       _completeLogin();
     });
   }
@@ -422,20 +454,77 @@ class _LoginScreenState extends State<LoginScreen>
     
     try {
       return await completer.future.timeout(
-        const Duration(seconds: 10),
+        const Duration(seconds: 15),
         onTimeout: () => null,
       );
+    } catch (e) {
+      return null;
     } finally {
-      _webViewController!.removeJavaScriptHandler(handlerName: 'onConversationData');
+      try {
+        _webViewController?.removeJavaScriptHandler(handlerName: 'onConversationData');
+      } catch (e) {
+        // Ignore errors when removing handler
+      }
     }
   }
 
   void _completeLogin() {
+    print('🔵 _completeLogin called with ${_conversations?.length ?? 0} conversations');
     // Clear password from memory (never stored)
     _passwordController.clear();
     
-    // Pass conversations to the callback for analysis
-    widget.onLoginSuccess(_conversations);
+    if (!mounted) {
+      print('⚠️ LoginScreen not mounted, calling callback anyway');
+      widget.onLoginSuccess(_conversations);
+      return;
+    }
+    
+    // Navigate directly from LoginScreen context - this is more reliable
+    print('🔵 Navigating directly from LoginScreen to AnalyzingLoadingScreen');
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (context) => AnalyzingLoadingScreen(
+          onAnalysisComplete: (stats, premiumInsights, parsedConversations) {
+            // Store analysis results in closure variables to pass to navigator
+            final parsedCount = parsedConversations?.length ?? 0;
+            print('🔵 onAnalysisComplete - stats: ${stats != null}, premiumInsights: ${premiumInsights != null}, parsedConversations: $parsedCount');
+            
+            // Navigate to IntroScreen
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (context) => IntroScreen(
+                  onStart: () {
+                    // Navigate directly to FreeWrappedNavigator with analysis results
+                    print('🔵 IntroScreen onStart - navigating to FreeWrappedNavigator');
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) {
+                          // We need onPremiumTap callback, but we can't access _startPremiumWrapped from here
+                          // So we'll create a dummy callback that shows an error
+                          return FreeWrappedNavigator(
+                            onPremiumTap: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Premium features require app restart.'),
+                                ),
+                              );
+                            },
+                            stats: stats,
+                            premiumInsights: premiumInsights,
+                            parsedConversations: parsedConversations,
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ),
+            );
+          },
+          conversations: _conversations,
+        ),
+      ),
+    );
   }
 
   @override
@@ -470,6 +559,22 @@ class _LoginScreenState extends State<LoginScreen>
               fontWeight: FontWeight.w600,
             ),
           ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh, color: Color(0xFF2D2D2D)),
+              onPressed: () {
+                _loadTimeoutTimer?.cancel();
+                if (_webViewController != null) {
+                  _webViewController!.reload();
+                  setState(() {
+                    _status = 'Refreshing...';
+                    _isLoading = true;
+                  });
+                }
+              },
+              tooltip: 'Refresh',
+            ),
+          ],
         ),
         body: Column(
           children: [
@@ -517,9 +622,35 @@ class _LoginScreenState extends State<LoginScreen>
                   allowsBackForwardNavigationGestures: true,
                   thirdPartyCookiesEnabled: true,
                   domStorageEnabled: true,
+                  cacheEnabled: true,
                   userAgent:
-                      'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36',
+                      'Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
+                  useShouldOverrideUrlLoading: true,
+                  supportMultipleWindows: true,
+                  javaScriptCanOpenWindowsAutomatically: true,
                 ),
+                shouldOverrideUrlLoading: (controller, navigationAction) async {
+                  // Allow all navigation
+                  return NavigationActionPolicy.ALLOW;
+                },
+                onLoadStart: (controller, url) {
+                  // Start timeout timer when page starts loading
+                  _loadTimeoutTimer?.cancel();
+                  _loadTimeoutTimer = Timer(const Duration(seconds: 30), () {
+                    if (mounted && _status.contains('Opening ChatGPT login')) {
+                      setState(() {
+                        _status = 'Loading is taking too long. Try refreshing or check your internet connection.';
+                        _isLoading = false;
+                      });
+                    }
+                  });
+                  
+                  if (mounted) {
+                    setState(() {
+                      _status = 'Loading ChatGPT...';
+                    });
+                  }
+                },
                 onWebViewCreated: (controller) {
                   _webViewController = controller;
 
@@ -552,11 +683,24 @@ class _LoginScreenState extends State<LoginScreen>
                           if (items.isNotEmpty) {
                             if (mounted) {
                               setState(() {
-                                _status = 'Fetched ${items.length} conversations. Loading messages...';
+                                _status = 'Loading messages... 0%';
                               });
                             }
                             // Fetch full conversation data with messages
                             _fetchFullConversations(items);
+                          } else {
+                            // No conversations found, complete login with empty list
+                            if (mounted) {
+                              setState(() {
+                                _status = 'No conversations found.';
+                                _conversations = [];
+                                _isLoading = false;
+                              });
+                              Future.delayed(const Duration(milliseconds: 500), () {
+                                if (!mounted) return;
+                                _completeLogin();
+                              });
+                            }
                           }
                         } catch (_) {}
                       }
@@ -600,6 +744,9 @@ class _LoginScreenState extends State<LoginScreen>
                   );
                 },
                 onLoadStop: (controller, url) async {
+                  // Cancel timeout when page loads
+                  _loadTimeoutTimer?.cancel();
+                  
                   if (mounted) {
                     setState(() {
                       _status = 'Please sign in to ChatGPT...';
@@ -608,34 +755,89 @@ class _LoginScreenState extends State<LoginScreen>
                   await _checkLoginStatus();
                 },
                 onReceivedError: (controller, request, error) {
-                  if (mounted) {
-                    setState(() {
-                      _isLoading = false;
-                      _status = 'Failed to load page. Please check your internet connection.';
-                    });
-                  }
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Network error: ${error.description}'),
-                        backgroundColor: Colors.red,
-                        duration: const Duration(seconds: 4),
-                      ),
-                    );
-                  }
-                },
-                onReceivedHttpError: (controller, request, response) {
-                  if (response.statusCode != null && response.statusCode! >= 400) {
+                  // Cancel timeout on error
+                  _loadTimeoutTimer?.cancel();
+                  
+                  // Ignore errors for third-party resources (analytics, ads, etc.)
+                  // Only show errors for main ChatGPT domain
+                  final url = request.url.toString();
+                  final isMainDomain = url.contains('chatgpt.com') || 
+                                     url.contains('openai.com') ||
+                                     url.isEmpty; // Empty URL means main page
+                  
+                  // Ignore common non-critical errors (third-party resources that fail to load)
+                  final errorDescription = error.description.toLowerCase();
+                  final isNonCriticalError = errorDescription.contains('err_name_not_resolved') ||
+                                            errorDescription.contains('net::err_name_not_resolved') ||
+                                            errorDescription.contains('name not resolved') ||
+                                            (!isMainDomain); // Ignore all third-party errors
+                  
+                  // Only show error if it's for main domain and not a non-critical error
+                  if (isMainDomain && !isNonCriticalError) {
                     if (mounted) {
                       setState(() {
                         _isLoading = false;
-                        _status = 'Failed to connect. Please try again.';
+                        _status = 'Failed to load page. Error: ${error.description}. Try refreshing.';
                       });
+                    }
+                    if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Connection error: ${response.statusCode}'),
+                          content: Text('Network error: ${error.description}'),
                           backgroundColor: Colors.red,
+                          duration: const Duration(seconds: 5),
+                          action: SnackBarAction(
+                            label: 'Refresh',
+                            textColor: Colors.white,
+                            onPressed: () {
+                              if (_webViewController != null) {
+                                _webViewController!.reload();
+                                setState(() {
+                                  _status = 'Refreshing...';
+                                  _isLoading = true;
+                                });
+                              }
+                            },
+                          ),
+                        ),
+                      );
+                    }
+                  }
+                  // Silently ignore third-party resource errors and ERR_NAME_NOT_RESOLVED
+                },
+                onReceivedHttpError: (controller, request, response) {
+                  // Cancel timeout on HTTP error
+                  _loadTimeoutTimer?.cancel();
+                  
+                  final url = request.url.toString();
+                  final isMainDomain = url.contains('chatgpt.com') || url.contains('openai.com');
+                  
+                  if (isMainDomain && response.statusCode != null && response.statusCode! >= 400) {
+                    if (mounted) {
+                      setState(() {
+                        _isLoading = false;
+                        _status = 'HTTP Error ${response.statusCode}. Try refreshing.';
+                      });
+                    }
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('HTTP Error ${response.statusCode}. Please try again.'),
+                          backgroundColor: Colors.orange,
                           duration: const Duration(seconds: 4),
+                          action: SnackBarAction(
+                            label: 'Refresh',
+                            textColor: Colors.white,
+                            onPressed: () {
+                              if (_webViewController != null) {
+                                _webViewController!.reload();
+                                setState(() {
+                                  _status = 'Refreshing...';
+                                  _isLoading = true;
+                                });
+                              }
+                            },
+                          ),
                         ),
                       );
                     }

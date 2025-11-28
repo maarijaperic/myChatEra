@@ -80,52 +80,52 @@ class _TypeABPersonalityScreenState extends State<TypeABPersonalityScreen>
     final screenHeight = MediaQuery.of(context).size.height;
     
     return Scaffold(
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          // Soft pastel gradient background (like Share with People)
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFFFFF5FB),
-                  Color(0xFFF4F1FF),
-                  Color(0xFFEFF6FF),
-                  Color(0xFFEAF9FF),
-                ],
-                stops: [0.0, 0.3, 0.7, 1.0],
+      body: RepaintBoundary(
+        key: _screenshotKey,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Soft pastel gradient background (like Share with People)
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0xFFFFF5FB),
+                    Color(0xFFF4F1FF),
+                    Color(0xFFEFF6FF),
+                    Color(0xFFEAF9FF),
+                  ],
+                  stops: [0.0, 0.3, 0.7, 1.0],
+                ),
               ),
             ),
-          ),
-          
-          // Subtle animated particles
-          AnimatedBuilder(
-            animation: _particlesController,
-            builder: (context, child) {
-              return CustomPaint(
-                painter: _SubtleParticlesPainter(_particlesController.value),
-                child: Container(),
-              );
-            },
-          ),
-          
-          // Main content
-          SafeArea(
-            child: RepaintBoundary(
-              key: _screenshotKey,
+            
+            // Subtle animated particles
+            AnimatedBuilder(
+              animation: _particlesController,
+              builder: (context, child) {
+                return CustomPaint(
+                  painter: _SubtleParticlesPainter(_particlesController.value),
+                  child: Container(),
+                );
+              },
+            ),
+            
+            // Main content
+            SafeArea(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: (screenWidth * 0.06).clamp(20.0, 24.0),
-                  vertical: (screenHeight * 0.025).clamp(16.0, 20.0),
-                ),
-                child: Column(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: (screenWidth * 0.05).clamp(16.0, 20.0),
+                    vertical: (screenHeight * 0.015).clamp(12.0, 16.0),
+                  ),
+                  child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    SizedBox(height: screenHeight * 0.03),
+                    SizedBox(height: (screenHeight * 0.04).clamp(20.0, 30.0)),
                     
                     // Header + hero card
                     _AnimatedFade(
@@ -138,23 +138,23 @@ class _TypeABPersonalityScreenState extends State<TypeABPersonalityScreen>
                             textAlign: TextAlign.center,
                             style: GoogleFonts.inter(
                               color: const Color(0xFF1F1F21),
-                              fontSize: (screenWidth * 0.08).clamp(28.0, 36.0),
+                              fontSize: (screenWidth * 0.065).clamp(22.0, 28.0),
                               fontWeight: FontWeight.w700,
                               letterSpacing: -0.2,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 6),
                           Text(
-                            'Discover your personality type based on your ChatGPT behavior.',
+                            widget.question,
                             textAlign: TextAlign.center,
                             style: GoogleFonts.inter(
                               color: const Color(0xFF636366),
-                              fontSize: (screenWidth * 0.04).clamp(14.0, 16.0),
+                              fontSize: (screenWidth * 0.035).clamp(12.0, 14.0),
                               fontWeight: FontWeight.w400,
                               letterSpacing: 0.2,
                             ),
                           ),
-                          SizedBox(height: screenHeight * 0.03),
+                          SizedBox(height: (screenHeight * 0.018).clamp(12.0, 16.0)),
                           _TypeABHeroCard(
                             screenWidth: screenWidth,
                             screenHeight: screenHeight,
@@ -167,16 +167,19 @@ class _TypeABPersonalityScreenState extends State<TypeABPersonalityScreen>
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.025),
+                    SizedBox(height: (screenHeight * 0.018).clamp(12.0, 16.0)),
                     
                     // Message card (like Share with People)
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.4,
                       child: Container(
-                        padding: EdgeInsets.all((screenWidth * 0.05).clamp(20.0, 24.0)),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: (screenWidth * 0.045).clamp(16.0, 20.0),
+                          vertical: (screenHeight * 0.025).clamp(18.0, 24.0),
+                        ),
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(24),
+                          borderRadius: BorderRadius.circular(20),
                           gradient: const LinearGradient(
                             colors: [Color(0xFFFFFFFF), Color(0xFFF6F7FF)],
                             begin: Alignment.topLeft,
@@ -185,30 +188,26 @@ class _TypeABPersonalityScreenState extends State<TypeABPersonalityScreen>
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.06),
-                              blurRadius: 15,
-                              offset: const Offset(0, 6),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
                             ),
                           ],
                         ),
-                        child: Column(
-                          children: [
-                            Text(
-                              '${widget.explanation} Understanding your personality type helps you leverage your strengths and work on areas that need growth.',
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.inter(
-                                color: const Color(0xFF555555),
-                                fontSize: (screenWidth * 0.038).clamp(14.0, 16.0),
-                                fontWeight: FontWeight.w400,
-                                height: 1.6,
-                                letterSpacing: 0.2,
-                              ),
-                            ),
-                          ],
+                        child: Text(
+                          widget.explanation,
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.inter(
+                            color: const Color(0xFF555555),
+                            fontSize: (screenWidth * 0.038).clamp(14.0, 16.0),
+                            fontWeight: FontWeight.w400,
+                            height: 1.6,
+                            letterSpacing: 0.1,
+                          ),
                         ),
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.02),
+                    SizedBox(height: (screenHeight * 0.02).clamp(14.0, 18.0)),
                     
                     // Small Share to Story button
                     _AnimatedFade(
@@ -221,14 +220,14 @@ class _TypeABPersonalityScreenState extends State<TypeABPersonalityScreen>
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.03),
+                    SizedBox(height: (screenHeight * 0.02).clamp(12.0, 16.0)),
                   ],
-                ),
                 ),
               ),
             ),
           ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -255,12 +254,12 @@ class _TypeABHeroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isLargeScreen = screenWidth > 600;
-    final cardPadding = (screenWidth * 0.04).clamp(16.0, isLargeScreen ? 24.0 : 20.0);
+    final cardPadding = (screenWidth * 0.03).clamp(12.0, isLargeScreen ? 20.0 : 16.0);
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular((screenWidth * 0.06).clamp(20.0, 28.0)),
+      borderRadius: BorderRadius.circular((screenWidth * 0.05).clamp(16.0, 24.0)),
       child: BackdropFilter(
-        filter: ui.ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+        filter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
           width: double.infinity,
           padding: EdgeInsets.all(cardPadding),
@@ -277,12 +276,13 @@ class _TypeABHeroCard extends StatelessWidget {
             boxShadow: [
               BoxShadow(
                 color: const Color(0xFF8E8E93).withOpacity(0.12),
-                blurRadius: 30,
-                offset: const Offset(0, 18),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
               ),
             ],
           ),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               // Two circular charts side by side
               Row(
@@ -308,13 +308,13 @@ class _TypeABHeroCard extends StatelessWidget {
                 ],
               ),
               
-              SizedBox(height: (screenHeight * 0.015).clamp(12.0, 18.0)),
+              SizedBox(height: (screenHeight * 0.012).clamp(10.0, 14.0)),
               
               // Personality Type Result
               Container(
                 padding: EdgeInsets.symmetric(
-                  horizontal: (screenWidth * 0.05).clamp(16.0, 20.0),
-                  vertical: (screenHeight * 0.01).clamp(8.0, 12.0),
+                  horizontal: (screenWidth * 0.04).clamp(14.0, 18.0),
+                  vertical: (screenHeight * 0.008).clamp(6.0, 10.0),
                 ),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -322,13 +322,13 @@ class _TypeABHeroCard extends StatelessWidget {
                         ? [const Color(0xFFFF6B35), const Color(0xFFFF8A65)]
                         : [const Color(0xFF4ECDC4), const Color(0xFF7EDDD6)],
                   ),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(18),
                 ),
                 child: Text(
                   personalityType,
                   style: GoogleFonts.inter(
                     color: Colors.white,
-                    fontSize: (screenWidth * 0.05).clamp(20.0, isLargeScreen ? 28.0 : 24.0),
+                    fontSize: (screenWidth * 0.045).clamp(16.0, isLargeScreen ? 24.0 : 20.0),
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.5,
                   ),
@@ -363,11 +363,11 @@ class _CircularProgressChart extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     final isLargeScreen = screenWidth > 600;
-    final chartSize = (screenWidth * 0.18).clamp(70.0, isLargeScreen ? 110.0 : 100.0);
-    final strokeWidth = (chartSize * 0.07).clamp(5.0, 8.0);
-    final iconSize = (chartSize * 0.22).clamp(14.0, isLargeScreen ? 24.0 : 20.0);
-    final percentageFontSize = (chartSize * 0.16).clamp(12.0, isLargeScreen ? 20.0 : 18.0);
-    final labelFontSize = (chartSize * 0.12).clamp(9.0, isLargeScreen ? 14.0 : 12.0);
+    final chartSize = (screenWidth * 0.16).clamp(60.0, isLargeScreen ? 100.0 : 80.0);
+    final strokeWidth = (chartSize * 0.07).clamp(4.0, 7.0);
+    final iconSize = (chartSize * 0.20).clamp(12.0, isLargeScreen ? 22.0 : 18.0);
+    final percentageFontSize = (chartSize * 0.15).clamp(10.0, isLargeScreen ? 18.0 : 16.0);
+    final labelFontSize = (chartSize * 0.11).clamp(9.0, isLargeScreen ? 13.0 : 11.0);
     
     return AnimatedBuilder(
       animation: controller,
@@ -415,7 +415,7 @@ class _CircularProgressChart extends StatelessWidget {
                         color: color,
                         size: iconSize,
                       ),
-                      SizedBox(height: (chartSize * 0.03).clamp(2.0, 6.0)),
+                      SizedBox(height: (chartSize * 0.025).clamp(2.0, 4.0)),
                       Text(
                         '$animatedPercentage%',
                         style: GoogleFonts.inter(
@@ -430,7 +430,7 @@ class _CircularProgressChart extends StatelessWidget {
               ),
             ),
             
-            SizedBox(height: (screenHeight * 0.012).clamp(8.0, 14.0)),
+            SizedBox(height: (screenHeight * 0.01).clamp(6.0, 10.0)),
             
             // Label
             Text(

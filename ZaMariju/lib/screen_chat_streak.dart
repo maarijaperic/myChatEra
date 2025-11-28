@@ -105,51 +105,51 @@ class _ChatStreakScreenState extends State<ChatStreakScreen>
     final screenHeight = MediaQuery.of(context).size.height;
     
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFFFE0B3), // Light orange
-              Color(0xFFFFD1A8), // Soft peach
-              Color(0xFFFFC4A8), // Light coral
-              Color(0xFFFFB8A8), // Soft salmon
-            ],
-            stops: [0.0, 0.35, 0.65, 1.0],
-          ),
-        ),
-        child: Stack(
-          children: [
-            // Subtle sparkle background elements
-            AnimatedBuilder(
-              animation: _sparkleController,
-              builder: (context, child) {
-                return CustomPaint(
-                  painter: _SparklePainter(
-                    animationValue: _sparkleController.value,
-                  ),
-                  child: Container(),
-                );
-              },
+      body: RepaintBoundary(
+        key: _screenshotKey,
+        child: Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFFFFE0B3), // Light orange
+                Color(0xFFFFD1A8), // Soft peach
+                Color(0xFFFFC4A8), // Light coral
+                Color(0xFFFFB8A8), // Soft salmon
+              ],
+              stops: [0.0, 0.35, 0.65, 1.0],
             ),
-            
-            // Main content
-            SafeArea(
-              child: RepaintBoundary(
-                key: _screenshotKey,
+          ),
+          child: Stack(
+            children: [
+              // Subtle sparkle background elements
+              AnimatedBuilder(
+                animation: _sparkleController,
+                builder: (context, child) {
+                  return CustomPaint(
+                    painter: _SparklePainter(
+                      animationValue: _sparkleController.value,
+                    ),
+                    child: Container(),
+                  );
+                },
+              ),
+              
+              // Main content
+              SafeArea(
                 child: SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: (screenWidth * 0.06).clamp(20.0, 24.0),
-                    vertical: (screenHeight * 0.025).clamp(16.0, 20.0),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                  children: [
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: (screenWidth * 0.06).clamp(20.0, 24.0),
+                      vertical: (screenHeight * 0.025).clamp(16.0, 20.0),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
                     SizedBox(height: screenHeight * 0.05),
                     
                     // Main headline
@@ -346,13 +346,13 @@ class _ChatStreakScreenState extends State<ChatStreakScreen>
                     ),
                     
                     SizedBox(height: screenHeight * 0.04),
-                  ],
+                      ],
+                    ),
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
-          ),
-          ],
         ),
       ),
     );

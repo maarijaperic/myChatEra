@@ -151,46 +151,34 @@ class _CardNavigatorState extends State<CardNavigator>
   }
 
   bool _shouldEnableTapZones() {
-    // Disable tap zones on screens with buttons to allow button clicks
+    // Disable tap zones only on specific screens that should not have navigation
     final currentScreen = widget.screens[_currentIndex];
     final screenType = currentScreen.runtimeType.toString();
 
-    // List of screens that are known to have interactive buttons (like share buttons)
-    const screensWithButtons = [
-      'DailyDoseScreen',
-      'CuriosityIndexScreen',
-      'ChatStreakScreen',
-      'LoveLanguageScreen',
-      'PastLifePersonaScreen',
-      'AdviceMostAskedScreen',
-      'IntrovertExtrovertScreen',
-      'MostUsedWordScreen',
-      'ChatEraScreen',
-      'ChatDaysTrackerScreen',
-      'GptOClockScreen',
-      'MBTIPersonalityScreen',
-      'TypeABPersonalityScreen',
-      'RedGreenFlagsScreen',
-      'GuessZodiacScreen',
-      'MovieTitleScreen',
-      'TypeABPreviewScreen', // Disable tap zones on Unlock Premium screen
+    // List of screens that should NOT have tap zones for navigation
+    // Tap zones are limited to center area (20% from top and bottom) so they won't
+    // interfere with share buttons at the bottom of screens
+    const screensWithoutNavigation = [
+      'TypeABPreviewScreen', // Unlock Premium screen - no swipe navigation, only button click
+      'SubscriptionScreen', // Subscription screen - no navigation
     ];
 
-    if (screensWithButtons.contains(screenType)) {
+    if (screensWithoutNavigation.contains(screenType)) {
       return false;
     }
 
-    // Original logic for premium and last screen
+    // Disable on premium gate screen (before premium section)
     if (widget.premiumStartIndex != null &&
         _currentIndex == widget.premiumStartIndex! - 1) {
       return false;
     }
+    
+    // Disable on last screen
     if (_currentIndex == widget.screens.length - 1) {
       return false;
     }
-    if (screenType == 'SubscriptionScreen') {
-      return false;
-    }
+    
+    // Enable tap zones for all other screens
     return true;
   }
 

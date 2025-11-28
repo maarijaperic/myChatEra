@@ -135,48 +135,48 @@ class _MostUsedWordScreenState extends State<MostUsedWordScreen>
     final screenHeight = MediaQuery.of(context).size.height;
     
     return Scaffold(
-      body: Stack(
-        children: [
-          // Pastel brown gradient background
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFFF5E6D3), // Very light pastel brown
-                  Color(0xFFE8D5C4), // Light pastel brown
-                  Color(0xFFDCC9B5), // Soft pastel brown
-                  Color(0xFFD0BDA6), // Pastel brown
-                ],
-                stops: [0.0, 0.3, 0.7, 1.0],
+      body: RepaintBoundary(
+        key: _screenshotKey,
+        child: Stack(
+          children: [
+            // Pastel brown gradient background
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFFF5E6D3), // Very light pastel brown
+                    Color(0xFFE8D5C4), // Light pastel brown
+                    Color(0xFFDCC9B5), // Soft pastel brown
+                    Color(0xFFD0BDA6), // Pastel brown
+                  ],
+                  stops: [0.0, 0.3, 0.7, 1.0],
+                ),
               ),
             ),
-          ),
-          
-          // Animated particles
-          AnimatedBuilder(
-            animation: _bubblesController,
-            builder: (context, child) {
-              return CustomPaint(
-                painter: _WordParticlesPainter(_bubblesController.value),
-                child: Container(),
-              );
-            },
-          ),
-          
-          // Main content
-          SafeArea(
-            child: RepaintBoundary(
-              key: _screenshotKey,
+            
+            // Animated particles
+            AnimatedBuilder(
+              animation: _bubblesController,
+              builder: (context, child) {
+                return CustomPaint(
+                  painter: _WordParticlesPainter(_bubblesController.value),
+                  child: Container(),
+                );
+              },
+            ),
+            
+            // Main content
+            SafeArea(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: (screenWidth * 0.06).clamp(20.0, 24.0),
-                  vertical: (screenHeight * 0.025).clamp(16.0, 20.0),
-                ),
-                child: Column(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: (screenWidth * 0.06).clamp(20.0, 24.0),
+                    vertical: (screenHeight * 0.025).clamp(16.0, 20.0),
+                  ),
+                  child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SizedBox(height: screenHeight * 0.03),
@@ -390,8 +390,8 @@ class _MostUsedWordScreenState extends State<MostUsedWordScreen>
               ),
             ),
           ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

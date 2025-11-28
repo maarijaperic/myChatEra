@@ -106,7 +106,7 @@ class _AnalyzingLoadingScreenState extends State<AnalyzingLoadingScreen>
     // Step 2: Fetching (already done, but show status)
     if (widget.conversations != null && widget.conversations!.isNotEmpty) {
       setState(() {
-        _statusText = 'Found ${widget.conversations!.length} conversations';
+        _statusText = 'Processing conversations...';
       });
     } else {
       setState(() {

@@ -131,48 +131,48 @@ class _DailyDoseScreenState extends State<DailyDoseScreen>
     ];
     
     return Scaffold(
-      body: Stack(
-        children: [
-          // Light pink gradient background
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFFFFF0F5),
-                  Color(0xFFFFE4E9),
-                  Color(0xFFFFD1DC),
-                  Color(0xFFFFB6C1),
-                ],
-                stops: [0.0, 0.3, 0.7, 1.0],
+      body: RepaintBoundary(
+        key: _screenshotKey,
+        child: Stack(
+          children: [
+            // Light pink gradient background
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFFFFF0F5),
+                    Color(0xFFFFE4E9),
+                    Color(0xFFFFD1DC),
+                    Color(0xFFFFB6C1),
+                  ],
+                  stops: [0.0, 0.3, 0.7, 1.0],
+                ),
               ),
             ),
-          ),
-          
-          // Animated particles
-          AnimatedBuilder(
-            animation: _bubblesController,
-            builder: (context, child) {
-              return CustomPaint(
-                painter: _DailyDoseParticlesPainter(_bubblesController.value),
-                child: Container(),
-              );
-            },
-          ),
-          
-          // Main content
-          SafeArea(
-            child: RepaintBoundary(
-              key: _screenshotKey,
+            
+            // Animated particles
+            AnimatedBuilder(
+              animation: _bubblesController,
+              builder: (context, child) {
+                return CustomPaint(
+                  painter: _DailyDoseParticlesPainter(_bubblesController.value),
+                  child: Container(),
+                );
+              },
+            ),
+            
+            // Main content
+            SafeArea(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 child: Padding(
                   padding: EdgeInsets.symmetric(
-                  horizontal: (screenWidth * 0.06).clamp(20.0, 24.0),
-                  vertical: (screenHeight * 0.025).clamp(16.0, 20.0),
-                ),
-                child: Column(
+                    horizontal: (screenWidth * 0.06).clamp(20.0, 24.0),
+                    vertical: (screenHeight * 0.025).clamp(16.0, 20.0),
+                  ),
+                  child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SizedBox(height: screenHeight * 0.05),
@@ -264,8 +264,8 @@ class _DailyDoseScreenState extends State<DailyDoseScreen>
               ),
             ),
           ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

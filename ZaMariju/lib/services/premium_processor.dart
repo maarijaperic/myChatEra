@@ -188,8 +188,12 @@ class PremiumProcessor {
         typeAPercentage: personalityResult['typeAPercentage'] ?? 50,
         typeBPercentage: personalityResult['typeBPercentage'] ?? 50,
         typeExplanation: personalityResult['explanation'] ?? '',
-        greenFlags: List<String>.from(flagsResult['greenFlags'] ?? []),
-        redFlags: List<String>.from(flagsResult['redFlags'] ?? []),
+        greenFlags: flagsResult['greenFlags'] != null && flagsResult['greenFlags'] is List
+            ? List<String>.from((flagsResult['greenFlags'] as List).map((e) => e.toString()))
+            : [],
+        redFlags: flagsResult['redFlags'] != null && flagsResult['redFlags'] is List
+            ? List<String>.from((flagsResult['redFlags'] as List).map((e) => e.toString()))
+            : [],
         zodiacName: zodiacResult['zodiacName'] ?? 'Gemini',
         zodiacSign: zodiacResult['zodiacSign'] ?? 'Gemini ♊',
         zodiacEmoji: zodiacResult['zodiacEmoji'] ?? '♊',

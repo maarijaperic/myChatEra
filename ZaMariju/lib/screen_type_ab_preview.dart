@@ -436,50 +436,53 @@ class _PreviewHeroCard extends StatelessWidget {
                     ),
                   ),
                   SizedBox(height: (screenWidth * 0.018).clamp(6.0, 10.0)),
-                  Container(
-                    padding: EdgeInsets.all((screenWidth * 0.018).clamp(5.0, 7.0)),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF2D2D2D), Color(0xFF434343)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
+                  // Center the relationship box
+                  Center(
+                    child: Container(
+                      padding: EdgeInsets.all((screenWidth * 0.018).clamp(5.0, 7.0)),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF2D2D2D), Color(0xFF434343)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.15),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.15),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        const Text(
-                          '💕',
-                          style: TextStyle(fontSize: 18),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'RELATIONSHIPS',
-                          style: GoogleFonts.inter(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1.0,
+                      child: Column(
+                        children: [
+                          const Text(
+                            '💕',
+                            style: TextStyle(fontSize: 18),
                           ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'How to improve my personal relationships',
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.inter(
-                            color: Colors.white.withOpacity(0.9),
-                            fontSize: 9,
-                            fontWeight: FontWeight.w500,
+                          const SizedBox(height: 4),
+                          Text(
+                            'RELATIONSHIPS',
+                            style: GoogleFonts.inter(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 1.0,
+                            ),
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 2),
+                          Text(
+                            'How to improve my personal relationships',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.inter(
+                              color: Colors.white.withOpacity(0.9),
+                              fontSize: 9,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],

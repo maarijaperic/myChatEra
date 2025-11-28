@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:gpt_wrapped2/models/chat_data.dart';
 
@@ -104,30 +105,39 @@ Respond ONLY with valid JSON in this exact format:
     final messagesSample = _getSampleMessages(userMessages, maxCount: 30);
     
     final prompt = '''
-Analyze these ChatGPT conversation messages and identify the user's red and green flags.
+Analyze these ChatGPT conversation messages and identify the user's red and green flags based on their actual conversation patterns, communication style, and interaction behavior.
 
 User messages:
 ${messagesSample.join('\n')}
 
+IMPORTANT: Analyze the ACTUAL messages above. Do NOT use generic examples. Base your analysis on:
+- How the user communicates (tone, style, language patterns)
+- What topics they discuss
+- How they ask questions
+- Their response patterns
+- Their interaction style with ChatGPT
+
 Provide:
-1. 5 green flags (positive traits based on how they interact)
-2. 5 red flags (areas for improvement, be playful not harsh)
+1. 5 green flags (positive traits based on their ACTUAL interactions - be specific to their messages)
+2. 5 red flags (areas for improvement based on their ACTUAL behavior - be playful not harsh, specific to their messages)
+
+Each flag should be unique to this user's conversation style, not generic examples.
 
 Respond ONLY with valid JSON in this exact format:
 {
   "greenFlags": [
-    "You always apologize when you make a mistake",
-    "You are very creative with your prompts",
-    "You ask very intelligent questions",
-    "You have a good sense of humor",
-    "You are patient with long answers"
+    "Specific positive trait based on their messages",
+    "Another specific positive trait",
+    "Another specific positive trait",
+    "Another specific positive trait",
+    "Another specific positive trait"
   ],
   "redFlags": [
-    "Sometimes you don't read the full answers",
-    "You ask for the same thing several times in a row",
-    "You don't specify what you want clearly",
-    "You get frustrated when you don't understand something",
-    "Sometimes you are very impatient"
+    "Specific area for improvement based on their messages",
+    "Another specific area for improvement",
+    "Another specific area for improvement",
+    "Another specific area for improvement",
+    "Another specific area for improvement"
   ]
 }
 ''';
@@ -374,6 +384,133 @@ Respond ONLY with the roast text, no JSON, no extra formatting.
 
     final result = await _callOpenAI(prompt, expectJson: false);
     return result['text'] ?? 'You ask ChatGPT everything. Like... everything. 💀';
+  }
+  
+  /// Analyze monthly topics from conversations (for Monthly Obsessions)
+  /// Groups conversations by month and extracts main topics
+  /// Returns topics for months 1-6 (Jan-Jun) or 7-12 (Jul-Dec) based on startMonth
+  static List<Map<String, dynamic>> analyzeMonthlyTopics(
+    List<ConversationData> conversations, {
+    int startMonth = 1, // 1 for Jan-Jun, 7 for Jul-Dec
+  }) {
+    if (conversations.isEmpty) {
+      return [];
+    }
+    
+    // Group conversations by month
+    final monthlyGroups = <int, List<ConversationData>>{};
+    for (var conv in conversations) {
+      final month = conv.createTime.month;
+      monthlyGroups.putIfAbsent(month, () => []).add(conv);
+    }
+    
+    // Extract topics for each month
+    final monthlyTopics = <Map<String, dynamic>>[];
+    final monthNames = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 
+                        'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
+    final colors = [
+      [Color(0xFFFFE5E5), Color(0xFFFF6B6B)], // Jan - Red
+      [Color(0xFFFFF0E5), Color(0xFFFF8C42)], // Feb - Orange
+      [Color(0xFFE5F5FF), Color(0xFF4A90E2)], // Mar - Blue
+      [Color(0xFFF0E5FF), Color(0xFF9B59B6)], // Apr - Purple
+      [Color(0xFFE5FFE5), Color(0xFF2ECC71)], // May - Green
+      [Color(0xFFFFF5E5), Color(0xFFFFB84D)], // Jun - Yellow
+      [Color(0xFFFFF5E5), Color(0xFFFFB84D)], // Jul - Yellow
+      [Color(0xFFE5F5FF), Color(0xFF4A90E2)], // Aug - Blue
+      [Color(0xFFF0E5FF), Color(0xFF9B59B6)], // Sep - Purple
+      [Color(0xFFFFF0E5), Color(0xFFFF8C42)], // Oct - Orange
+      [Color(0xFFE5FFE5), Color(0xFF2ECC71)], // Nov - Green
+      [Color(0xFFFFE5FF), Color(0xFFFF6B9D)], // Dec - Pink
+    ];
+    
+    // Analyze topics for specified months
+    final endMonth = startMonth + 5; // 6 months total
+    for (int month = startMonth; month <= endMonth && month <= 12; month++) {
+      final monthConvs = monthlyGroups[month] ?? [];
+      
+      // Extract main topic from conversation titles
+      final topic = monthConvs.isNotEmpty 
+          ? _extractTopicFromConversations(monthConvs)
+          : 'Chatting';
+      final emoji = _getEmojiForTopic(topic);
+      
+      monthlyTopics.add({
+        'month': monthNames[month - 1],
+        'obsession': topic,
+        'sentence': _generateSentenceForTopic(topic),
+        'emoji': emoji,
+        'color': colors[month - 1][0],
+        'accentColor': colors[month - 1][1],
+      });
+    }
+    
+    return monthlyTopics;
+  }
+  
+  /// Extract topic from conversation titles
+  static String _extractTopicFromConversations(List<ConversationData> conversations) {
+    if (conversations.isEmpty) return 'Chatting';
+    
+    // Count word frequency in titles
+    final wordCounts = <String, int>{};
+    final commonWords = {
+      'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
+      'of', 'with', 'by', 'from', 'as', 'is', 'was', 'are', 'be', 'been',
+      'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could',
+      'should', 'may', 'might', 'can', 'how', 'what', 'why', 'when', 'where',
+      'me', 'you', 'i', 'my', 'help', 'please', 'thanks', 'need', 'about'
+    };
+    
+    for (final conv in conversations) {
+      final words = conv.title
+          .toLowerCase()
+          .replaceAll(RegExp(r'[^\w\s]'), '')
+          .split(' ')
+          .where((w) => w.length > 3 && !commonWords.contains(w));
+      
+      for (final word in words) {
+        wordCounts[word] = (wordCounts[word] ?? 0) + 1;
+      }
+    }
+    
+    if (wordCounts.isEmpty) return 'Chatting';
+    
+    // Find most common meaningful word
+    String topWord = 'Chatting';
+    int maxCount = 0;
+    wordCounts.forEach((word, count) {
+      if (count > maxCount) {
+        maxCount = count;
+        topWord = word;
+      }
+    });
+    
+    // Capitalize and format
+    return topWord[0].toUpperCase() + topWord.substring(1) + '!';
+  }
+  
+  /// Get emoji for topic
+  static String _getEmojiForTopic(String topic) {
+    final topicLower = topic.toLowerCase();
+    if (topicLower.contains('code') || topicLower.contains('program')) return '💻';
+    if (topicLower.contains('write') || topicLower.contains('story')) return '✍️';
+    if (topicLower.contains('learn') || topicLower.contains('study')) return '📚';
+    if (topicLower.contains('work') || topicLower.contains('career')) return '💼';
+    if (topicLower.contains('health') || topicLower.contains('fitness')) return '💪';
+    if (topicLower.contains('travel') || topicLower.contains('trip')) return '✈️';
+    if (topicLower.contains('cook') || topicLower.contains('food')) return '🍳';
+    if (topicLower.contains('art') || topicLower.contains('design')) return '🎨';
+    if (topicLower.contains('music') || topicLower.contains('song')) return '🎵';
+    if (topicLower.contains('game') || topicLower.contains('play')) return '🎮';
+    if (topicLower.contains('love') || topicLower.contains('relationship')) return '💕';
+    if (topicLower.contains('money') || topicLower.contains('finance')) return '💰';
+    return '💬';
+  }
+  
+  /// Generate sentence for topic
+  static String _generateSentenceForTopic(String topic) {
+    final topicLower = topic.toLowerCase().replaceAll('!', '');
+    return 'Exploring $topicLower and discovering new insights.';
   }
   
   /// Helper: Get sample of user messages

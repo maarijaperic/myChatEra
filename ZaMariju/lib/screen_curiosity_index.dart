@@ -103,48 +103,48 @@ class _CuriosityIndexScreenState extends State<CuriosityIndexScreen>
     final isLargeScreen = screenWidth > 600;
     
     return Scaffold(
-      body: Stack(
-        children: [
-          // Light pink gradient background
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFFFFF0F5), // Very light pink
-                  Color(0xFFFFE4E9), // Light pink
-                  Color(0xFFFFD1DC), // Soft pink
-                  Color(0xFFFFB6C1), // Light pink
-                ],
-                stops: [0.0, 0.3, 0.7, 1.0],
+      body: RepaintBoundary(
+        key: _screenshotKey,
+        child: Stack(
+          children: [
+            // Light pink gradient background
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFFFFF0F5), // Very light pink
+                    Color(0xFFFFE4E9), // Light pink
+                    Color(0xFFFFD1DC), // Soft pink
+                    Color(0xFFFFB6C1), // Light pink
+                  ],
+                  stops: [0.0, 0.3, 0.7, 1.0],
+                ),
               ),
             ),
-          ),
-          
-          // Animated particles
-          AnimatedBuilder(
-            animation: _bubblesController,
-            builder: (context, child) {
-              return CustomPaint(
-                painter: _CuriosityParticlesPainter(_bubblesController.value),
-                child: Container(),
-              );
-            },
-          ),
-          
-          // Main content
-          SafeArea(
-            child: RepaintBoundary(
-              key: _screenshotKey,
+            
+            // Animated particles
+            AnimatedBuilder(
+              animation: _bubblesController,
+              builder: (context, child) {
+                return CustomPaint(
+                  painter: _CuriosityParticlesPainter(_bubblesController.value),
+                  child: Container(),
+                );
+              },
+            ),
+            
+            // Main content
+            SafeArea(
               child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: (screenWidth * 0.06).clamp(20.0, 24.0),
-                  vertical: (screenHeight * 0.025).clamp(16.0, 20.0),
-                ),
-                child: Column(
+                physics: const BouncingScrollPhysics(),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: (screenWidth * 0.06).clamp(20.0, 24.0),
+                    vertical: (screenHeight * 0.025).clamp(16.0, 20.0),
+                  ),
+                  child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SizedBox(height: screenHeight * 0.06),
@@ -342,8 +342,8 @@ class _CuriosityIndexScreenState extends State<CuriosityIndexScreen>
               ),
             ),
           ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

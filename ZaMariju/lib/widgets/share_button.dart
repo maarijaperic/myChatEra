@@ -44,7 +44,7 @@ class ShareToStoryButton extends StatelessWidget {
       },
       child: Container(
         width: double.infinity,
-        padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 18),
+        padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 14),
         decoration: BoxDecoration(
           color: Colors.white.withOpacity(0.85),
           borderRadius: BorderRadius.circular(22),
@@ -60,49 +60,50 @@ class ShareToStoryButton extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              width: 48,
-              height: 48,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: accentGradient,
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(14),
                 boxShadow: [
                   BoxShadow(
                     color: accentGradient.last.withOpacity(0.35),
-                    blurRadius: 18,
-                    offset: const Offset(0, 8),
+                    blurRadius: 14,
+                    offset: const Offset(0, 6),
                   ),
                 ],
               ),
               child: Icon(
                 icon,
                 color: Colors.white,
-                size: 22,
+                size: 20,
               ),
             ),
-            const SizedBox(width: 18),
+            const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     title,
                     style: GoogleFonts.inter(
                       color: const Color(0xFF1F1F21),
-                      fontSize: (screenWidth * 0.042).clamp(15.0, 18.0),
+                      fontSize: (screenWidth * 0.038).clamp(14.0, 16.0),
                       fontWeight: FontWeight.w600,
                       letterSpacing: 0.2,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 3),
                   Text(
                     subtitle,
                     style: GoogleFonts.inter(
                       color: const Color(0xFF8E8E93),
-                      fontSize: (screenWidth * 0.032).clamp(12.0, 14.0),
+                      fontSize: (screenWidth * 0.030).clamp(11.0, 13.0),
                       fontWeight: FontWeight.w400,
                       letterSpacing: 0.1,
                     ),
@@ -113,7 +114,7 @@ class ShareToStoryButton extends StatelessWidget {
             const Icon(
               CupertinoIcons.chevron_forward,
               color: Color(0xFFAEAEB2),
-              size: 18,
+              size: 16,
             ),
           ],
         ),
