@@ -257,7 +257,7 @@ class _WrappedStatsScreenState extends State<WrappedStatsScreen>
                       delay: 0.9,
                       child: Center(
                         child: ShareToStoryButton(
-                          shareText: 'My 2025 Monthly Obsessions: From your ex to baking to self-care! Check out my year in review 🎉 #ChatGPTWrapped',
+                          shareText: 'My 2025 Monthly Obsessions: From your ex to baking to self-care! Check out my year in review 🎉 #mychateraAI',
                         ),
                       ),
                     ),

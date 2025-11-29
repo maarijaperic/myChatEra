@@ -265,7 +265,7 @@ class _ComparisonStatsScreenState extends State<ComparisonStatsScreen>
                       delay: 0.9,
                       child: Center(
                         child: ShareToStoryButton(
-                          shareText: 'My GPT Wrapped Monthly Obsessions: From summer vibes to reflection! Check out my year 🎉 #ChatGPTWrapped',
+                          shareText: 'My GPT Wrapped Monthly Obsessions: From summer vibes to reflection! Check out my year 🎉 #mychateraAI',
                         ),
                       ),
                     ),

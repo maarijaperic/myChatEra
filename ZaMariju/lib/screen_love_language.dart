@@ -203,7 +203,7 @@ class _LoveLanguageScreenState extends State<LoveLanguageScreen>
                           ],
                         ),
                         child: Text(
-                          '${_removeEmojis(widget.explanation)} Understanding your love language helps you communicate your needs better and recognize how others express their care.${widget.subtitle.isNotEmpty ? ' ${_removeEmojis(widget.subtitle)}' : ''}',
+                          '${_removeEmojis(widget.explanation)} Understanding your love language helps you communicate your needs better and recognize how others express their care.${widget.subtitle.isNotEmpty ? ' ${_removeEmojis(widget.subtitle)}' : ''} It\'s a powerful tool for building deeper connections. When you know your love language, you can create more meaningful relationships and feel truly understood.',
                           textAlign: TextAlign.center,
                           style: GoogleFonts.inter(
                             color: const Color(0xFF555555),
@@ -223,7 +223,7 @@ class _LoveLanguageScreenState extends State<LoveLanguageScreen>
                       controller: _fadeController,
                       delay: 0.4,
                       child: SmallShareToStoryButton(
-                        shareText: 'My love language is ${widget.loveLanguage}! Love is spoken in many languages 💕 #ChatGPTWrapped',
+                        shareText: 'My love language is ${widget.loveLanguage}! Love is spoken in many languages 💕 #mychateraAI',
                         screenshotKey: _screenshotKey,
                         accentGradient: const [Color(0xFFFF8FB1), Color(0xFFFFB5D8)],
                       ),

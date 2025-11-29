@@ -76,12 +76,12 @@ class _MostUsedWordScreenState extends State<MostUsedWordScreen>
     final count = widget.wordCount;
 
     if (count <= 0 || word.trim().isEmpty) {
-      return "No single word defined my ChatGPT era — every prompt was a plot twist. #ChatGPTWrapped";
+      return "No single word defined my AI era — every prompt was a plot twist. #mychateraAI";
     }
     if (count < 80) {
-      return 'My ChatGPT signature word this year: "$word" ($count uses). Intentional and iconic. #ChatGPTWrapped';
+      return 'My AI signature word this year: "$word" ($count uses). Intentional and iconic. #mychateraAI';
     }
-    return 'I said "$word" $count times to ChatGPT. Trademarked vocabulary activated. #ChatGPTWrapped';
+    return 'I said "$word" $count times to AI. Trademarked vocabulary activated. #mychateraAI';
   }
   
   @override

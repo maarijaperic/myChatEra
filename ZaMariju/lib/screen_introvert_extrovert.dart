@@ -196,9 +196,9 @@ class _IntrovertExtrovertScreenState extends State<IntrovertExtrovertScreen>
                           textAlign: TextAlign.center,
                           style: GoogleFonts.inter(
                             color: const Color(0xFF555555),
-                            fontSize: (screenWidth * 0.032).clamp(12.0, 14.0),
+                            fontSize: (screenWidth * 0.036).clamp(13.0, 15.0),
                             fontWeight: FontWeight.w400,
-                            height: 1.4,
+                            height: 1.5,
                             letterSpacing: 0.1,
                           ),
                         ),
@@ -212,7 +212,7 @@ class _IntrovertExtrovertScreenState extends State<IntrovertExtrovertScreen>
                       controller: _fadeController,
                       delay: 0.4,
                       child: SmallShareToStoryButton(
-                        shareText: 'ChatGPT says I\'m ${widget.personalityType} (${widget.introvertPercentage}% Introvert, ${widget.extrovertPercentage}% Extrovert). The perfect balance! 🌙☀️ #ChatGPTWrapped',
+                        shareText: 'AI says I\'m ${widget.personalityType} (${widget.introvertPercentage}% Introvert, ${widget.extrovertPercentage}% Extrovert). The perfect balance! 🌙☀️ #mychateraAI',
                         screenshotKey: _screenshotKey,
                         accentGradient: const [Color(0xFFFF8FB1), Color(0xFFFFB5D8)],
                       ),

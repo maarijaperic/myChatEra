@@ -285,7 +285,7 @@ class _ChatStreakScreenState extends State<ChatStreakScreen>
                         delay: 0.7,
                         child: Center(
                           child: ShareToStoryButton(
-                            shareText: 'I chatted with ChatGPT for ${widget.streakDays} days straight. 🔥 #ChatGPTWrapped',
+                            shareText: 'I chatted with AI for ${widget.streakDays} days straight. 🔥 #mychateraAI',
                           ),
                         ),
                       ),

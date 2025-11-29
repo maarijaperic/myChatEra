@@ -56,15 +56,15 @@ class _CuriosityIndexScreenState extends State<CuriosityIndexScreen>
     final seconds = widget.averageResponseTime;
     final label = _capitalizedSpeedLabel;
     if (seconds <= 0) {
-      return "Apparently I ghosted ChatGPT all year. Plot twist coming soon. #ChatGPTWrapped";
+      return "Apparently I ghosted AI all year. Plot twist coming soon. #mychateraAI";
     }
     if (seconds <= 4) {
-      return "I reply to ChatGPT in ${seconds.toStringAsFixed(1)} seconds. ${label} mode activated. #ChatGPTWrapped";
+      return "I reply to AI in ${seconds.toStringAsFixed(1)} seconds. ${label} mode activated. #mychateraAI";
     }
     if (seconds <= 10) {
-      return "My ChatGPT response time is ${seconds.toStringAsFixed(1)} seconds — thoughtful and on point. #ChatGPTWrapped";
+      return "My AI response time is ${seconds.toStringAsFixed(1)} seconds — thoughtful and on point. #mychateraAI";
     }
-    return "I take ${seconds.toStringAsFixed(1)} seconds per ChatGPT reply. Slow and intentional wins. #ChatGPTWrapped";
+    return "I take ${seconds.toStringAsFixed(1)} seconds per AI reply. Slow and intentional wins. #mychateraAI";
   }
 
   @override

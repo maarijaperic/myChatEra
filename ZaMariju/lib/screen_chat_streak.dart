@@ -361,18 +361,18 @@ class _ChatStreakScreenState extends State<ChatStreakScreen>
   String _getShareText() {
     final days = widget.streakDays;
     if (days <= 0) {
-      return "My longest ChatGPT streak: 0 days — ready to start building! 🔥 #ChatGPTWrapped";
+      return "My longest AI streak: 0 days — ready to start building! 🔥 #mychateraAI";
     }
     if (days < 5) {
-      return "My longest ChatGPT streak: $days days in a row! Building the habit one day at a time. 🔥 #ChatGPTWrapped";
+      return "My longest AI streak: $days days in a row! Building the habit one day at a time. 🔥 #mychateraAI";
     }
     if (days < 14) {
-      return "My longest ChatGPT streak: $days days straight! Consistency is key. 🔥 #ChatGPTWrapped";
+      return "My longest AI streak: $days days straight! Consistency is key. 🔥 #mychateraAI";
     }
     if (days < 30) {
-      return "My longest ChatGPT streak: $days days on lock! Discipline and dedication. 🔥 #ChatGPTWrapped";
+      return "My longest AI streak: $days days on lock! Discipline and dedication. 🔥 #mychateraAI";
     }
-    return "My longest ChatGPT streak: $days days without skipping! Elite consistency unlocked. 🔥 #ChatGPTWrapped";
+    return "My longest AI streak: $days days without skipping! Elite consistency unlocked. 🔥 #mychateraAI";
   }
 }
 

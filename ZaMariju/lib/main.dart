@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:gpt_wrapped2/screen_splash.dart';
+import 'package:gpt_wrapped2/screen_intro_app.dart';
 import 'package:gpt_wrapped2/screen_welcome.dart';
-import 'package:gpt_wrapped2/screen_intro.dart';
 import 'package:gpt_wrapped2/card_navigator.dart';
 import 'package:gpt_wrapped2/screen_analyzing_loading.dart';
 import 'package:gpt_wrapped2/screen_chat_era.dart';
@@ -19,6 +19,7 @@ import 'package:gpt_wrapped2/screen_guess_zodiac.dart';
 import 'package:gpt_wrapped2/screen_introvert_extrovert.dart';
 import 'package:gpt_wrapped2/screen_advice_most_asked.dart';
 import 'package:gpt_wrapped2/screen_movie_title.dart';
+import 'package:gpt_wrapped2/screen_roast_me.dart';
 import 'package:gpt_wrapped2/screen_love_language.dart';
 import 'package:gpt_wrapped2/screen_past_life_persona.dart';
 import 'package:gpt_wrapped2/screen_mbti_personality.dart';
@@ -145,6 +146,7 @@ class _GPTWrappedHomeState extends State<GPTWrappedHome> {
       MaterialPageRoute(
         builder: (context) => _PremiumWrappedNavigator(
           insights: premiumInsights,
+          parsedConversations: null, // Will be passed from PremiumAnalyzingScreen
         ),
       ),
     );
@@ -153,14 +155,12 @@ class _GPTWrappedHomeState extends State<GPTWrappedHome> {
   Future<void> _onLoginSuccess(List<dynamic>? conversations) async {
     print('🟢 _onLoginSuccess called with ${conversations?.length ?? 0} conversations');
     
-    // This callback is now called from IntroScreen.onStart, so we have a valid context
     // Get the current navigator context
     final navigatorContext = Navigator.of(context);
     
-    print('🟢 Navigating to _FreeWrappedNavigator from IntroScreen');
+    print('🟢 Navigating to _FreeWrappedNavigator');
     // Navigate directly to wrapped screens
     // Note: stats, premiumInsights, and parsedConversations should be passed from AnalyzingLoadingScreen
-    // But since we're calling this from IntroScreen, we need to get them from somewhere
     // For now, we'll create the navigator with null values and let it use demo data
     navigatorContext.push(
       MaterialPageRoute(
@@ -190,8 +190,16 @@ class _GPTWrappedHomeState extends State<GPTWrappedHome> {
       onComplete: () {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder: (context) => WelcomeScreen(
-              onGetStarted: _onLoginSuccess,
+            builder: (context) => IntroAppScreen(
+              onContinue: () {
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(
+                    builder: (context) => WelcomeScreen(
+                      onGetStarted: _onLoginSuccess,
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         );
@@ -227,6 +235,7 @@ class FreeWrappedNavigator extends StatelessWidget {
           builder: (context) {
             return _PremiumWrappedNavigator(
               insights: premiumInsights!,
+              parsedConversations: conversations,
             );
           },
         ),
@@ -272,13 +281,14 @@ class FreeWrappedNavigator extends StatelessWidget {
                 MaterialPageRoute(
                   builder: (context) => PremiumAnalyzingScreen(
                     conversations: conversationsWithMessages,
-                    onAnalysisComplete: (premiumInsights) {
+                    onAnalysisComplete: (premiumInsights, conversations) {
                       // Navigate to premium screens when analysis completes
                       Navigator.of(context).pop(); // Close analyzing screen
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (context) => _PremiumWrappedNavigator(
                             insights: premiumInsights,
+                            parsedConversations: conversations,
                           ),
                         ),
                       );
@@ -354,15 +364,15 @@ class FreeWrappedNavigator extends StatelessWidget {
         DailyDoseScreen(
           messagesPerDay: messagesPerDay,
         ),
-        // Index 1 - Your Chat Era
-        ChatEraScreen(
-          totalHours: hours,
-          totalMinutes: minutes,
-        ),
-        // Index 2 - Your Signature Word (Most Used Word)
+        // Index 1 - Your Signature Word (Most Used Word)
         MostUsedWordScreen(
           mostUsedWord: stats?.mainTopic ?? 'literally',
           wordCount: stats?.mostUsedWordCount ?? 247,
+        ),
+        // Index 2 - Your Chat Era
+        ChatEraScreen(
+          totalHours: hours,
+          totalMinutes: minutes,
         ),
         // Index 3 - Chat Days Tracker
         ChatDaysTrackerScreen(
@@ -396,16 +406,16 @@ class FreeWrappedNavigator extends StatelessWidget {
         ),
         // Index 8 - MBTI Personality
         MBTIPersonalityScreen(
-          question: 'What is your MBTI personality type according to ChatGPT?',
+          question: 'What is your MBTI personality type according to AI?',
           mbtiType: premiumInsights?.mbtiType ?? 'ENFP',
           mbtiEmoji: premiumInsights?.mbtiEmoji ?? '🎭',
           personalityName: premiumInsights?.personalityName ?? 'The Enthusiast',
-          explanation: premiumInsights?.mbtiExplanation ?? 'According to the analysis of your conversations, ChatGPT detected that you are an ENFP (Extroverted, Intuitive, Feeling, Perceiving). You are an enthusiastic, creative and sociable person who is motivated by possibilities. You have a great ability to connect with others and always seek new experiences and challenges. Your positive energy and your ability to inspire others are your greatest strengths.',
+          explanation: premiumInsights?.mbtiExplanation ?? 'According to the analysis of your conversations, AI detected that you are an ENFP (Extroverted, Intuitive, Feeling, Perceiving). You are an enthusiastic, creative and sociable person who is motivated by possibilities. You have a great ability to connect with others and always seek new experiences and challenges. Your positive energy and your ability to inspire others are your greatest strengths.',
           subtitle: 'Your personality is unique, like a work of art 🎨',
         ),
         // Index 9 - Type A vs Type B Personality
         TypeABPersonalityScreen(
-          question: 'Are you Type A or Type B according to ChatGPT?',
+          question: 'Are you Type A or Type B according to AI?',
           personalityType: premiumInsights?.personalityType ?? 'TYPE A',
           typeEmoji: _getTypeEmoji(premiumInsights?.personalityType ?? 'TYPE A'),
           typeAPercentage: premiumInsights?.typeAPercentage ?? 70,
@@ -415,7 +425,7 @@ class FreeWrappedNavigator extends StatelessWidget {
         ),
         // Index 10 - Red Green Flags
         RedGreenFlagsScreen(
-          question: 'What are your red and green flags according to ChatGPT?',
+          question: 'What are your red and green flags according to AI?',
           greenFlagTitle: 'Green Flags 🟢',
           redFlagTitle: 'Red Flags 🔴',
           greenFlags: premiumInsights?.greenFlags.isNotEmpty == true 
@@ -428,25 +438,25 @@ class FreeWrappedNavigator extends StatelessWidget {
         ),
         // Index 11 - Guess Zodiac
         GuessZodiacScreen(
-          question: 'What is your zodiac sign according to ChatGPT?',
+          question: 'What is your zodiac sign according to AI?',
           zodiacSign: premiumInsights?.zodiacSign ?? 'Scorpio ♏',
           zodiacEmoji: premiumInsights?.zodiacEmoji ?? '🦂',
           zodiacName: premiumInsights?.zodiacName ?? 'Scorpio',
           explanation: premiumInsights?.zodiacExplanation ?? 'Based on your chats, you\'re giving major Scorpio energy 🦂✨ Intense conversations? Check. Deep questions at 3 AM? Check. Reading between every single line? That\'s so you. GPT says you\'re the friend who turns small talk into therapy sessions. Mysterious vibes only. 💅',
-          subtitle: 'The stars don\'t lie... and neither does ChatGPT! ⭐',
+          subtitle: 'The stars don\'t lie... and neither does AI! ⭐',
         ),
         // Index 12 - Introvert Extrovert
         IntrovertExtrovertScreen(
-          question: 'Are you an introvert or extrovert according to ChatGPT?',
+          question: 'Are you an introvert or extrovert according to AI?',
           personalityType: premiumInsights?.introExtroType ?? 'AMBIVERT',
           introvertPercentage: premiumInsights?.introvertPercentage ?? 55,
           extrovertPercentage: premiumInsights?.extrovertPercentage ?? 45,
-          explanation: premiumInsights?.introExtroExplanation ?? 'According to your conversations, ChatGPT detected that you have a balanced personality. You are an ambivert: you enjoy both moments of solitary reflection and social interactions. You have the ability to adapt to different situations, being introspective when you need to process information and sociable when you want to share ideas.',
+          explanation: premiumInsights?.introExtroExplanation ?? 'According to your conversations, AI detected that you have a balanced personality. You are an ambivert: you enjoy both moments of solitary reflection and social interactions. You have the ability to adapt to different situations, being introspective when you need to process information and sociable when you want to share ideas.',
           subtitle: _getIntroExtroSubtitle(premiumInsights?.introExtroType ?? 'AMBIVERT'),
         ),
         // Index 13 - Advice Most Asked
         AdviceMostAskedScreen(
-          question: 'What advice have you asked ChatGPT for the most?',
+          question: 'What advice have you asked AI for the most?',
           mostAskedAdvice: premiumInsights?.mostAskedAdvice ?? 'How to improve my personal relationships',
           adviceCategory: premiumInsights?.adviceCategory ?? 'RELATIONSHIPS',
           adviceEmoji: premiumInsights?.adviceEmoji ?? '💕',
@@ -455,7 +465,7 @@ class FreeWrappedNavigator extends StatelessWidget {
         ),
         // Index 14 - Love Language
         LoveLanguageScreen(
-          question: 'What\'s your love language according to ChatGPT?',
+          question: 'What\'s your love language according to AI?',
           loveLanguage: premiumInsights?.loveLanguage ?? 'Words of Affirmation',
           languageEmoji: premiumInsights?.languageEmoji ?? '💬',
           explanation: premiumInsights?.loveLanguageExplanation ?? 'Based on your chats, GPT noticed you light up when validated. You seek reassurance, ask follow-up questions to make sure you\'re understood, and appreciate detailed explanations. You love when GPT acknowledges your ideas and reflects them back. Basically, you\'re the type who needs to hear "You\'re doing great!" even from an AI. And honestly? You are. 💕',
@@ -464,7 +474,7 @@ class FreeWrappedNavigator extends StatelessWidget {
         ),
         // Index 15 - Past Life Persona (Last premium screen)
         PastLifePersonaScreen(
-          question: 'Who were you in a past life according to ChatGPT?',
+          question: 'Who were you in a past life according to AI?',
           personaTitle: premiumInsights?.personaTitle ?? 'Renaissance Philosopher-Artist',
           personaEmoji: premiumInsights?.personaEmoji ?? '🎨',
           era: premiumInsights?.era ?? '15TH CENTURY FLORENCE',
@@ -485,10 +495,10 @@ class FreeWrappedNavigator extends StatelessWidget {
           firstName: 'You',
           firstValue: 127,
           firstEmoji: '👤',
-          secondName: 'ChatGPT',
+          secondName: 'AI',
           secondValue: 89,
           secondEmoji: '🤖',
-          poeticMessage: 'You\'ve created a beautiful partnership with AI this year. While others see ChatGPT as a tool, you\'ve made it your conversation partner, creative collaborator, and digital confidant. Here\'s to many more meaningful exchanges! 🌟',
+          poeticMessage: 'You\'ve created a beautiful partnership with AI this year. While others see AI as a tool, you\'ve made it your conversation partner, creative collaborator, and digital confidant. Here\'s to many more meaningful exchanges! 🌟',
           monthlyTopics: monthlyTopicsJulDec,
         ),
         // Index 18 - Share with People
@@ -567,9 +577,11 @@ class FreeWrappedNavigator extends StatelessWidget {
 
 class _PremiumWrappedNavigator extends StatelessWidget {
   final PremiumInsights insights;
+  final List<ConversationData>? parsedConversations;
 
   const _PremiumWrappedNavigator({
     required this.insights,
+    this.parsedConversations,
   });
 
   @override
@@ -588,13 +600,22 @@ class _PremiumWrappedNavigator extends StatelessWidget {
     print('🔴 PREMIUM_DEBUG: movieTitle: ${insights.movieTitle}');
     print('🔴 PREMIUM_DEBUG: greenFlags count: ${insights.greenFlags.length}');
     print('🔴 PREMIUM_DEBUG: redFlags count: ${insights.redFlags.length}');
+    print('🔴 PREMIUM_DEBUG: parsedConversations: ${parsedConversations != null ? parsedConversations!.length : 0}');
     print('🔴 PREMIUM_DEBUG: ================================================');
+
+    // Generate monthly topics from conversations if available
+    final monthlyTopicsJanJun = parsedConversations != null && parsedConversations!.isNotEmpty
+        ? AIAnalyzer.analyzeMonthlyTopics(parsedConversations!, startMonth: 1)
+        : null;
+    final monthlyTopicsJulDec = parsedConversations != null && parsedConversations!.isNotEmpty
+        ? AIAnalyzer.analyzeMonthlyTopics(parsedConversations!, startMonth: 7)
+        : null;
 
     return CardNavigator(
       screens: [
         // Index 0 - MBTI Personality (first premium screen)
         MBTIPersonalityScreen(
-          question: 'What is your MBTI personality type according to ChatGPT?',
+          question: 'What is your MBTI personality type according to AI?',
           mbtiType: insights.mbtiType,
           mbtiEmoji: insights.mbtiEmoji,
           personalityName: insights.personalityName,
@@ -603,7 +624,7 @@ class _PremiumWrappedNavigator extends StatelessWidget {
         ),
         // Index 1 - Type A/B Personality
         TypeABPersonalityScreen(
-          question: 'Are you Type A or Type B according to ChatGPT?',
+          question: 'Are you Type A or Type B according to AI?',
           personalityType: insights.personalityType,
           typeEmoji: _typeEmoji(insights.personalityType),
           typeAPercentage: insights.typeAPercentage,
@@ -612,7 +633,7 @@ class _PremiumWrappedNavigator extends StatelessWidget {
           subtitle: _personalitySubtitle(insights.personalityType),
         ),
         RedGreenFlagsScreen(
-          question: 'What are your red and green flags according to ChatGPT?',
+          question: 'What are your red and green flags according to AI?',
           greenFlagTitle: 'Green Flags 🟢',
           redFlagTitle: 'Red Flags 🔴',
           greenFlags: insights.greenFlags,
@@ -620,15 +641,15 @@ class _PremiumWrappedNavigator extends StatelessWidget {
           subtitle: 'Self-love also includes recognizing our areas for improvement 💚❤️',
         ),
         GuessZodiacScreen(
-          question: 'What is your zodiac sign according to ChatGPT?',
+          question: 'What is your zodiac sign according to AI?',
           zodiacSign: insights.zodiacSign,
           zodiacEmoji: insights.zodiacEmoji,
           zodiacName: insights.zodiacName,
           explanation: insights.zodiacExplanation,
-          subtitle: 'The stars don\'t lie... and neither does ChatGPT! ⭐',
+          subtitle: 'The stars don\'t lie... and neither does AI! ⭐',
         ),
         IntrovertExtrovertScreen(
-          question: 'Are you an introvert or extrovert according to ChatGPT?',
+          question: 'Are you an introvert or extrovert according to AI?',
           personalityType: insights.introExtroType,
           introvertPercentage: insights.introvertPercentage,
           extrovertPercentage: insights.extrovertPercentage,
@@ -636,7 +657,7 @@ class _PremiumWrappedNavigator extends StatelessWidget {
           subtitle: _introExtroSubtitle(insights.introExtroType),
         ),
         AdviceMostAskedScreen(
-          question: 'What advice have you asked ChatGPT for the most?',
+          question: 'What advice have you asked AI for the most?',
           mostAskedAdvice: insights.mostAskedAdvice,
           adviceCategory: insights.adviceCategory,
           adviceEmoji: insights.adviceEmoji,
@@ -644,14 +665,19 @@ class _PremiumWrappedNavigator extends StatelessWidget {
           subtitle: 'Wisdom is knowing what to ask 💡',
         ),
         MovieTitleScreen(
-          question: 'What movie title represents your life according to ChatGPT?',
+          question: 'What movie title represents your life according to AI?',
           movieTitle: insights.movieTitle,
           releaseYear: insights.movieYear,
           explanation: insights.movieExplanation,
           subtitle: 'Plot twist: Your chats are cinema-worthy 🍿✨',
         ),
+        RoastMeScreen(
+          question: 'Roast me based on our previous interactions',
+          roastText: insights.roastText,
+          subtitle: 'Can you handle the heat? 🔥😂',
+        ),
         LoveLanguageScreen(
-          question: 'What\'s your love language according to ChatGPT?',
+          question: 'What\'s your love language according to AI?',
           loveLanguage: insights.loveLanguage,
           languageEmoji: insights.languageEmoji,
           explanation: insights.loveLanguageExplanation,
@@ -659,7 +685,7 @@ class _PremiumWrappedNavigator extends StatelessWidget {
           loveLanguagePercentages: _loveLanguageDistribution(insights.loveLanguage),
         ),
         PastLifePersonaScreen(
-          question: 'Who were you in a past life according to ChatGPT?',
+          question: 'Who were you in a past life according to AI?',
           personaTitle: insights.personaTitle,
           personaEmoji: insights.personaEmoji,
           era: insights.era,
@@ -672,7 +698,7 @@ class _PremiumWrappedNavigator extends StatelessWidget {
           statNumber: 2025,
           unit: 'YEAR',
           poeticMessage: 'Get ready for another year of growth, discovery, and countless conversations with an AI that will know you even better! Here\'s to asking even more interesting questions! 🎉',
-          monthlyTopics: null, // Premium navigator doesn't have access to conversations
+          monthlyTopics: monthlyTopicsJanJun, // Use real monthly topics from conversations
         ),
         // Index 10 - Your GPT Wrapped
         ComparisonStatsScreen(
@@ -680,11 +706,11 @@ class _PremiumWrappedNavigator extends StatelessWidget {
           firstName: 'You',
           firstValue: 127,
           firstEmoji: '👤',
-          secondName: 'ChatGPT',
+          secondName: 'AI',
           secondValue: 89,
           secondEmoji: '🤖',
-          poeticMessage: 'You\'ve created a beautiful partnership with AI this year. While others see ChatGPT as a tool, you\'ve made it your conversation partner, creative collaborator, and digital confidant. Here\'s to many more meaningful exchanges! 🌟',
-          monthlyTopics: null, // Premium navigator doesn't have access to conversations
+          poeticMessage: 'You\'ve created a beautiful partnership with AI this year. While others see AI as a tool, you\'ve made it your conversation partner, creative collaborator, and digital confidant. Here\'s to many more meaningful exchanges! 🌟',
+          monthlyTopics: monthlyTopicsJulDec, // Use real monthly topics from conversations
         ),
         // Index 11 - Share with People
         SocialSharingScreen(

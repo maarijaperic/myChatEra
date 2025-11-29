@@ -113,7 +113,7 @@ class _PastLifePersonaScreenState extends State<PastLifePersonaScreen>
                   child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    SizedBox(height: (screenHeight * 0.05).clamp(30.0, 40.0)), // Povećano sa 0.005
+                    SizedBox(height: (screenHeight * 0.08).clamp(40.0, 50.0)),
                     
                     // Header + hero card
                     _AnimatedFade(
@@ -181,7 +181,7 @@ class _PastLifePersonaScreenState extends State<PastLifePersonaScreen>
                           ],
                         ),
                         child: Text(
-                          widget.description,
+                          '${widget.description} Your past life echoes through your conversations, revealing timeless patterns and wisdom that transcend generations.',
                           textAlign: TextAlign.center,
                           style: GoogleFonts.inter(
                             color: const Color(0xFF555555),
@@ -201,7 +201,7 @@ class _PastLifePersonaScreenState extends State<PastLifePersonaScreen>
                       controller: _fadeController,
                       delay: 0.4,
                       child: SmallShareToStoryButton(
-                        shareText: 'In my past life, I was a ${widget.personaTitle} in ${widget.era}. ${widget.subtitle} ✨ #ChatGPTWrapped',
+                        shareText: 'In my past life, I was a ${widget.personaTitle} in ${widget.era}. ${widget.subtitle} ✨ #mychateraAI',
                         screenshotKey: _screenshotKey,
                         accentGradient: const [Color(0xFFFF8FB1), Color(0xFFFFB5D8)],
                       ),
@@ -277,10 +277,10 @@ class _PastLifeHeroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isLargeScreen = screenWidth > 600;
-    final cardPadding = (screenWidth * 0.04).clamp(16.0, isLargeScreen ? 22.0 : 20.0); // Povećano sa 0.03
+    final cardPadding = (screenWidth * 0.042).clamp(16.8, isLargeScreen ? 23.1 : 21.0); // Povećano za 5%
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular((screenWidth * 0.06).clamp(20.0, 26.0)), // Povećano sa 0.05
+      borderRadius: BorderRadius.circular((screenWidth * 0.063).clamp(21.0, 27.3)), // Povećano za 5%
       child: BackdropFilter(
         filter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
@@ -311,15 +311,15 @@ class _PastLifeHeroCard extends StatelessWidget {
               Text(
                 personaEmoji,
                 style: TextStyle(
-                  fontSize: (screenWidth * 0.085).clamp(32.0, isLargeScreen ? 48.0 : 42.0), // Povećano sa 0.075
+                  fontSize: (screenWidth * 0.08925).clamp(33.6, isLargeScreen ? 50.4 : 44.1), // Povećano za 5%
                 ),
               ),
-              SizedBox(height: (screenWidth * 0.025).clamp(10.0, 14.0)), // Povećano sa 0.02
+              SizedBox(height: (screenWidth * 0.025).clamp(10.0, 14.0)),
               // Era
               Container(
                 padding: EdgeInsets.symmetric(
-                  horizontal: (screenWidth * 0.035).clamp(12.0, 14.0), // Povećano sa 0.03
-                  vertical: (screenHeight * 0.006).clamp(5.0, 6.0), // Povećano sa 0.005
+                  horizontal: (screenWidth * 0.035).clamp(12.0, 14.0),
+                  vertical: (screenHeight * 0.006).clamp(5.0, 6.0),
                 ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF6E9DA),
@@ -329,20 +329,20 @@ class _PastLifeHeroCard extends StatelessWidget {
                   era.toUpperCase(),
                   style: GoogleFonts.inter(
                     color: const Color(0xFF8B7E74),
-                    fontSize: (screenWidth * 0.028).clamp(10.0, 12.0), // Povećano sa 0.025
+                    fontSize: (screenWidth * 0.0294).clamp(10.5, 12.6), // Povećano za 5%
                     fontWeight: FontWeight.w600,
                     letterSpacing: 0.8,
                   ),
                 ),
               ),
-              SizedBox(height: (screenHeight * 0.01).clamp(8.0, 10.0)), // Povećano sa 0.008
+              SizedBox(height: (screenHeight * 0.01).clamp(8.0, 10.0)),
               // Persona Title
               Text(
                 personaTitle,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.inter(
                   color: const Color(0xFF3C2F25),
-                  fontSize: (screenWidth * 0.045).clamp(18.0, isLargeScreen ? 26.0 : 22.0), // Povećano sa 0.04
+                  fontSize: (screenWidth * 0.04725).clamp(18.9, isLargeScreen ? 27.3 : 23.1), // Povećano za 5%
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.2,
                   height: 1.2,

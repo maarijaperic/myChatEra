@@ -32,7 +32,7 @@ class _AnalyzingLoadingScreenState extends State<AnalyzingLoadingScreen>
   late AnimationController _progressController;
   late AnimationController _fadeController;
   double _progress = 0.0;
-  String _statusText = 'Connecting to ChatGPT...';
+  String _statusText = 'Connecting to AI...';
 
   List<String> get _loadingSteps {
     if (widget.customLoadingSteps != null) {
@@ -54,7 +54,7 @@ class _AnalyzingLoadingScreenState extends State<AnalyzingLoadingScreen>
       ];
     }
     return [
-      'Connecting to ChatGPT...',
+      'Connecting to AI...',
       'Fetching your conversations...',
       'Analyzing your messages...',
       'Calculating statistics...',

@@ -6,7 +6,7 @@ import 'package:gpt_wrapped2/services/premium_processor.dart';
 
 class PremiumAnalyzingScreen extends StatefulWidget {
   final List<ConversationData> conversations;
-  final Function(PremiumInsights) onAnalysisComplete;
+  final Function(PremiumInsights, List<ConversationData>) onAnalysisComplete;
   final Function(String)? onError;
 
   const PremiumAnalyzingScreen({
@@ -116,7 +116,7 @@ class _PremiumAnalyzingScreenState extends State<PremiumAnalyzingScreen>
 
       // Complete
       if (mounted) {
-        widget.onAnalysisComplete(premiumInsights);
+        widget.onAnalysisComplete(premiumInsights, conversationsWithMessages);
       }
     } catch (e) {
       print('Error during premium analysis: $e');

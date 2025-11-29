@@ -317,25 +317,16 @@ class ChatAnalyzer {
   }
 
   /// Calculate percentage of year with chats
+  /// Always uses 365 days as the base (full year), regardless of actual date range
   static int calculateYearPercentage(List<MessageData> messages) {
     if (messages.isEmpty) return 0;
     
     final uniqueDays = countUniqueDays(messages);
     if (uniqueDays == 0) return 0;
     
-    // Calculate actual date range
-    final sortedMessages = List<MessageData>.from(messages)
-      ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
-    
-    final firstDate = sortedMessages.first.timestamp;
-    final lastDate = sortedMessages.last.timestamp;
-    final totalDaysInRange = lastDate.difference(firstDate).inDays + 1;
-    
-    // If range is less than a year, use actual range
-    // If range is more than a year, use 365 days
-    final denominator = totalDaysInRange > 365 ? 365 : totalDaysInRange;
-    
-    return ((uniqueDays / denominator) * 100).round().clamp(0, 100);
+    // Always use 365 days as the base for year percentage calculation
+    // This ensures consistent percentage regardless of when the user started using ChatGPT
+    return ((uniqueDays / 365) * 100).round().clamp(0, 100);
   }
 
   /// Get word count for most used word

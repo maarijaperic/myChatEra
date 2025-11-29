@@ -202,7 +202,7 @@ class _AdviceMostAskedScreenState extends State<AdviceMostAskedScreen>
                       controller: _fadeController,
                       delay: 0.4,
                       child: SmallShareToStoryButton(
-                        shareText: 'My most asked ChatGPT advice: "${widget.mostAskedAdvice}" in ${widget.adviceCategory}. Wisdom is knowing what to ask! ${widget.adviceEmoji} #ChatGPTWrapped',
+                        shareText: 'My most asked AI advice: "${widget.mostAskedAdvice}" in ${widget.adviceCategory}. Wisdom is knowing what to ask! ${widget.adviceEmoji} #mychateraAI',
                         screenshotKey: _screenshotKey,
                         accentGradient: const [Color(0xFF10B981), Color(0xFF34D399)],
                       ),

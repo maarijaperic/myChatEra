@@ -121,23 +121,31 @@ Provide:
 1. 5 green flags (positive traits based on their ACTUAL interactions - be specific to their messages)
 2. 5 red flags (areas for improvement based on their ACTUAL behavior - be playful not harsh, specific to their messages)
 
+CRITICAL FORMATTING RULES:
+- Write each flag as a SHORT sentence in SECOND PERSON SINGULAR (use "you" and "your")
+- Keep each flag to ONE sentence maximum
+- Do NOT use "The user demonstrates..." or "The user shows..." - write directly to the user
+- Be concise and direct
+- Examples of good format: "You ask thoughtful follow-up questions", "You sometimes skip reading full answers"
+- Examples of BAD format: "The user demonstrates patience", "The user shows impatience"
+
 Each flag should be unique to this user's conversation style, not generic examples.
 
 Respond ONLY with valid JSON in this exact format:
 {
   "greenFlags": [
-    "Specific positive trait based on their messages",
-    "Another specific positive trait",
-    "Another specific positive trait",
-    "Another specific positive trait",
-    "Another specific positive trait"
+    "You [specific positive trait]",
+    "You [another specific positive trait]",
+    "You [another specific positive trait]",
+    "You [another specific positive trait]",
+    "You [another specific positive trait]"
   ],
   "redFlags": [
-    "Specific area for improvement based on their messages",
-    "Another specific area for improvement",
-    "Another specific area for improvement",
-    "Another specific area for improvement",
-    "Another specific area for improvement"
+    "You [specific area for improvement]",
+    "You [another specific area for improvement]",
+    "You [another specific area for improvement]",
+    "You [another specific area for improvement]",
+    "You [another specific area for improvement]"
   ]
 }
 ''';
@@ -387,7 +395,7 @@ Respond ONLY with the roast text, no JSON, no extra formatting.
   }
   
   /// Analyze monthly topics from conversations (for Monthly Obsessions)
-  /// Groups conversations by month and extracts main topics
+  /// Extracts topics from user's chats and maps them to valid categories
   /// Returns topics for months 1-6 (Jan-Jun) or 7-12 (Jul-Dec) based on startMonth
   static List<Map<String, dynamic>> analyzeMonthlyTopics(
     List<ConversationData> conversations, {
@@ -396,6 +404,30 @@ Respond ONLY with the roast text, no JSON, no extra formatting.
     if (conversations.isEmpty) {
       return [];
     }
+    
+    // Valid topic categories that can be used
+    final validCategories = [
+      'Your Ex',
+      'Healing',
+      'Therapy',
+      'Self-Care',
+      'Baking',
+      'Programming',
+      'Writing',
+      'Learning',
+      'Career',
+      'Health',
+      'Travel',
+      'Cooking',
+      'Art',
+      'Music',
+      'Gaming',
+      'Relationships',
+      'Finance',
+      'Productivity',
+      'Science',
+      'Philosophy',
+    ];
     
     // Group conversations by month
     final monthlyGroups = <int, List<ConversationData>>{};
@@ -423,33 +455,317 @@ Respond ONLY with the roast text, no JSON, no extra formatting.
       [Color(0xFFFFE5FF), Color(0xFFFF6B9D)], // Dec - Pink
     ];
     
+    // Track topic usage to prevent more than 2 repetitions
+    final topicUsageCount = <String, int>{};
+    String? previousTopic;
+    bool allowConsecutive = true; // Allow one consecutive repetition
+    int consecutiveCount = 0;
+    
+    // Shuffle valid categories for fallback randomness
+    final shuffledCategories = List<String>.from(validCategories);
+    shuffledCategories.shuffle();
+    
     // Analyze topics for specified months
     final endMonth = startMonth + 5; // 6 months total
     for (int month = startMonth; month <= endMonth && month <= 12; month++) {
       final monthConvs = monthlyGroups[month] ?? [];
+      String topic;
+      bool isConsecutive = false;
       
-      // Extract main topic from conversation titles
-      final topic = monthConvs.isNotEmpty 
-          ? _extractTopicFromConversations(monthConvs)
-          : 'Chatting';
+      // Try to extract topic from conversations for this month
+      if (monthConvs.isNotEmpty) {
+        // Extract topic from conversations and map to valid category
+        final extractedTopic = _extractTopicFromConversations(monthConvs);
+        
+        // Check if extracted topic is a valid category
+        if (validCategories.contains(extractedTopic)) {
+          topic = extractedTopic;
+        } else {
+          // Map to valid category based on keywords
+          topic = _mapToValidCategory(extractedTopic, validCategories);
+        }
+      } else {
+        // No conversations for this month - use random valid category
+        final available = shuffledCategories.where((t) {
+          final key = t.toLowerCase();
+          return (topicUsageCount[key] ?? 0) < 2;
+        }).toList();
+        
+        if (available.isEmpty) {
+          topic = shuffledCategories[month % shuffledCategories.length];
+        } else {
+          final random = (month * 17 + startMonth * 23) % available.length;
+          topic = available[random];
+        }
+      }
+      
+      // Check if topic is used too many times (max 2)
+      final topicKey = topic.toLowerCase();
+      final usageCount = topicUsageCount[topicKey] ?? 0;
+      if (usageCount >= 2) {
+        // Find alternative valid category that hasn't been used 2 times
+        final available = shuffledCategories.where((t) {
+          final key = t.toLowerCase();
+          return (topicUsageCount[key] ?? 0) < 2 && t != topic;
+        }).toList();
+        
+        if (available.isNotEmpty) {
+          final random = (month * 19 + startMonth * 31) % available.length;
+          topic = available[random];
+        }
+      }
+      
+      // Check if it's consecutive (same as previous)
+      if (previousTopic != null && topic == previousTopic) {
+        if (allowConsecutive && consecutiveCount == 0) {
+          // Allow one consecutive, mark it
+          isConsecutive = true;
+          consecutiveCount = 1;
+          allowConsecutive = false; // Don't allow more consecutive
+        } else {
+          // Find different topic
+          final available = shuffledCategories.where((t) {
+            final key = t.toLowerCase();
+            return (topicUsageCount[key] ?? 0) < 2 && t != previousTopic;
+          }).toList();
+          
+          if (available.isNotEmpty) {
+            final random2 = (month * 19 + startMonth * 31) % available.length;
+            topic = available[random2];
+          }
+          consecutiveCount = 0;
+        }
+      } else {
+        consecutiveCount = 0;
+      }
+      
+      // Increment usage count
+      topicUsageCount[topicKey] = (topicUsageCount[topicKey] ?? 0) + 1;
+      
       final emoji = _getEmojiForTopic(topic);
       
       monthlyTopics.add({
         'month': monthNames[month - 1],
         'obsession': topic,
-        'sentence': _generateSentenceForTopic(topic),
+        'sentence': _generateSentenceForTopic(topic, month, isConsecutive: isConsecutive),
         'emoji': emoji,
         'color': colors[month - 1][0],
         'accentColor': colors[month - 1][1],
       });
+      
+      previousTopic = topic;
     }
     
     return monthlyTopics;
   }
   
-  /// Extract topic from conversation titles
+  /// Map extracted topic to a valid category
+  static String _mapToValidCategory(String extractedTopic, List<String> validCategories) {
+    final topicLower = extractedTopic.toLowerCase();
+    
+    // Map of keywords to valid categories
+    final keywordMap = {
+      'Your Ex': ['ex', 'breakup', 'former', 'past relationship', 'split', 'divorce'],
+      'Healing': ['healing', 'heal', 'recovery', 'recover', 'trauma'],
+      'Therapy': ['therapy', 'therapist', 'counseling', 'mental health'],
+      'Self-Care': ['self-care', 'self care', 'wellness', 'self-love', 'self improvement'],
+      'Baking': ['baking', 'bake', 'cake', 'cookies', 'pastry', 'dessert'],
+      'Programming': ['code', 'program', 'python', 'javascript', 'java', 'react', 'flutter', 'developer', 'coding'],
+      'Writing': ['write', 'story', 'essay', 'article', 'blog', 'poem', 'novel', 'author', 'book'],
+      'Learning': ['learn', 'study', 'course', 'tutorial', 'education', 'school', 'university', 'exam'],
+      'Career': ['work', 'career', 'job', 'interview', 'resume', 'professional', 'business', 'company'],
+      'Health': ['health', 'fitness', 'exercise', 'workout', 'gym', 'diet', 'nutrition', 'yoga'],
+      'Travel': ['travel', 'trip', 'vacation', 'hotel', 'flight', 'destination', 'adventure'],
+      'Cooking': ['cook', 'food', 'recipe', 'kitchen', 'meal', 'restaurant', 'cuisine'],
+      'Art': ['art', 'design', 'drawing', 'painting', 'sketch', 'illustration', 'graphic', 'artist'],
+      'Music': ['music', 'song', 'album', 'artist', 'band', 'concert', 'piano', 'guitar'],
+      'Gaming': ['game', 'gaming', 'play', 'player', 'level', 'quest', 'strategy', 'console'],
+      'Relationships': ['love', 'relationship', 'dating', 'partner', 'friend', 'family', 'marriage', 'romance'],
+      'Finance': ['money', 'finance', 'budget', 'investment', 'saving', 'bank', 'credit', 'stock'],
+      'Productivity': ['productivity', 'planning', 'organize', 'schedule', 'task', 'goal', 'project', 'time'],
+      'Science': ['science', 'research', 'experiment', 'theory', 'data', 'analysis', 'physics', 'chemistry'],
+      'Philosophy': ['philosophy', 'meaning', 'life', 'exist', 'think', 'question', 'truth', 'wisdom'],
+    };
+    
+    // Try to find matching category
+    for (final entry in keywordMap.entries) {
+      if (entry.value.any((keyword) => topicLower.contains(keyword))) {
+        if (validCategories.contains(entry.key)) {
+          return entry.key;
+        }
+      }
+    }
+    
+    // If no match, return random valid category
+    return validCategories[extractedTopic.hashCode.abs() % validCategories.length];
+  }
+  
+  /// Extract all unique topics from all conversations
+  static List<String> _extractAllTopicsFromConversations(List<ConversationData> conversations) {
+    final topics = <String>{};
+    
+    for (var conv in conversations) {
+      final topic = _extractSingleTopicFromTitle(conv.title);
+      if (topic.isNotEmpty && topic.toLowerCase() != 'chatting') {
+        topics.add(topic);
+      }
+    }
+    
+    return topics.toList();
+  }
+  
+  /// Extract a single topic from a conversation title
+  static String _extractSingleTopicFromTitle(String title) {
+    // Map of known topic categories and their keywords (same as in _extractTopicFromConversations)
+    final topicCategories = {
+      'Your Ex': ['ex', 'ex-', 'breakup', 'break up', 'former', 'past relationship', 'old flame', 'previous', 'split', 'divorce', 'separated'],
+      'Healing': ['healing', 'heal', 'recovery', 'recover', 'recovering', 'healing journey', 'self-healing', 'emotional healing', 'trauma', 'healing process'],
+      'Therapy': ['therapy', 'therapist', 'counseling', 'counselor', 'psychotherapy', 'mental health', 'therapy session', 'therapeutic', 'counseling session'],
+      'Self-Care': ['self-care', 'self care', 'selfcare', 'wellness', 'wellbeing', 'self-love', 'self love', 'self improvement', 'self-improvement', 'mental wellness'],
+      'Baking': ['baking', 'bake', 'baker', 'cake', 'cookies', 'pastry', 'dessert', 'sweet', 'recipe', 'baking recipe', 'homemade'],
+      'Programming': ['code', 'program', 'python', 'javascript', 'java', 'react', 'flutter', 'app', 'software', 'developer', 'coding', 'algorithm', 'function', 'variable', 'debug', 'api', 'html', 'css', 'sql', 'database'],
+      'Writing': ['write', 'story', 'essay', 'article', 'blog', 'poem', 'novel', 'character', 'plot', 'narrative', 'creative', 'author', 'book', 'text', 'content'],
+      'Learning': ['learn', 'study', 'course', 'tutorial', 'lesson', 'education', 'school', 'university', 'exam', 'test', 'homework', 'assignment', 'research', 'knowledge'],
+      'Career': ['work', 'career', 'job', 'interview', 'resume', 'cv', 'professional', 'business', 'company', 'office', 'colleague', 'boss', 'salary', 'promotion'],
+      'Health': ['health', 'fitness', 'exercise', 'workout', 'gym', 'diet', 'nutrition', 'weight', 'muscle', 'yoga', 'meditation', 'doctor', 'medical'],
+      'Travel': ['travel', 'trip', 'vacation', 'hotel', 'flight', 'airport', 'destination', 'tourist', 'sightseeing', 'adventure', 'journey', 'explore', 'visit'],
+      'Cooking': ['cook', 'food', 'recipe', 'kitchen', 'ingredient', 'meal', 'dinner', 'lunch', 'breakfast', 'restaurant', 'cuisine', 'dish'],
+      'Art': ['art', 'design', 'drawing', 'painting', 'sketch', 'illustration', 'graphic', 'logo', 'color', 'aesthetic', 'creative', 'artist', 'gallery'],
+      'Music': ['music', 'song', 'album', 'artist', 'band', 'concert', 'piano', 'guitar', 'instrument', 'melody', 'lyrics', 'spotify', 'playlist'],
+      'Gaming': ['game', 'gaming', 'play', 'player', 'level', 'quest', 'character', 'strategy', 'puzzle', 'multiplayer', 'console', 'pc', 'mobile'],
+      'Relationships': ['love', 'relationship', 'dating', 'partner', 'friend', 'family', 'marriage', 'wedding', 'romance', 'crush'],
+      'Finance': ['money', 'finance', 'budget', 'investment', 'saving', 'bank', 'credit', 'debit', 'payment', 'salary', 'income', 'expense', 'stock', 'crypto'],
+      'Productivity': ['productivity', 'planning', 'organize', 'schedule', 'task', 'goal', 'project', 'deadline', 'time', 'manage', 'efficient', 'optimize', 'system'],
+      'Science': ['science', 'research', 'experiment', 'theory', 'hypothesis', 'data', 'analysis', 'study', 'discover', 'physics', 'chemistry', 'biology'],
+      'Philosophy': ['philosophy', 'meaning', 'life', 'exist', 'think', 'question', 'truth', 'wisdom', 'mind', 'soul', 'spiritual'],
+    };
+    
+    final titleLower = title.toLowerCase();
+    
+    // Check for category matches first
+    for (final entry in topicCategories.entries) {
+      for (final keyword in entry.value) {
+        if (titleLower.contains(keyword)) {
+          return entry.key;
+        }
+      }
+    }
+    
+    // Fallback to first meaningful word
+    final commonWords = {
+      'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
+      'of', 'with', 'by', 'from', 'as', 'is', 'was', 'are', 'be', 'been',
+      'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could',
+      'should', 'may', 'might', 'can', 'how', 'what', 'why', 'when', 'where',
+      'me', 'you', 'i', 'my', 'help', 'please', 'thanks', 'need', 'about',
+      'chat', 'gpt', 'openai', 'ai', 'assistant', 'conversation', 'new'
+    };
+    
+    final words = titleLower
+        .replaceAll(RegExp(r'[^\w\s]'), '')
+        .split(' ')
+        .where((w) => w.length > 3 && !commonWords.contains(w))
+        .toList();
+    
+    if (words.isEmpty) return '';
+    
+    // Try to map the word to a known category
+    final firstWord = words[0];
+    for (final entry in topicCategories.entries) {
+      if (entry.value.any((keyword) => firstWord.contains(keyword) || keyword.contains(firstWord))) {
+        return entry.key;
+      }
+    }
+    
+    // Map Serbian/Croatian words to categories
+    final serbianWordMap = {
+      'zavr': 'Productivity', // zavrena, završiti
+      'vreme': 'Productivity', // vreme, time management
+      'dokaz': 'Science', // dokaz, proof
+      'plan': 'Productivity',
+      'zadat': 'Productivity', // zadatak, task
+      'projek': 'Productivity', // projekat, project
+      'cilj': 'Productivity', // cilj, goal
+      'nauka': 'Science', // nauka, science
+      'istraž': 'Science', // istraživanje, research
+      'posao': 'Career', // posao, work
+      'karijer': 'Career', // karijera, career
+      'zdravlje': 'Health', // zdravlje, health
+      'fitnes': 'Health', // fitnes, fitness
+      'putovan': 'Travel', // putovanje, travel
+      'kuhanje': 'Cooking', // kuhanje, cooking
+      'hrana': 'Cooking', // hrana, food
+      'umetnost': 'Art', // umetnost, art
+      'muzika': 'Music', // muzika, music
+      'igra': 'Gaming', // igra, game
+      'ljubav': 'Relationships', // ljubav, love
+      'novac': 'Finance', // novac, money
+      'učenje': 'Learning', // učenje, learning
+      'pisanje': 'Writing', // pisanje, writing
+    };
+    
+    for (final entry in serbianWordMap.entries) {
+      if (firstWord.contains(entry.key)) {
+        return entry.value;
+      }
+    }
+    
+    // Return first meaningful word, capitalized
+    return firstWord[0].toUpperCase() + firstWord.substring(1);
+  }
+  
+  /// Get random topic from list, avoiding overused topics
+  static String _getRandomTopicFromList(
+    List<String> topics, 
+    Map<String, int> usageCount, {
+    String? excludeTopic,
+  }) {
+    if (topics.isEmpty) return 'Chatting';
+    
+    // Filter topics that haven't been used 2 times yet
+    final availableTopics = topics.where((t) {
+      final key = t.toLowerCase();
+      if (excludeTopic != null && key == excludeTopic) return false;
+      return (usageCount[key] ?? 0) < 2;
+    }).toList();
+    
+    if (availableTopics.isEmpty) {
+      // If all topics are used 2 times, just pick any random one
+      return topics[DateTime.now().millisecondsSinceEpoch % topics.length];
+    }
+    
+    // Pick random from available topics
+    final random = DateTime.now().millisecondsSinceEpoch % availableTopics.length;
+    return availableTopics[random];
+  }
+  
+  /// Extract topic from conversation titles for a specific month
   static String _extractTopicFromConversations(List<ConversationData> conversations) {
     if (conversations.isEmpty) return 'Chatting';
+    
+    // Map of known topic categories and their keywords
+    final topicCategories = {
+      'Your Ex': ['ex', 'ex-', 'breakup', 'break up', 'former', 'past relationship', 'old flame', 'previous', 'split', 'divorce', 'separated'],
+      'Healing': ['healing', 'heal', 'recovery', 'recover', 'recovering', 'healing journey', 'self-healing', 'emotional healing', 'trauma', 'healing process'],
+      'Therapy': ['therapy', 'therapist', 'counseling', 'counselor', 'psychotherapy', 'mental health', 'therapy session', 'therapeutic', 'counseling session'],
+      'Self-Care': ['self-care', 'self care', 'selfcare', 'wellness', 'wellbeing', 'self-love', 'self love', 'self improvement', 'self-improvement', 'mental wellness'],
+      'Baking': ['baking', 'bake', 'baker', 'cake', 'cookies', 'pastry', 'dessert', 'sweet', 'recipe', 'baking recipe', 'homemade'],
+      'Programming': ['code', 'program', 'python', 'javascript', 'java', 'react', 'flutter', 'app', 'software', 'developer', 'coding', 'algorithm', 'function', 'variable', 'debug', 'api', 'html', 'css', 'sql', 'database'],
+      'Writing': ['write', 'story', 'essay', 'article', 'blog', 'poem', 'novel', 'character', 'plot', 'narrative', 'creative', 'author', 'book', 'text', 'content'],
+      'Learning': ['learn', 'study', 'course', 'tutorial', 'lesson', 'education', 'school', 'university', 'exam', 'test', 'homework', 'assignment', 'research', 'knowledge'],
+      'Career': ['work', 'career', 'job', 'interview', 'resume', 'cv', 'professional', 'business', 'company', 'office', 'colleague', 'boss', 'salary', 'promotion'],
+      'Health': ['health', 'fitness', 'exercise', 'workout', 'gym', 'diet', 'nutrition', 'weight', 'muscle', 'yoga', 'meditation', 'doctor', 'medical'],
+      'Travel': ['travel', 'trip', 'vacation', 'hotel', 'flight', 'airport', 'destination', 'tourist', 'sightseeing', 'adventure', 'journey', 'explore', 'visit'],
+      'Cooking': ['cook', 'food', 'recipe', 'kitchen', 'ingredient', 'meal', 'dinner', 'lunch', 'breakfast', 'restaurant', 'cuisine', 'dish'],
+      'Art': ['art', 'design', 'drawing', 'painting', 'sketch', 'illustration', 'graphic', 'logo', 'color', 'aesthetic', 'creative', 'artist', 'gallery'],
+      'Music': ['music', 'song', 'album', 'artist', 'band', 'concert', 'piano', 'guitar', 'instrument', 'melody', 'lyrics', 'spotify', 'playlist'],
+      'Gaming': ['game', 'gaming', 'play', 'player', 'level', 'quest', 'character', 'strategy', 'puzzle', 'multiplayer', 'console', 'pc', 'mobile'],
+      'Relationships': ['love', 'relationship', 'dating', 'partner', 'friend', 'family', 'marriage', 'wedding', 'romance', 'crush'],
+      'Finance': ['money', 'finance', 'budget', 'investment', 'saving', 'bank', 'credit', 'debit', 'payment', 'salary', 'income', 'expense', 'stock', 'crypto'],
+      'Productivity': ['productivity', 'planning', 'organize', 'schedule', 'task', 'goal', 'project', 'deadline', 'time', 'manage', 'efficient', 'optimize', 'system'],
+      'Science': ['science', 'research', 'experiment', 'theory', 'hypothesis', 'data', 'analysis', 'study', 'discover', 'physics', 'chemistry', 'biology'],
+      'Philosophy': ['philosophy', 'meaning', 'life', 'exist', 'think', 'question', 'truth', 'wisdom', 'mind', 'soul', 'spiritual'],
+    };
     
     // Count word frequency in titles
     final wordCounts = <String, int>{};
@@ -458,10 +774,27 @@ Respond ONLY with the roast text, no JSON, no extra formatting.
       'of', 'with', 'by', 'from', 'as', 'is', 'was', 'are', 'be', 'been',
       'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could',
       'should', 'may', 'might', 'can', 'how', 'what', 'why', 'when', 'where',
-      'me', 'you', 'i', 'my', 'help', 'please', 'thanks', 'need', 'about'
+      'me', 'you', 'i', 'my', 'help', 'please', 'thanks', 'need', 'about',
+      'chat', 'gpt', 'openai', 'ai', 'assistant', 'conversation', 'new'
     };
     
+    // First, try to find category matches
+    final categoryMatches = <String, int>{};
+    
     for (final conv in conversations) {
+      final titleLower = conv.title.toLowerCase();
+      
+      // Check for category matches
+      topicCategories.forEach((category, keywords) {
+        for (final keyword in keywords) {
+          if (titleLower.contains(keyword)) {
+            categoryMatches[category] = (categoryMatches[category] ?? 0) + 1;
+            break; // Count each category only once per title
+          }
+        }
+      });
+      
+      // Also count individual words
       final words = conv.title
           .toLowerCase()
           .replaceAll(RegExp(r'[^\w\s]'), '')
@@ -473,6 +806,20 @@ Respond ONLY with the roast text, no JSON, no extra formatting.
       }
     }
     
+    // Prefer category matches over individual words
+    if (categoryMatches.isNotEmpty) {
+      String topCategory = 'Chatting';
+      int maxCount = 0;
+      categoryMatches.forEach((category, count) {
+        if (count > maxCount) {
+          maxCount = count;
+          topCategory = category;
+        }
+      });
+      return topCategory;
+    }
+    
+    // Fallback to most common meaningful word
     if (wordCounts.isEmpty) return 'Chatting';
     
     // Find most common meaningful word
@@ -485,32 +832,122 @@ Respond ONLY with the roast text, no JSON, no extra formatting.
       }
     });
     
+    // Try to map the word to a known category
+    final wordLower = topWord.toLowerCase();
+    for (final entry in topicCategories.entries) {
+      if (entry.value.any((keyword) => wordLower.contains(keyword) || keyword.contains(wordLower))) {
+        return entry.key;
+      }
+    }
+    
+    // Map Serbian/Croatian words to categories
+    final serbianWordMap = {
+      'zavr': 'Productivity', // zavrena, završiti
+      'vreme': 'Productivity', // vreme, time management
+      'dokaz': 'Science', // dokaz, proof
+      'plan': 'Productivity',
+      'zadat': 'Productivity', // zadatak, task
+      'projek': 'Productivity', // projekat, project
+      'cilj': 'Productivity', // cilj, goal
+      'nauka': 'Science', // nauka, science
+      'istraž': 'Science', // istraživanje, research
+      'posao': 'Career', // posao, work
+      'karijer': 'Career', // karijera, career
+      'zdravlje': 'Health', // zdravlje, health
+      'fitnes': 'Health', // fitnes, fitness
+      'putovan': 'Travel', // putovanje, travel
+      'kuhanje': 'Cooking', // kuhanje, cooking
+      'hrana': 'Cooking', // hrana, food
+      'umetnost': 'Art', // umetnost, art
+      'muzika': 'Music', // muzika, music
+      'igra': 'Gaming', // igra, game
+      'ljubav': 'Relationships', // ljubav, love
+      'novac': 'Finance', // novac, money
+      'učenje': 'Learning', // učenje, learning
+      'pisanje': 'Writing', // pisanje, writing
+    };
+    
+    for (final entry in serbianWordMap.entries) {
+      if (wordLower.contains(entry.key)) {
+        return entry.value;
+      }
+    }
+    
     // Capitalize and format
-    return topWord[0].toUpperCase() + topWord.substring(1) + '!';
+    final formatted = topWord[0].toUpperCase() + topWord.substring(1);
+    return formatted;
   }
   
   /// Get emoji for topic
   static String _getEmojiForTopic(String topic) {
     final topicLower = topic.toLowerCase();
-    if (topicLower.contains('code') || topicLower.contains('program')) return '💻';
-    if (topicLower.contains('write') || topicLower.contains('story')) return '✍️';
-    if (topicLower.contains('learn') || topicLower.contains('study')) return '📚';
-    if (topicLower.contains('work') || topicLower.contains('career')) return '💼';
-    if (topicLower.contains('health') || topicLower.contains('fitness')) return '💪';
-    if (topicLower.contains('travel') || topicLower.contains('trip')) return '✈️';
-    if (topicLower.contains('cook') || topicLower.contains('food')) return '🍳';
-    if (topicLower.contains('art') || topicLower.contains('design')) return '🎨';
-    if (topicLower.contains('music') || topicLower.contains('song')) return '🎵';
-    if (topicLower.contains('game') || topicLower.contains('play')) return '🎮';
-    if (topicLower.contains('love') || topicLower.contains('relationship')) return '💕';
-    if (topicLower.contains('money') || topicLower.contains('finance')) return '💰';
+    
+    // Map topics to emojis - viral TikTok topics first
+    if (topicLower.contains('your ex') || topicLower.contains('ex') || topicLower.contains('breakup')) return '💔';
+    if (topicLower.contains('healing') || topicLower.contains('heal') || topicLower.contains('recovery')) return '🌱';
+    if (topicLower.contains('therapy') || topicLower.contains('therapist') || topicLower.contains('counseling')) return '🧘';
+    if (topicLower.contains('self-care') || topicLower.contains('self care') || topicLower.contains('selfcare')) return '✨';
+    if (topicLower.contains('baking') || topicLower.contains('bake') || topicLower.contains('cake') || topicLower.contains('cookies')) return '🍰';
+    
+    // Other topics
+    if (topicLower.contains('programming') || topicLower.contains('code') || topicLower.contains('program')) return '💻';
+    if (topicLower.contains('writing') || topicLower.contains('write') || topicLower.contains('story')) return '✍️';
+    if (topicLower.contains('learning') || topicLower.contains('learn') || topicLower.contains('study')) return '📚';
+    if (topicLower.contains('career') || topicLower.contains('work') || topicLower.contains('job')) return '💼';
+    if (topicLower.contains('health') || topicLower.contains('fitness') || topicLower.contains('exercise')) return '💪';
+    if (topicLower.contains('travel') || topicLower.contains('trip') || topicLower.contains('vacation')) return '✈️';
+    if (topicLower.contains('cooking') || topicLower.contains('cook') || topicLower.contains('food') || topicLower.contains('recipe')) return '🍳';
+    if (topicLower.contains('art') || topicLower.contains('design') || topicLower.contains('drawing')) return '🎨';
+    if (topicLower.contains('music') || topicLower.contains('song') || topicLower.contains('album')) return '🎵';
+    if (topicLower.contains('gaming') || topicLower.contains('game') || topicLower.contains('play')) return '🎮';
+    if (topicLower.contains('relationship') || topicLower.contains('love') || topicLower.contains('dating')) return '💕';
+    if (topicLower.contains('finance') || topicLower.contains('money') || topicLower.contains('budget')) return '💰';
+    if (topicLower.contains('productivity') || topicLower.contains('planning') || topicLower.contains('organize')) return '📋';
+    if (topicLower.contains('science') || topicLower.contains('research') || topicLower.contains('experiment')) return '🔬';
+    if (topicLower.contains('philosophy') || topicLower.contains('meaning') || topicLower.contains('wisdom')) return '🤔';
+    
+    // Try to match partial words
+    if (topicLower.contains('zavr') || topicLower.contains('finish') || topicLower.contains('complete')) return '✅';
+    if (topicLower.contains('vreme') || topicLower.contains('time') || topicLower.contains('schedule')) return '⏰';
+    if (topicLower.contains('dokaz') || topicLower.contains('proof') || topicLower.contains('evidence')) return '📄';
+    
     return '💬';
   }
   
-  /// Generate sentence for topic
-  static String _generateSentenceForTopic(String topic) {
+  /// Generate sentence for topic with variety
+  static String _generateSentenceForTopic(String topic, int month, {bool isConsecutive = false}) {
     final topicLower = topic.toLowerCase().replaceAll('!', '');
-    return 'Exploring $topicLower and discovering new insights.';
+    
+    // Different sentence templates based on month and topic
+    final sentences = [
+      'Diving deep into $topicLower this month.',
+      'Your main focus was $topicLower.',
+      'Spent time exploring $topicLower.',
+      'Focused on $topicLower and learning.',
+      'Your obsession with $topicLower grew.',
+      'Deep conversations about $topicLower.',
+      'Exploring $topicLower in new ways.',
+      'Your interest in $topicLower peaked.',
+    ];
+    
+    // If consecutive, add "still"
+    if (isConsecutive) {
+      final stillSentences = [
+        'Still diving deep into $topicLower this month.',
+        'Still focused on $topicLower.',
+        'Still exploring $topicLower.',
+        'Your obsession with $topicLower continued.',
+        'Still deep conversations about $topicLower.',
+        'Still exploring $topicLower in new ways.',
+        'Your interest in $topicLower still peaked.',
+      ];
+      final index = (month + topicLower.hashCode) % stillSentences.length;
+      return stillSentences[index];
+    }
+    
+    // Use month as seed for variety
+    final index = (month + topicLower.hashCode) % sentences.length;
+    return sentences[index];
   }
   
   /// Helper: Get sample of user messages

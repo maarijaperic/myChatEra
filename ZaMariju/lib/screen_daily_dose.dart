@@ -230,19 +230,22 @@ class _DailyDoseScreenState extends State<DailyDoseScreen>
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.45,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: highlightData
-                            .map((data) => Expanded(
-                                  child: Padding(
-                                    padding: EdgeInsets.only(
-                                      left: data == highlightData.first ? 0 : 8,
-                                      right: data == highlightData.last ? 0 : 8,
+                      child: IntrinsicHeight(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: highlightData
+                              .map((data) => Expanded(
+                                    child: Padding(
+                                      padding: EdgeInsets.only(
+                                        left: data == highlightData.first ? 0 : 8,
+                                        right: data == highlightData.last ? 0 : 8,
+                                      ),
+                                      child: _DailyDoseHighlightCard(data: data),
                                     ),
-                                    child: _DailyDoseHighlightCard(data: data),
-                                  ),
-                                ))
-                            .toList(),
+                                  ))
+                              .toList(),
+                        ),
                       ),
                     ),
                     
@@ -253,7 +256,7 @@ class _DailyDoseScreenState extends State<DailyDoseScreen>
                       controller: _fadeController,
                       delay: 0.6,
                       child: SmallShareToStoryButton(
-                        shareText: 'I send ${widget.messagesPerDay} messages to ChatGPT per day! My daily dose of AI wisdom 💬 #ChatGPTWrapped',
+                        shareText: 'I send ${widget.messagesPerDay} messages to AI per day! My daily dose of AI wisdom 💬 #mychateraAI',
                         screenshotKey: _screenshotKey,
                       ),
                     ),
@@ -628,11 +631,12 @@ class _HeroStatCard extends StatelessWidget {
                   value,
                   style: GoogleFonts.inter(
                     color: const Color(0xFF1F1F21),
-                    fontSize: 13,
+                    fontSize: 12,
                     fontWeight: FontWeight.w600,
                   ),
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
+                  softWrap: true,
                 ),
               ],
             ),
@@ -674,7 +678,7 @@ class _DailyDoseHighlightCard extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: MainAxisSize.max,
         children: [
           Container(
             width: 38,

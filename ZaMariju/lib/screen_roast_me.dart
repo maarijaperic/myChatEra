@@ -6,48 +6,42 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:gpt_wrapped2/widgets/instagram_share_button.dart';
 
-class MBTIPersonalityScreen extends StatefulWidget {
+class RoastMeScreen extends StatefulWidget {
   final String question;
-  final String mbtiType;
-  final String mbtiEmoji;
-  final String personalityName;
-  final String explanation;
+  final String roastText;
   final String subtitle;
 
-  const MBTIPersonalityScreen({
+  const RoastMeScreen({
     super.key,
     required this.question,
-    required this.mbtiType,
-    required this.mbtiEmoji,
-    required this.personalityName,
-    required this.explanation,
+    required this.roastText,
     required this.subtitle,
   });
 
   @override
-  State<MBTIPersonalityScreen> createState() => _MBTIPersonalityScreenState();
+  State<RoastMeScreen> createState() => _RoastMeScreenState();
 }
 
-class _MBTIPersonalityScreenState extends State<MBTIPersonalityScreen>
+class _RoastMeScreenState extends State<RoastMeScreen>
     with TickerProviderStateMixin {
   late AnimationController _fadeController;
   late AnimationController _bubblesController;
   final GlobalKey _screenshotKey = GlobalKey();
-  
+
   @override
   void initState() {
     super.initState();
-    
+
     _fadeController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
     );
-    
+
     _bubblesController = AnimationController(
-      vsync: this,
       duration: const Duration(milliseconds: 3000),
+      vsync: this,
     )..repeat();
-    
+
     _startAnimations();
   }
 
@@ -67,7 +61,7 @@ class _MBTIPersonalityScreenState extends State<MBTIPersonalityScreen>
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-    
+
     return Scaffold(
       body: RepaintBoundary(
         key: _screenshotKey,
@@ -90,7 +84,7 @@ class _MBTIPersonalityScreenState extends State<MBTIPersonalityScreen>
                 ),
               ),
             ),
-            
+
             // Subtle animated particles (like Share with People)
             AnimatedBuilder(
               animation: _bubblesController,
@@ -101,7 +95,7 @@ class _MBTIPersonalityScreenState extends State<MBTIPersonalityScreen>
                 );
               },
             ),
-            
+
             // Main content
             SafeArea(
               child: SingleChildScrollView(
@@ -112,122 +106,119 @@ class _MBTIPersonalityScreenState extends State<MBTIPersonalityScreen>
                     vertical: (screenHeight * 0.02).clamp(16.0, 20.0),
                   ),
                   child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(height: screenHeight * 0.06),
-                    
-                    // Header + hero card
-                    _AnimatedFade(
-                      controller: _fadeController,
-                      delay: 0.0,
-                      child: Column(
-                        children: [
-                          Text(
-                            'MBTI Personality',
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.inter(
-                              color: const Color(0xFF1F1F21),
-                              fontSize: (screenWidth * 0.08).clamp(26.0, 34.0),
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: -0.2,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            'Discover your personality type based on your AI conversations.',
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.inter(
-                              color: const Color(0xFF636366),
-                              fontSize: (screenWidth * 0.04).clamp(13.0, 15.0),
-                              fontWeight: FontWeight.w400,
-                              letterSpacing: 0.2,
-                            ),
-                          ),
-                          SizedBox(height: screenHeight * 0.02),
-                          _MBTIHeroCard(
-                            screenWidth: screenWidth,
-                            screenHeight: screenHeight,
-                            mbtiType: widget.mbtiType,
-                            mbtiEmoji: widget.mbtiEmoji,
-                            personalityName: widget.personalityName,
-                          ),
-                        ],
-                      ),
-                    ),
-                    
-                    SizedBox(height: screenHeight * 0.02),
-                    
-                    // Message card (like Share with People)
-                    _AnimatedFade(
-                      controller: _fadeController,
-                      delay: 0.2,
-                      child: Container(
-                        padding: EdgeInsets.all((screenWidth * 0.045).clamp(16.0, 20.0)),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(24),
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFFFFFFF), Color(0xFFF6F7FF)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.06),
-                              blurRadius: 15,
-                              offset: const Offset(0, 6),
-                            ),
-                          ],
-                        ),
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(height: screenHeight * 0.06),
+
+                      // Header + hero card
+                      _AnimatedFade(
+                        controller: _fadeController,
+                        delay: 0.0,
                         child: Column(
                           children: [
                             Text(
-                              widget.explanation,
+                              'Roast Me',
                               textAlign: TextAlign.center,
                               style: GoogleFonts.inter(
-                                color: const Color(0xFF555555),
-                                fontSize: (screenWidth * 0.036).clamp(13.0, 15.0),
+                                color: const Color(0xFF1F1F21),
+                                fontSize: (screenWidth * 0.08).clamp(26.0, 34.0),
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: -0.2,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              'Based on our previous interactions, here\'s your roast!',
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.inter(
+                                color: const Color(0xFF636366),
+                                fontSize: (screenWidth * 0.04).clamp(13.0, 15.0),
                                 fontWeight: FontWeight.w400,
-                                height: 1.5,
                                 letterSpacing: 0.2,
                               ),
                             ),
-                            const SizedBox(height: 12),
-                            Text(
-                              'Your conversations reveal unique insights about who you are.',
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.inter(
-                                color: const Color(0xFF555555),
-                                fontSize: (screenWidth * 0.036).clamp(13.0, 15.0),
-                                fontWeight: FontWeight.w400,
-                                height: 1.5,
-                                letterSpacing: 0.2,
-                                fontStyle: FontStyle.italic,
-                              ),
+                            SizedBox(height: screenHeight * 0.02),
+                            _RoastHeroCard(
+                              screenWidth: screenWidth,
+                              screenHeight: screenHeight,
                             ),
                           ],
                         ),
                       ),
-                    ),
-                    
-                    SizedBox(height: screenHeight * 0.02),
-                    
-                    // Small Share to Story button
-                    _AnimatedFade(
-                      controller: _fadeController,
-                      delay: 0.4,
-                      child: SmallShareToStoryButton(
-                        shareText: 'My MBTI personality type: ${widget.mbtiType} - ${widget.personalityName}! 85% match according to AI. ${widget.mbtiEmoji} #mychateraAI',
-                        screenshotKey: _screenshotKey,
-                        accentGradient: const [Color(0xFFFF8FB1), Color(0xFFFFB5D8)],
+
+                      SizedBox(height: screenHeight * 0.02),
+
+                      // Roast text card (like Share with People)
+                      _AnimatedFade(
+                        controller: _fadeController,
+                        delay: 0.2,
+                        child: Container(
+                          padding: EdgeInsets.all((screenWidth * 0.045).clamp(16.0, 20.0)),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(24),
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFFFFFFFF), Color(0xFFF6F7FF)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.06),
+                                blurRadius: 15,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            children: [
+                              Text(
+                                widget.roastText,
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.inter(
+                                  color: const Color(0xFF555555),
+                                  fontSize: (screenWidth * 0.036).clamp(13.0, 15.0),
+                                  fontWeight: FontWeight.w400,
+                                  height: 1.5,
+                                  letterSpacing: 0.2,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                widget.subtitle,
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.inter(
+                                  color: const Color(0xFF555555),
+                                  fontSize: (screenWidth * 0.036).clamp(13.0, 15.0),
+                                  fontWeight: FontWeight.w400,
+                                  height: 1.5,
+                                  letterSpacing: 0.2,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
-                    
-                    SizedBox(height: screenHeight * 0.03),
-                  ],
+
+                      SizedBox(height: screenHeight * 0.02),
+
+                      // Small Share to Story button
+                      _AnimatedFade(
+                        controller: _fadeController,
+                        delay: 0.4,
+                        child: SmallShareToStoryButton(
+                          shareText: 'AI roasted me based on our conversations and I can\'t even be mad! 🔥😂 #mychateraAI #Roasted',
+                          screenshotKey: _screenshotKey,
+                          accentGradient: const [Color(0xFFFF6B35), Color(0xFFFF8C42)],
+                        ),
+                      ),
+
+                      SizedBox(height: screenHeight * 0.03),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
           ],
         ),
       ),
@@ -273,20 +264,14 @@ class _AnimatedFade extends StatelessWidget {
   }
 }
 
-// MBTI Hero Card (like Share Hero Card) - optimized for responsive design
-class _MBTIHeroCard extends StatelessWidget {
+// Roast Hero Card (like MBTI Hero Card) - optimized for responsive design
+class _RoastHeroCard extends StatelessWidget {
   final double screenWidth;
   final double screenHeight;
-  final String mbtiType;
-  final String mbtiEmoji;
-  final String personalityName;
 
-  const _MBTIHeroCard({
+  const _RoastHeroCard({
     required this.screenWidth,
     required this.screenHeight,
-    required this.mbtiType,
-    required this.mbtiEmoji,
-    required this.personalityName,
   });
 
   @override
@@ -321,7 +306,7 @@ class _MBTIHeroCard extends StatelessWidget {
           ),
           child: Column(
             children: [
-              // Circular Progress with Emoji (smaller)
+              // Circular Progress with Fire Emoji (smaller)
               Builder(
                 builder: (context) {
                   final progressSize = (screenWidth * 0.18).clamp(70.0, isLargeScreen ? 110.0 : 90.0);
@@ -346,17 +331,17 @@ class _MBTIHeroCard extends StatelessWidget {
                           width: progressSize,
                           height: progressSize,
                           child: CircularProgressIndicator(
-                            value: 0.85,
+                            value: 1.0, // Full circle for roast
                             strokeWidth: strokeWidth,
                             backgroundColor: Colors.transparent,
                             valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFFF6B35)),
                             strokeCap: StrokeCap.round,
                           ),
                         ),
-                        // Emoji in center
+                        // Fire emoji in center
                         Center(
                           child: Text(
-                            mbtiEmoji,
+                            '🔥',
                             style: TextStyle(fontSize: emojiSize),
                           ),
                         ),
@@ -366,9 +351,9 @@ class _MBTIHeroCard extends StatelessWidget {
                 },
               ),
               SizedBox(height: (screenWidth * 0.025).clamp(10.0, 14.0)),
-              // MBTI Type
+              // Roast Title
               Text(
-                mbtiType,
+                'ROASTED',
                 style: GoogleFonts.inter(
                   color: const Color(0xFFFF6B35),
                   fontSize: (screenWidth * 0.075).clamp(24.0, isLargeScreen ? 40.0 : 32.0),
@@ -378,9 +363,9 @@ class _MBTIHeroCard extends StatelessWidget {
                 ),
               ),
               SizedBox(height: (screenHeight * 0.004).clamp(2.0, 4.0)),
-              // Personality Name
+              // Subtitle
               Text(
-                personalityName,
+                'Based on your chats',
                 style: GoogleFonts.inter(
                   color: const Color(0xFF1F1F21),
                   fontSize: (screenWidth * 0.038).clamp(14.0, isLargeScreen ? 18.0 : 16.0),
@@ -389,7 +374,7 @@ class _MBTIHeroCard extends StatelessWidget {
                 ),
               ),
               SizedBox(height: (screenHeight * 0.006).clamp(4.0, 6.0)),
-              // Match percentage
+              // Fun badge
               Container(
                 padding: EdgeInsets.symmetric(
                   horizontal: (screenWidth * 0.03).clamp(10.0, 12.0),
@@ -400,7 +385,7 @@ class _MBTIHeroCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Text(
-                  '85% Match',
+                  '100% Roasted 🔥',
                   style: GoogleFonts.inter(
                     color: const Color(0xFFFF6B35),
                     fontSize: (screenWidth * 0.030).clamp(11.0, 12.0),
@@ -415,7 +400,6 @@ class _MBTIHeroCard extends StatelessWidget {
     );
   }
 }
-
 
 // Subtle particles painter (like Share with People)
 class _SubtleParticlesPainter extends CustomPainter {

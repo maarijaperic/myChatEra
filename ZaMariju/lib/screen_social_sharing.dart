@@ -203,7 +203,7 @@ class _SocialSharingScreenState extends State<SocialSharingScreen>
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              'Use the share button on any screen to share your favorite insights directly to Instagram Story. Your journey with ChatGPT is worth sharing! 🌟',
+                              'Use the share button on any screen to share your favorite insights directly to Instagram Story. Your journey with AI is worth sharing! 🌟',
                               textAlign: TextAlign.center,
                               style: GoogleFonts.inter(
                                 color: const Color(0xFF555555),
@@ -214,72 +214,6 @@ class _SocialSharingScreenState extends State<SocialSharingScreen>
                               ),
                             ),
                           ],
-                        ),
-                      ),
-                    ),
-                    
-                    SizedBox(height: screenHeight * 0.04),
-                    
-                    // Stay Tuned Card
-                    _AnimatedFade(
-                      controller: _fadeController,
-                      delay: 0.6,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(24),
-                        child: BackdropFilter(
-                          filter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                          child: Container(
-                            width: double.infinity,
-                            padding: EdgeInsets.all((screenWidth * 0.05).clamp(20.0, 28.0)),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  const Color(0xFFFF6B9D).withOpacity(0.15),
-                                  const Color(0xFFFFB4A2).withOpacity(0.15),
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              border: Border.all(
-                                color: const Color(0xFFFF6B9D).withOpacity(0.3),
-                                width: 1,
-                              ),
-                              borderRadius: BorderRadius.circular(24),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFFFF6B9D).withOpacity(0.2),
-                                  blurRadius: 20,
-                                  offset: const Offset(0, 8),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              children: [
-                                Text(
-                                  '✨ Stay Tuned for More ✨',
-                                  textAlign: TextAlign.center,
-                                  style: GoogleFonts.inter(
-                                    color: const Color(0xFF1F1F21),
-                                    fontSize: (screenWidth * 0.055).clamp(20.0, 26.0),
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 0.3,
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  'We\'re constantly working on new features and insights to make your ChatGPT experience even more personalized. More analytics, deeper insights, and exciting discoveries are coming soon!',
-                                  textAlign: TextAlign.center,
-                                  style: GoogleFonts.inter(
-                                    color: const Color(0xFF555555),
-                                    fontSize: (screenWidth * 0.038).clamp(14.0, 16.0),
-                                    fontWeight: FontWeight.w400,
-                                    height: 1.5,
-                                    letterSpacing: 0.1,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
                         ),
                       ),
                     ),
@@ -453,7 +387,7 @@ class _ShareHeroCard extends StatelessWidget {
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              'ChatGPT knows you like never before.',
+                              'AI knows you like never before.',
                               style: GoogleFonts.inter(
                                 color: Colors.white,
                                 fontSize: 18,

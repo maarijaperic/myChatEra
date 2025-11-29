@@ -249,7 +249,7 @@ class _RandomQuestionScreenState extends State<RandomQuestionScreen>
                         ],
                       ),
                       child: Text(
-                        'Of all the profound questions you could ask... you chose THIS masterpiece: "${widget.randomQuestion}". ChatGPT is still processing. The audacity. The pure, unfiltered curiosity. Iconic behavior. Never change. 💀💅🌟',
+                        'Of all the profound questions you could ask... you chose THIS masterpiece: "${widget.randomQuestion}". AI is still processing. The audacity. The pure, unfiltered curiosity. Iconic behavior. Never change. 💀💅🌟',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.inter(
                           color: const Color(0xFF555555),
@@ -270,7 +270,7 @@ class _RandomQuestionScreenState extends State<RandomQuestionScreen>
                     delay: 0.6,
                     child: Center(
                       child: ShareToStoryButton(
-                        shareText: 'My most random question to ChatGPT: "${widget.randomQuestion}" — the audacity! 💀 #ChatGPTWrapped',
+                        shareText: 'My most random question to AI: "${widget.randomQuestion}" — the audacity! 💀 #mychateraAI',
                       ),
                     ),
                   ),

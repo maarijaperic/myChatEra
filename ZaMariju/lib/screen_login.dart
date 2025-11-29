@@ -5,8 +5,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
 import 'package:gpt_wrapped2/screen_analyzing_loading.dart';
-import 'package:gpt_wrapped2/screen_intro.dart';
 import 'package:gpt_wrapped2/main.dart' show FreeWrappedNavigator;
+import 'package:url_launcher/url_launcher.dart';
 
 class LoginScreen extends StatefulWidget {
   final Function(List<dynamic>? conversations) onLoginSuccess;
@@ -489,35 +489,26 @@ class _LoginScreenState extends State<LoginScreen>
             final parsedCount = parsedConversations?.length ?? 0;
             print('🔵 onAnalysisComplete - stats: ${stats != null}, premiumInsights: ${premiumInsights != null}, parsedConversations: $parsedCount');
             
-            // Navigate to IntroScreen
+            // Navigate directly to FreeWrappedNavigator (Daily Dose screen) - skipping IntroScreen
+            print('🔵 onAnalysisComplete - navigating directly to FreeWrappedNavigator');
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
-                builder: (context) => IntroScreen(
-                  onStart: () {
-                    // Navigate directly to FreeWrappedNavigator with analysis results
-                    print('🔵 IntroScreen onStart - navigating to FreeWrappedNavigator');
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) {
-                          // We need onPremiumTap callback, but we can't access _startPremiumWrapped from here
-                          // So we'll create a dummy callback that shows an error
-                          return FreeWrappedNavigator(
-                            onPremiumTap: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Premium features require app restart.'),
-                                ),
-                              );
-                            },
-                            stats: stats,
-                            premiumInsights: premiumInsights,
-                            parsedConversations: parsedConversations,
-                          );
-                        },
-                      ),
-                    );
-                  },
-                ),
+                builder: (context) {
+                  // We need onPremiumTap callback, but we can't access _startPremiumWrapped from here
+                  // So we'll create a dummy callback that shows an error
+                  return FreeWrappedNavigator(
+                    onPremiumTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Premium features require app restart.'),
+                        ),
+                      );
+                    },
+                    stats: stats,
+                    premiumInsights: premiumInsights,
+                    parsedConversations: parsedConversations,
+                  );
+                },
               ),
             );
           },
@@ -545,14 +536,12 @@ class _LoginScreenState extends State<LoginScreen>
           leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: Color(0xFF2D2D2D)),
             onPressed: () {
-              setState(() {
-                _showWebView = false;
-                _isLoading = false;
-              });
+              // Navigate back to WelcomeScreen (which has ToS and Privacy Policy)
+              Navigator.of(context).pop();
             },
           ),
           title: Text(
-            'Sign in to ChatGPT',
+            'Sign in to AI',
             style: TextStyle(
               color: const Color(0xFF2D2D2D),
               fontSize: (screenWidth * 0.042).clamp(16.0, 20.0),
@@ -749,7 +738,7 @@ class _LoginScreenState extends State<LoginScreen>
                   
                   if (mounted) {
                     setState(() {
-                      _status = 'Please sign in to ChatGPT...';
+                      _status = 'Please sign in to AI...';
                     });
                   }
                   await _checkLoginStatus();
@@ -759,7 +748,7 @@ class _LoginScreenState extends State<LoginScreen>
                   _loadTimeoutTimer?.cancel();
                   
                   // Ignore errors for third-party resources (analytics, ads, etc.)
-                  // Only show errors for main ChatGPT domain
+                  // Only show errors for main AI domain
                   final url = request.url.toString();
                   final isMainDomain = url.contains('chatgpt.com') || 
                                      url.contains('openai.com') ||
@@ -1016,13 +1005,22 @@ class _LoginScreenState extends State<LoginScreen>
                                 ),
                               ),
                               GestureDetector(
-                                onTap: () {
-                                  // TODO: Open Terms of Use
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Terms of Use'),
-                                    ),
-                                  );
+                                onTap: () async {
+                                  final url = Uri.parse('https://github.com/maarijaperic/myChatEra-legal/blob/main/TERMS_OF_SERVICE.md');
+                                  try {
+                                    if (await canLaunchUrl(url)) {
+                                      await launchUrl(url, mode: LaunchMode.externalApplication);
+                                    }
+                                  } catch (e) {
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Could not open Terms of Service'),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                    }
+                                  }
                                 },
                                 child: Text(
                                   'Terms of Use',
@@ -1048,13 +1046,22 @@ class _LoginScreenState extends State<LoginScreen>
                                 ),
                               ),
                               GestureDetector(
-                                onTap: () {
-                                  // TODO: Open Privacy Policy
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Privacy Policy'),
-                                    ),
-                                  );
+                                onTap: () async {
+                                  final url = Uri.parse('https://github.com/maarijaperic/myChatEra-legal/blob/main/PRIVACY_POLICY.md');
+                                  try {
+                                    if (await canLaunchUrl(url)) {
+                                      await launchUrl(url, mode: LaunchMode.externalApplication);
+                                    }
+                                  } catch (e) {
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Could not open Privacy Policy'),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                    }
+                                  }
                                 },
                                 child: Text(
                                   'Privacy Policy',
@@ -1075,7 +1082,7 @@ class _LoginScreenState extends State<LoginScreen>
 
                           // Privacy note
                           Text(
-                            'We never store your passwords.\nAll authentication happens securely through ChatGPT.',
+                            'We never store your passwords.\nAll authentication happens securely through AI.',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 12,

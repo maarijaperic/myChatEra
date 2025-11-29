@@ -66,18 +66,18 @@ class _ChatEraScreenState extends State<ChatEraScreen>
   String get _shareText {
     final hoursPrecise = _totalHoursPrecise;
     if (_totalMinutesRaw <= 0) {
-      return "I barely clocked any time with ChatGPT this year — saving my prompts for mission-critical moments. #ChatGPTWrapped";
+      return "I barely clocked any time with AI this year — saving my prompts for mission-critical moments. #mychateraAI";
     }
     if (_totalMinutesRaw < 180) {
-      return "Spent ${hoursPrecise.toStringAsFixed(1)} hours with ChatGPT. Tactical check-ins only. #ChatGPTWrapped";
+      return "Spent ${hoursPrecise.toStringAsFixed(1)} hours with AI. Tactical check-ins only. #mychateraAI";
     }
     if (_totalMinutesRaw < 600) {
-      return "Logged ${hoursPrecise.toStringAsFixed(1)} hours with ChatGPT — my secret productivity ritual. #ChatGPTWrapped";
+      return "Logged ${hoursPrecise.toStringAsFixed(1)} hours with AI — my secret productivity ritual. #mychateraAI";
     }
     if (_totalMinutesRaw < 1200) {
-      return "${hoursPrecise.toStringAsFixed(1)} hours of GPT collabs this year. That AI is basically on payroll. #ChatGPTWrapped";
+      return "${hoursPrecise.toStringAsFixed(1)} hours of GPT collabs this year. That AI is basically on payroll. #mychateraAI";
     }
-    return "Spent ${hoursPrecise.toStringAsFixed(1)} hours with ChatGPT. Cofounder status unlocked. #ChatGPTWrapped";
+    return "Spent ${hoursPrecise.toStringAsFixed(1)} hours with AI. Cofounder status unlocked. #mychateraAI";
   }
 
   @override

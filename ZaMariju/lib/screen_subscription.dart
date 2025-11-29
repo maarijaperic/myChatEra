@@ -14,7 +14,7 @@ class SubscriptionScreen extends StatefulWidget {
 }
 
 class _SubscriptionScreenState extends State<SubscriptionScreen> {
-  int _selectedIndex = 1; // Default to yearly (middle option)
+  int _selectedIndex = 1; // Default to monthly (middle option, best value)
 
   @override
   Widget build(BuildContext context) {
@@ -99,36 +99,36 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Monthly option
-                            Expanded(
-                              child: _buildSubscriptionBox(
-                                index: 0,
-                                title: 'Monthly',
-                                price: '\$4.99',
-                                period: '/mo',
-                                badge: null,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            // Yearly option (highlighted)
-                            Expanded(
-                              child: _buildSubscriptionBox(
-                                index: 1,
-                                title: 'Yearly',
-                                price: '\$19.99',
-                                period: '/yr',
-                                badge: 'SAVE 67%',
-                              ),
-                            ),
-                            const SizedBox(width: 6),
                             // One-time option
                             Expanded(
                               child: _buildSubscriptionBox(
-                                index: 2,
+                                index: 0,
                                 title: 'One Time',
-                                price: '\$9.99',
+                                price: '\$3.99',
                                 period: 'once',
                                 badge: null,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            // Monthly option (best value, in the middle)
+                            Expanded(
+                              child: _buildSubscriptionBox(
+                                index: 1,
+                                title: 'Monthly',
+                                price: '\$6.99',
+                                period: '/mo',
+                                badge: 'BEST VALUE',
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            // Yearly option
+                            Expanded(
+                              child: _buildSubscriptionBox(
+                                index: 2,
+                                title: 'Yearly',
+                                price: '\$39.99',
+                                period: '/yr',
+                                badge: 'Future versions',
                               ),
                             ),
                           ],
@@ -198,23 +198,23 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
   List<String> _getBulletPoints(int index) {
     switch (index) {
-      case 0: // Monthly
-        return [
-          'All premium insights',
-          'Billed monthly',
-          'Cancel anytime',
-        ];
-      case 1: // Yearly
-        return [
-          'All premium insights',
-          'Best value - save 67%',
-          'Billed once per year',
-        ];
-      case 2: // One-time
+      case 0: // One-time
         return [
           'All premium insights',
           'Single payment only',
-          'Instant lifetime access',
+          'One analysis',
+        ];
+      case 1: // Monthly (best value)
+        return [
+          'All premium insights',
+          '5 analyses per month',
+          'Cancel anytime',
+        ];
+      case 2: // Yearly
+        return [
+          'All premium insights',
+          'Available for all future versions',
+          'Billed once per year',
         ];
       default:
         return [];

@@ -89,7 +89,7 @@ class ShareHelper {
       if (context.mounted) {
         await Share.shareXFiles(
           [XFile(imagePath)],
-          text: 'Check out my GPT Wrapped! #ChatGPTWrapped',
+          text: 'Check out my GPT Wrapped! #mychateraAI',
         );
       }
 

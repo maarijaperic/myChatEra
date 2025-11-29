@@ -33,7 +33,7 @@ class _MovieTitleScreenState extends State<MovieTitleScreen>
   String get _shareText {
     final title = widget.movieTitle;
     final year = widget.releaseYear;
-    return 'My life is basically "$title" ($year) according to ChatGPT. 🎬 Plot twist unlocked! #ChatGPTWrapped';
+    return 'My life is basically "$title" ($year) according to AI. 🎬 Plot twist unlocked! #mychateraAI';
   }
 
   @override
@@ -116,7 +116,7 @@ class _MovieTitleScreenState extends State<MovieTitleScreen>
                   child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    SizedBox(height: screenHeight * 0.03),
+                    SizedBox(height: screenHeight * 0.05),
                     
                     // Header + hero card
                     _AnimatedFade(
@@ -162,7 +162,7 @@ class _MovieTitleScreenState extends State<MovieTitleScreen>
                       controller: _fadeController,
                       delay: 0.2,
                       child: Container(
-                        padding: EdgeInsets.all((screenWidth * 0.04).clamp(18.0, 20.0)),
+                        padding: EdgeInsets.all((screenWidth * 0.038).clamp(16.0, 18.0)),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(24),
                           gradient: const LinearGradient(
@@ -185,7 +185,7 @@ class _MovieTitleScreenState extends State<MovieTitleScreen>
                               textAlign: TextAlign.center,
                               style: GoogleFonts.inter(
                                 color: const Color(0xFF555555),
-                                fontSize: (screenWidth * 0.036).clamp(13.0, 15.0),
+                                fontSize: (screenWidth * 0.034).clamp(12.5, 14.5),
                                 fontWeight: FontWeight.w400,
                                 height: 1.5,
                                 letterSpacing: 0.2,
@@ -210,7 +210,7 @@ class _MovieTitleScreenState extends State<MovieTitleScreen>
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.025),
+                    SizedBox(height: screenHeight * 0.02),
                     
                     // Share button
                     _AnimatedFade(

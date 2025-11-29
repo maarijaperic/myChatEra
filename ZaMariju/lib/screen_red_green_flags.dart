@@ -179,7 +179,7 @@ class _RedGreenFlagsScreenState extends State<RedGreenFlagsScreen>
                       controller: _fadeController,
                       delay: 0.4,
                       child: SmallShareToStoryButton(
-                        shareText: 'Check out my ChatGPT Red and Green Flags! 🟢🔴 #ChatGPTWrapped',
+                        shareText: 'Check out my AI Red and Green Flags! 🟢🔴 #mychateraAI',
                         screenshotKey: _screenshotKey,
                         accentGradient: const [Color(0xFFFF8FB1), Color(0xFFFFB5D8)],
                       ),

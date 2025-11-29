@@ -251,7 +251,7 @@ class _PastLifePersonaScreenState extends State<PastLifePersonaScreen>
                   // Share button
                   Center(
                     child: ShareToStoryButton(
-                      shareText: 'In a past life, I was a ${widget.personaTitle}! ${widget.personaEmoji} History echoes in who we are today ✨ #ChatGPTWrapped',
+                      shareText: 'In a past life, I was a ${widget.personaTitle}! ${widget.personaEmoji} History echoes in who we are today ✨ #mychateraAI',
                     ),
                   ),
                   

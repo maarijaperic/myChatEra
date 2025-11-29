@@ -230,7 +230,7 @@ class _RoastScreenState extends State<RoastScreen>
                         delay: 0.6,
                         child: Center(
                           child: ShareToStoryButton(
-                            shareText: 'ChatGPT roasted me and I can\'t even be mad about it. 🔥😂 #ChatGPTWrapped #Roasted',
+                            shareText: 'AI roasted me and I can\'t even be mad about it. 🔥😂 #mychateraAI #Roasted',
                           ),
                         ),
                       ),

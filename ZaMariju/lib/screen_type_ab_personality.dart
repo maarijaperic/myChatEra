@@ -125,7 +125,7 @@ class _TypeABPersonalityScreenState extends State<TypeABPersonalityScreen>
                   child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    SizedBox(height: (screenHeight * 0.04).clamp(20.0, 30.0)),
+                    SizedBox(height: (screenHeight * 0.06).clamp(30.0, 40.0)),
                     
                     // Header + hero card
                     _AnimatedFade(
@@ -193,16 +193,46 @@ class _TypeABPersonalityScreenState extends State<TypeABPersonalityScreen>
                             ),
                           ],
                         ),
-                        child: Text(
-                          widget.explanation,
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.inter(
-                            color: const Color(0xFF555555),
-                            fontSize: (screenWidth * 0.038).clamp(14.0, 16.0),
-                            fontWeight: FontWeight.w400,
-                            height: 1.6,
-                            letterSpacing: 0.1,
-                          ),
+                        child: Column(
+                          children: [
+                            Text(
+                              widget.explanation,
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.inter(
+                                color: const Color(0xFF555555),
+                                fontSize: (screenWidth * 0.038).clamp(14.0, 16.0),
+                                fontWeight: FontWeight.w400,
+                                height: 1.6,
+                                letterSpacing: 0.1,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'Your conversations reveal unique insights about your personality and how you approach challenges.',
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.inter(
+                                color: const Color(0xFF555555),
+                                fontSize: (screenWidth * 0.038).clamp(14.0, 16.0),
+                                fontWeight: FontWeight.w400,
+                                height: 1.6,
+                                letterSpacing: 0.1,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Understanding your type helps you leverage your strengths and grow.',
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.inter(
+                                color: const Color(0xFF555555),
+                                fontSize: (screenWidth * 0.038).clamp(14.0, 16.0),
+                                fontWeight: FontWeight.w400,
+                                height: 1.6,
+                                letterSpacing: 0.1,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -214,7 +244,7 @@ class _TypeABPersonalityScreenState extends State<TypeABPersonalityScreen>
                       controller: _fadeController,
                       delay: 0.6,
                       child: SmallShareToStoryButton(
-                        shareText: 'ChatGPT says I\'m ${widget.personalityType} (${widget.typeAPercentage}% Type A, ${widget.typeBPercentage}% Type B). ${widget.typeEmoji} #ChatGPTWrapped',
+                        shareText: 'AI says I\'m ${widget.personalityType} (${widget.typeAPercentage}% Type A, ${widget.typeBPercentage}% Type B). ${widget.typeEmoji} #mychateraAI',
                         screenshotKey: _screenshotKey,
                         accentGradient: const [Color(0xFFFF8FB1), Color(0xFFFFB5D8)],
                       ),
@@ -288,13 +318,14 @@ class _TypeABHeroCard extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  // Type A Chart
+                  // Type A Chart (slightly larger)
                   _CircularProgressChart(
                     controller: chartController,
                     percentage: typeAPercentage,
                     label: 'Type A',
                     color: const Color(0xFFFF6B35),
                     icon: Icons.flash_on_rounded,
+                    isLarger: true,
                   ),
                   
                   // Type B Chart
@@ -304,6 +335,7 @@ class _TypeABHeroCard extends StatelessWidget {
                     label: 'Type B',
                     color: const Color(0xFF4ECDC4),
                     icon: Icons.spa_rounded,
+                    isLarger: false,
                   ),
                 ],
               ),
@@ -349,6 +381,7 @@ class _CircularProgressChart extends StatelessWidget {
   final String label;
   final Color color;
   final IconData icon;
+  final bool isLarger;
 
   const _CircularProgressChart({
     required this.controller,
@@ -356,6 +389,7 @@ class _CircularProgressChart extends StatelessWidget {
     required this.label,
     required this.color,
     required this.icon,
+    this.isLarger = false,
   });
 
   @override
@@ -363,7 +397,8 @@ class _CircularProgressChart extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     final isLargeScreen = screenWidth > 600;
-    final chartSize = (screenWidth * 0.16).clamp(60.0, isLargeScreen ? 100.0 : 80.0);
+    final baseChartSize = (screenWidth * 0.16).clamp(60.0, isLargeScreen ? 100.0 : 80.0);
+    final chartSize = isLarger ? baseChartSize * 1.15 : baseChartSize;
     final strokeWidth = (chartSize * 0.07).clamp(4.0, 7.0);
     final iconSize = (chartSize * 0.20).clamp(12.0, isLargeScreen ? 22.0 : 18.0);
     final percentageFontSize = (chartSize * 0.15).clamp(10.0, isLargeScreen ? 18.0 : 16.0);

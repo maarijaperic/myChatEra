@@ -316,7 +316,7 @@ class _TypeABPreviewScreenState extends State<TypeABPreviewScreen>
                           ],
                         ),
                         child: Text(
-                          'Get personalized insights about your personality, relationships, and communication style based on your ChatGPT conversations. 🌟',
+                          'Get personalized insights about your personality, relationships, and communication style based on your AI conversations. 🌟',
                           textAlign: TextAlign.center,
                           style: GoogleFonts.inter(
                             color: const Color(0xFF555555),
@@ -427,7 +427,7 @@ class _PreviewHeroCard extends StatelessWidget {
                   ),
                   SizedBox(height: (screenWidth * 0.018).clamp(6.0, 10.0)),
                   Text(
-                    'What advice have you asked ChatGPT for the most?',
+                    'What advice have you asked AI for the most?',
                     style: GoogleFonts.inter(
                       color: const Color(0xFF1F1F21),
                       fontSize: (screenWidth * 0.032).clamp(12.0, isLargeScreen ? 16.0 : 14.0),

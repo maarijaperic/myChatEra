@@ -166,8 +166,8 @@ class _GuessZodiacScreenState extends State<GuessZodiacScreen>
                       delay: 0.2,
                       child: Container(
                         padding: EdgeInsets.symmetric(
-                          horizontal: (screenWidth * 0.045).clamp(16.0, 20.0), // Povećano
-                          vertical: (screenHeight * 0.025).clamp(18.0, 24.0), // Povećano
+                          horizontal: (screenWidth * 0.043).clamp(15.5, 19.0), // Smanjeno sa 0.045
+                          vertical: (screenHeight * 0.023).clamp(17.0, 23.0), // Smanjeno sa 0.025
                         ),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(24),
@@ -185,13 +185,13 @@ class _GuessZodiacScreenState extends State<GuessZodiacScreen>
                           ],
                         ),
                         child: Text(
-                          widget.explanation,
+                          '${widget.explanation} The stars align with your conversation patterns, revealing traits that match your zodiac energy. Your cosmic personality shines through in every chat.',
                           textAlign: TextAlign.center,
                           style: GoogleFonts.inter(
                             color: const Color(0xFF555555),
-                            fontSize: (screenWidth * 0.038).clamp(14.0, 16.0), // Povećano sa 0.0306
+                            fontSize: (screenWidth * 0.036).clamp(13.5, 15.5), // Smanjeno sa 0.038
                             fontWeight: FontWeight.w400,
-                            height: 1.6, // Povećano sa 1.4
+                            height: 1.5, // Smanjeno sa 1.6
                             letterSpacing: 0.2,
                           ),
                         ),
@@ -205,7 +205,7 @@ class _GuessZodiacScreenState extends State<GuessZodiacScreen>
                       controller: _fadeController,
                       delay: 0.4,
                       child: SmallShareToStoryButton(
-                        shareText: 'My zodiac sign: ${widget.zodiacSign} - ${widget.zodiacName}! 92% match according to ChatGPT. ${_removeEmojis(widget.subtitle)} ${widget.zodiacEmoji} #ChatGPTWrapped',
+                        shareText: 'My zodiac sign: ${widget.zodiacSign} - ${widget.zodiacName}! 92% match according to AI. ${_removeEmojis(widget.subtitle)} ${widget.zodiacEmoji} #mychateraAI',
                         screenshotKey: _screenshotKey,
                         accentGradient: const [Color(0xFFFF8FB1), Color(0xFFFFB5D8)],
                       ),

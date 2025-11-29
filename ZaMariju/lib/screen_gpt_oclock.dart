@@ -116,7 +116,7 @@ class _GptOClockScreenState extends State<GptOClockScreen>
     final suffix = hour >= 12 ? 'PM' : 'AM';
     final timeStr = '$displayHour:00 $suffix';
     
-    return "My ChatGPT peak time is $timeStr ${widget.timeDescription}. ${_timePersona} mode activated! 🕐 #ChatGPTWrapped";
+    return "My AI peak time is $timeStr ${widget.timeDescription}. ${_timePersona} mode activated! 🕐 #mychateraAI";
   }
 
 
@@ -220,7 +220,7 @@ class _GptOClockScreenState extends State<GptOClockScreen>
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'The time when your ChatGPT conversations peak.',
+                            'The time when your AI conversations peak.',
                             textAlign: TextAlign.center,
                             style: GoogleFonts.inter(
                               color: const Color(0xFF5C5C5E),
@@ -254,31 +254,34 @@ class _GptOClockScreenState extends State<GptOClockScreen>
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.45,
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.only(right: 8),
-                              child: _PeakTimeHighlightCard(
-                                icon: Icons.wb_sunny_rounded,
-                                title: 'Time Period',
-                                subtitle: widget.timeDescription,
-                                gradient: _getTimePeriodGradient(),
+                      child: IntrinsicHeight(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.only(right: 8),
+                                child: _PeakTimeHighlightCard(
+                                  icon: Icons.wb_sunny_rounded,
+                                  title: 'Time Period',
+                                  subtitle: widget.timeDescription,
+                                  gradient: _getTimePeriodGradient(),
+                                ),
                               ),
                             ),
-                          ),
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.only(left: 8),
-                              child: _PeakTimeHighlightCard(
-                                icon: Icons.person_outline_rounded,
-                                title: 'Persona',
-                                subtitle: _timePersona,
-                                gradient: _getPersonaGradient(),
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.only(left: 8),
+                                child: _PeakTimeHighlightCard(
+                                  icon: Icons.person_outline_rounded,
+                                  title: 'Persona',
+                                  subtitle: _timePersona,
+                                  gradient: _getPersonaGradient(),
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                     
@@ -726,7 +729,7 @@ class _PeakTimeHighlightCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
-          Flexible(
+          Expanded(
             child: Text(
               subtitle,
               style: GoogleFonts.inter(

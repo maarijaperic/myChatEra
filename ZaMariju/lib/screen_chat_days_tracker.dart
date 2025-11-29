@@ -38,21 +38,8 @@ class _ChatDaysTrackerScreenState extends State<ChatDaysTrackerScreen>
 
   String get _dayBlurb {
     final days = widget.totalDays;
-    double rawPercent = (days / 365.0) * 100.0;
-    if (rawPercent.isNaN || rawPercent.isInfinite) {
-      rawPercent = 0;
-    }
-    int displayPercent = rawPercent.round();
-    if (days == 0) {
-      displayPercent = 0;
-    } else {
-      if (displayPercent <= 0) {
-        displayPercent = 1;
-      }
-      if (displayPercent > 100) {
-        displayPercent = 100;
-      }
-    }
+    // Use the correct yearPercentage that accounts for actual date range, not fixed 365 days
+    int displayPercent = widget.yearPercentage;
 
     if (days <= 0) {
       return "You barely touched GPT this year. Which means when you did, it mattered. Next chapter? Maybe making it a habit. Zero-day years leave a lot of space for next-level experiments. GPT will be waiting when you're ready to sprint. Every conversation you have builds on the foundation of curiosity. The best part? Your next chat could be the one that changes everything.";
@@ -74,15 +61,15 @@ class _ChatDaysTrackerScreenState extends State<ChatDaysTrackerScreen>
     final percent = widget.yearPercentage;
 
     if (days <= 0) {
-      return "I barely touched ChatGPT this year — plotting a comeback arc. #ChatGPTWrapped";
+      return "I barely touched AI this year — plotting a comeback arc. #mychateraAI";
     }
     if (percent < 30) {
-      return "I checked in with ChatGPT on $days days this year ($percent% of 2024). Strategic usage only. #ChatGPTWrapped";
+      return "I checked in with AI on $days days this year ($percent% of 2024). Strategic usage only. #mychateraAI";
     }
     if (percent < 60) {
-      return "$days ChatGPT days this year — $percent% of the calendar. It's officially a ritual. #ChatGPTWrapped";
+      return "$days AI days this year — $percent% of the calendar. It's officially a ritual. #mychateraAI";
     }
-    return "I spent $percent% of the year chatting with GPT ($days days). Certified daily habit. #ChatGPTWrapped";
+    return "I spent $percent% of the year chatting with GPT ($days days). Certified daily habit. #mychateraAI";
   }
 
   @override

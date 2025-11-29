@@ -236,7 +236,7 @@ class _AuthScreenState extends State<AuthScreen>
                       const SizedBox(height: 12),
 
                       Text(
-                        'Discover your ChatGPT story',
+                        'Discover your AI story',
                         style: GoogleFonts.inter(
                           fontSize: 17,
                           color: const Color(0xFF8E8E93),
@@ -403,24 +403,37 @@ class _AuthScreenState extends State<AuthScreen>
 const String _termsOfService = '''
 Terms of Service - MyChatEra
 
-Last Updated: November 2024
+Last Updated: January 2025
 
 1. Acceptance of Terms
 By using MyChatEra ("the App"), you agree to these Terms of Service.
 
 2. Description of Service
-MyChatEra is an UNOFFICIAL, fan-made application that analyzes your ChatGPT conversation history.
+MyChatEra is an application that analyzes your AI conversation history to provide insights, statistics, and personalized analytics about your usage patterns.
 
 WE ARE NOT AFFILIATED WITH, ENDORSED BY, OR SPONSORED BY OPENAI.
 
 3. How It Works
-The App temporarily accesses your ChatGPT account to analyze your usage patterns and statistics.
+
+The App provides you with a secure, in-app web browser interface that allows you to sign in to your AI account directly through OpenAI's official website (chatgpt.com). Here's how the process works:
+
+1. You initiate the login process within the App, which opens a secure web browser view displaying AI's official login page.
+
+2. You enter your AI credentials directly into OpenAI's official login interface. Your credentials are entered only on OpenAI's website and are never stored, accessed, or transmitted by our App.
+
+3. Once you successfully authenticate with OpenAI, the App retrieves your conversation metadata (such as conversation titles, dates, and message counts) using standard API requests that you authorize through your authenticated session.
+
+4. The App processes this conversation data locally on your device to generate statistics and insights about your AI usage patterns.
+
+5. For premium features, the App uses OpenAI's API (through our secure proxy server) to generate AI-powered insights based on your conversation data. The proxy server acts as an intermediary and does not store your data.
+
+6. All data, including your conversation information and generated insights, is stored exclusively on your device using secure local storage. We do not maintain any servers, databases, or cloud storage containing your conversation content.
 
 IMPORTANT: We do NOT store:
-• Your OpenAI password
-• Your conversation content  
-• Any personal information
-• Any chat data
+• Your OpenAI password or credentials
+• Your conversation content on our servers
+• Any personal information on our servers
+• Any chat data on our servers
 
 4. Risks and Disclaimers
 ⚠️ USE AT YOUR OWN RISK
@@ -458,7 +471,7 @@ Privacy Policy - MyChatEra
 Last Updated: November 2024
 
 1. Information We Collect
-We temporarily access your ChatGPT conversation history for analysis purposes only.
+We temporarily access your AI conversation history for analysis purposes only.
 
 2. What We DO NOT Store
 • Passwords or credentials
@@ -489,7 +502,7 @@ You have the right to:
 We implement industry-standard security measures to protect your information during processing.
 
 7. Third-Party Services
-We are not affiliated with OpenAI. Your use of ChatGPT is subject to OpenAI's own privacy policy.
+We are not affiliated with OpenAI. Your use of AI is subject to OpenAI's own privacy policy.
 
 8. Children's Privacy
 Our service is not intended for users under 13 years of age.
