@@ -8,25 +8,35 @@ workflows:
       flutter: stable
       xcode: latest
       cocoapods: default
-      groups:
-        - app_store_credentials
+      # groups:
+      #   - app_store_credentials  # Dodaj kasnije kada budeš spreman
     scripts:
-      - name: Navigate to Flutter project
+      - name: Verify Flutter project location
         script: |
-          cd ZaMariju
-          pwd
-          ls -la
           echo "Current directory: $(pwd)"
-          echo "Checking for pubspec.yaml..."
-          if [ -f "pubspec.yaml" ]; then
-            echo "✅ Found pubspec.yaml!"
+          echo "Listing root directory:"
+          ls -la
+          echo ""
+          echo "Checking ZaMariju folder:"
+          if [ -d "ZaMariju" ]; then
+            echo "✅ ZaMariju folder exists!"
+            ls -la ZaMariju/ | head -20
+            echo ""
+            if [ -f "ZaMariju/pubspec.yaml" ]; then
+              echo "✅ Found pubspec.yaml in ZaMariju!"
+            else
+              echo "❌ pubspec.yaml NOT found in ZaMariju!"
+              exit 1
+            fi
           else
-            echo "❌ pubspec.yaml not found!"
+            echo "❌ ZaMariju folder NOT found!"
             exit 1
           fi
       - name: Get Flutter dependencies
         script: |
           cd ZaMariju
+          echo "Current directory: $(pwd)"
+          echo "Running flutter pub get..."
           flutter pub get
       - name: Install CocoaPods dependencies
         script: |
@@ -51,11 +61,5 @@ workflows:
           success: true
           failure: false
       app_store_connect:
-        auth:
-          key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
-          issuer_id: $APP_STORE_CONNECT_ISSUER_ID
-          key: $APP_STORE_CONNECT_PRIVATE_KEY
-        submit_to_testflight: true
-        beta_groups:
-          - group name 1
-          - group name 2
+        auth: integration
+        submit_to_testflight: false
