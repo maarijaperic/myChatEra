@@ -11,27 +11,6 @@ workflows:
       # groups:
       #   - app_store_credentials  # Dodaj kasnije kada budeš spreman
     scripts:
-      - name: Verify Flutter project location
-        script: |
-          echo "Current directory: $(pwd)"
-          echo "Listing root directory:"
-          ls -la
-          echo ""
-          echo "Checking ZaMariju folder:"
-          if [ -d "ZaMariju" ]; then
-            echo "✅ ZaMariju folder exists!"
-            ls -la ZaMariju/ | head -20
-            echo ""
-            if [ -f "ZaMariju/pubspec.yaml" ]; then
-              echo "✅ Found pubspec.yaml in ZaMariju!"
-            else
-              echo "❌ pubspec.yaml NOT found in ZaMariju!"
-              exit 1
-            fi
-          else
-            echo "❌ ZaMariju folder NOT found!"
-            exit 1
-          fi
       - name: Get Flutter dependencies
         script: |
           cd ZaMariju
