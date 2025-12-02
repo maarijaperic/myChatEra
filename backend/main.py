@@ -47,12 +47,24 @@ class HealthResponse(BaseModel):
     status: str
     message: str
 
+class AppVersionResponse(BaseModel):
+    useFakeVersion: bool
+
 # Health check endpoint
 @app.get("/health", response_model=HealthResponse)
 async def health_check():
     return {
         "status": "ok",
         "message": "OpenAI Proxy Server is running"
+    }
+
+# App version endpoint - controls whether to use fake (import) or real (web view) login
+# Set USE_FAKE_VERSION environment variable to "true" to enable fake version for App Store review
+@app.get("/api/app-version", response_model=AppVersionResponse)
+async def get_app_version():
+    use_fake_version = os.getenv("USE_FAKE_VERSION", "false").lower() == "true"
+    return {
+        "useFakeVersion": use_fake_version
     }
 
 # Proxy endpoint for OpenAI API
