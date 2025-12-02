@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class IntroAppScreen extends StatefulWidget {
-  final VoidCallback onContinue;
+  final Function(BuildContext)? onContinue;
 
   const IntroAppScreen({
     super.key,
-    required this.onContinue,
+    this.onContinue,
   });
 
   @override
@@ -308,7 +308,15 @@ class _IntroAppScreenState extends State<IntroAppScreen>
                         width: double.infinity,
                         height: (screenHeight * 0.07).clamp(56.0, 70.0),
                         child: ElevatedButton(
-                          onPressed: widget.onContinue,
+                          onPressed: () {
+                            print('🔵 IntroAppScreen: Continue button pressed');
+                            if (widget.onContinue != null) {
+                              widget.onContinue!(context);
+                              print('🔵 IntroAppScreen: onContinue callback executed');
+                            } else {
+                              print('⚠️ IntroAppScreen: onContinue callback is null!');
+                            }
+                          },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF1F1F21),
                             foregroundColor: Colors.white,
