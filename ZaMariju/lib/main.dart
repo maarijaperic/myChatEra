@@ -4,7 +4,6 @@ import 'package:gpt_wrapped2/screen_splash.dart';
 import 'package:gpt_wrapped2/screen_intro_app.dart';
 import 'package:gpt_wrapped2/screen_welcome.dart';
 import 'package:gpt_wrapped2/card_navigator.dart';
-import 'package:gpt_wrapped2/screen_analyzing_loading.dart';
 import 'package:gpt_wrapped2/screen_chat_era.dart';
 import 'package:gpt_wrapped2/screen_daily_dose.dart';
 import 'package:gpt_wrapped2/screen_most_used_word.dart';
@@ -19,6 +18,7 @@ import 'package:gpt_wrapped2/screen_guess_zodiac.dart';
 import 'package:gpt_wrapped2/screen_introvert_extrovert.dart';
 import 'package:gpt_wrapped2/screen_advice_most_asked.dart';
 import 'package:gpt_wrapped2/screen_movie_title.dart';
+import 'package:gpt_wrapped2/screen_song_title.dart';
 import 'package:gpt_wrapped2/screen_roast_me.dart';
 import 'package:gpt_wrapped2/screen_love_language.dart';
 import 'package:gpt_wrapped2/screen_past_life_persona.dart';
@@ -33,9 +33,43 @@ import 'package:gpt_wrapped2/screen_premium_analyzing.dart';
 import 'package:gpt_wrapped2/models/chat_data.dart';
 import 'package:gpt_wrapped2/services/premium_processor.dart';
 import 'package:gpt_wrapped2/services/ai_analyzer.dart';
+import 'package:gpt_wrapped2/services/chat_analyzer.dart';
+import 'package:gpt_wrapped2/services/app_version_service.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:gpt_wrapped2/services/revenuecat_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  try {
+    // Initialize Firebase
+    print('🔵 Initializing Firebase...');
+    await Firebase.initializeApp();
+    print('✅ Firebase initialized');
+  } catch (e) {
+    print('❌ Error initializing Firebase: $e');
+    // Continue anyway - Firebase might not be critical for basic functionality
+  }
+  
+  try {
+    // Initialize RevenueCat
+    // TODO: Replace with your actual RevenueCat Public SDK Key
+    const String revenueCatApiKey = String.fromEnvironment(
+      'REVENUECAT_API_KEY',
+      defaultValue: 'YOUR_REVENUECAT_PUBLIC_KEY_HERE', // Replace with your key
+    );
+    
+    if (revenueCatApiKey != 'YOUR_REVENUECAT_PUBLIC_KEY_HERE') {
+      print('🔵 Initializing RevenueCat...');
+      await RevenueCatService.initialize(revenueCatApiKey);
+      print('✅ RevenueCat initialized');
+    } else {
+      print('⚠️ RevenueCat API key not set - skipping initialization');
+    }
+  } catch (e) {
+    print('❌ Error initializing RevenueCat: $e');
+    // Continue anyway - RevenueCat might not be critical for basic functionality
+  }
   
   // Proxy URL configuration (FastAPI Backend)
   // For local development:
@@ -57,6 +91,10 @@ void main() async {
   );
   AIAnalyzer.setProxyUrl(proxyUrl);
   
+  // Initialize AppVersionService with same backend URL
+  AppVersionService.setBackendUrl(proxyUrl);
+  
+  print('🔵 Starting app...');
   runApp(const MyApp());
 }
 
@@ -65,6 +103,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print('🔵 MyApp build called');
     return MaterialApp(
       title: 'GPT Wrapped',
       theme: ThemeData(
@@ -76,6 +115,17 @@ class MyApp extends StatelessWidget {
       ),
       home: const GPTWrappedHome(),
       debugShowCheckedModeBanner: false,
+      builder: (context, child) {
+        // Add error boundary
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(1.0)),
+          child: child ?? const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -179,6 +229,7 @@ class _GPTWrappedHomeState extends State<GPTWrappedHome> {
 
   @override
   Widget build(BuildContext context) {
+    print('🔵 GPTWrappedHome build called');
     // if (_isLoading) {
     //   return const MaterialApp(
     //     home: Scaffold(
@@ -188,21 +239,33 @@ class _GPTWrappedHomeState extends State<GPTWrappedHome> {
     // }
     return SplashScreen(
       onComplete: () {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => IntroAppScreen(
-              onContinue: () {
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(
-                    builder: (context) => WelcomeScreen(
-                      onGetStarted: _onLoginSuccess,
-                    ),
-                  ),
+        print('🔵 SplashScreen onComplete called');
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) {
+                print('🔵 Navigating to IntroAppScreen');
+                return IntroAppScreen(
+                  onContinue: (introContext) {
+                    print('🔵 IntroAppScreen onContinue called with context');
+                    // Use the context from IntroAppScreen for navigation
+                    Navigator.of(introContext).pushReplacement(
+                      MaterialPageRoute(
+                        builder: (context) {
+                          print('🔵 Navigating to WelcomeScreen');
+                          return WelcomeScreen(
+                            onGetStarted: _onLoginSuccess,
+                          );
+                        },
+                      ),
+                    );
+                    print('🔵 Navigation to WelcomeScreen completed');
+                  },
                 );
               },
             ),
-          ),
-        );
+          );
+        }
       },
     );
   }
@@ -222,10 +285,56 @@ class FreeWrappedNavigator extends StatelessWidget {
     this.parsedConversations,
   });
 
-  void _handlePremiumTap(BuildContext context, List<ConversationData>? conversations) {
+  void _handlePremiumTap(BuildContext context, List<ConversationData> conversations) {
     print('🔴 PREMIUM_DEBUG: _handlePremiumTap CALLED');
     print('🔴 PREMIUM_DEBUG: _handlePremiumTap - premiumInsights is null: ${premiumInsights == null}');
-    print('🔴 PREMIUM_DEBUG: _handlePremiumTap - conversations: ${conversations != null}');
+    print('🔴 PREMIUM_DEBUG: _handlePremiumTap - conversations count: ${conversations.length}');
+    
+    // CRITICAL CHECK: Ensure conversations are available and have messages
+    if (conversations.isEmpty) {
+      print('🔴 PREMIUM_DEBUG: CRITICAL ERROR - conversations list is empty in _handlePremiumTap!');
+      print('🔴 PREMIUM_DEBUG: Falling back to parsedConversations from widget: ${parsedConversations?.length ?? 0}');
+      
+      // Fallback to widget's parsedConversations
+      final fallbackConversations = parsedConversations;
+      if (fallbackConversations == null || fallbackConversations.isEmpty) {
+        print('🔴 PREMIUM_DEBUG: CRITICAL - No conversations available even from widget!');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No conversations available. Please try logging in again.'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 4),
+          ),
+        );
+        return;
+      }
+      
+      // Use fallback conversations
+      final conversationsWithMessages = fallbackConversations.where((conv) => conv.messages.isNotEmpty).toList();
+      if (conversationsWithMessages.isEmpty) {
+        print('🔴 PREMIUM_DEBUG: CRITICAL - Fallback conversations have no messages!');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No conversations with messages found. Please try logging in again.'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 4),
+          ),
+        );
+        return;
+      }
+      
+      print('🔴 PREMIUM_DEBUG: Using fallback conversations: ${conversationsWithMessages.length}');
+      // Recursively call with fallback conversations
+      _handlePremiumTap(context, conversationsWithMessages);
+      return;
+    }
+    
+    // Debug: Log conversation details
+    print('🔴 PREMIUM_DEBUG: Total conversations: ${conversations.length}');
+    for (int i = 0; i < conversations.length; i++) {
+      final conv = conversations[i];
+      print('🔴 PREMIUM_DEBUG: Conversation $i: id=${conv.id}, title=${conv.title}, messages=${conv.messages.length}');
+    }
     
     // If premium insights already exist, navigate directly
     if (premiumInsights != null) {
@@ -244,34 +353,58 @@ class FreeWrappedNavigator extends StatelessWidget {
     }
     
     // If no premium insights, show subscription screen which will trigger analysis
+    // Ensure we have conversations before showing subscription screen
+    List<ConversationData> conversationsToPass = conversations;
+    
+    if (conversationsToPass.isEmpty) {
+      print('🔴 PREMIUM_DEBUG: WARNING - conversations is empty, using fallback from widget');
+      final fallback = parsedConversations;
+      if (fallback != null && fallback.isNotEmpty) {
+        conversationsToPass = fallback.where((conv) => conv.messages.isNotEmpty).toList();
+        print('🔴 PREMIUM_DEBUG: Using ${conversationsToPass.length} fallback conversations');
+      }
+    }
+    
+    // Final check before proceeding
+    if (conversationsToPass.isEmpty) {
+      print('🔴 PREMIUM_DEBUG: CRITICAL - No conversations available at all!');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No conversations available. Please try logging in again.'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 4),
+        ),
+      );
+      return;
+    }
+    
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) {
           return SubscriptionScreen(
             onSubscribe: () async {
               // Start premium analysis when user subscribes
-              if (conversations == null || conversations.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('No conversations available for analysis.'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-                return;
-              }
+              print('🔴 PREMIUM_DEBUG: SubscriptionScreen onSubscribe called');
+              print('🔴 PREMIUM_DEBUG: Using ${conversationsToPass.length} conversations');
               
-              final conversationsWithMessages =
-                  conversations.where((conv) => conv.messages.isNotEmpty).toList();
+              // Filter conversations with messages
+              final conversationsWithMessages = conversationsToPass.where((conv) => conv.messages.isNotEmpty).toList();
+              
+              print('🔴 PREMIUM_DEBUG: Conversations with messages: ${conversationsWithMessages.length} out of ${conversationsToPass.length}');
               
               if (conversationsWithMessages.isEmpty) {
+                print('🔴 PREMIUM_DEBUG: ERROR - No conversations with messages found!');
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('No conversations with messages found.'),
+                    content: Text('No conversations with messages found. Please try logging in again.'),
                     backgroundColor: Colors.red,
+                    duration: Duration(seconds: 4),
                   ),
                 );
                 return;
               }
+              
+              print('🔴 PREMIUM_DEBUG: Proceeding with ${conversationsWithMessages.length} conversations for premium analysis');
               
               // Close subscription screen and show premium analyzing screen
               Navigator.of(context).pop(); // Close subscription screen
@@ -295,10 +428,12 @@ class FreeWrappedNavigator extends StatelessWidget {
                     },
                     onError: (errorMessage) {
                       // Show error message
+                      print('🔴 PREMIUM_DEBUG: Premium analysis error: $errorMessage');
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(errorMessage),
                           backgroundColor: Colors.red,
+                          duration: const Duration(seconds: 4),
                         ),
                       );
                     },
@@ -316,9 +451,29 @@ class FreeWrappedNavigator extends StatelessWidget {
   Widget build(BuildContext context) {
     // PREMIUM_DEBUG: Check if premiumInsights is available
     print('🔴 PREMIUM_DEBUG: _FreeWrappedNavigator build - premiumInsights is null: ${premiumInsights == null}');
+    print('🔴 PREMIUM_DEBUG: _FreeWrappedNavigator build - parsedConversations: ${parsedConversations != null}');
+    print('🔴 PREMIUM_DEBUG: _FreeWrappedNavigator build - parsedConversations count: ${parsedConversations?.length ?? 0}');
+    
     if (premiumInsights != null) {
       print('🔴 PREMIUM_DEBUG: _FreeWrappedNavigator - premiumInsights.personalityType: ${premiumInsights!.personalityType}');
       print('🔴 PREMIUM_DEBUG: _FreeWrappedNavigator - premiumInsights.mbtiType: ${premiumInsights!.mbtiType}');
+    }
+    
+    // Debug: Log conversation details
+    if (parsedConversations != null) {
+      int conversationsWithMessages = 0;
+      for (int i = 0; i < parsedConversations!.length; i++) {
+        final conv = parsedConversations![i];
+        if (conv.messages.isNotEmpty) {
+          conversationsWithMessages++;
+        }
+        if (i < 3) {
+          print('🔴 PREMIUM_DEBUG: Conversation $i: id=${conv.id}, title=${conv.title}, messages=${conv.messages.length}');
+        }
+      }
+      print('🔴 PREMIUM_DEBUG: Conversations with messages: $conversationsWithMessages out of ${parsedConversations!.length}');
+    } else {
+      print('🔴 PREMIUM_DEBUG: WARNING - parsedConversations is NULL in build!');
     }
     
     // Generate monthly topics from conversations
@@ -329,7 +484,23 @@ class FreeWrappedNavigator extends StatelessWidget {
         ? AIAnalyzer.analyzeMonthlyTopics(parsedConversations!, startMonth: 7)
         : null;
     
+    // Debug: Log stats to verify they're being passed correctly
+    print('🔵 FREEWRAPPED_DEBUG: stats is null = ${stats == null}');
+    if (stats != null) {
+      print('🔵 FREEWRAPPED_DEBUG: stats.totalHours = ${stats!.totalHours}');
+      print('🔵 FREEWRAPPED_DEBUG: stats.totalMinutes = ${stats!.totalMinutes}');
+      print('🔵 FREEWRAPPED_DEBUG: stats.messagesPerDay = ${stats!.messagesPerDay}');
+      print('🔵 FREEWRAPPED_DEBUG: stats.longestStreak = ${stats!.longestStreak}');
+      print('🔵 FREEWRAPPED_DEBUG: stats.peakTime = ${stats!.peakTime}');
+      print('🔵 FREEWRAPPED_DEBUG: stats.peakHour = ${stats!.peakHour}');
+      print('🔵 FREEWRAPPED_DEBUG: stats.mainTopic = ${stats!.mainTopic}');
+      print('🔵 FREEWRAPPED_DEBUG: stats.mostUsedWordCount = ${stats!.mostUsedWordCount}');
+      print('🔵 FREEWRAPPED_DEBUG: stats.totalMessages = ${stats!.totalMessages}');
+      print('🔵 FREEWRAPPED_DEBUG: stats.totalConversations = ${stats!.totalConversations}');
+    }
+    
     // Use real stats if available, otherwise use demo data
+    // IMPORTANT: Only use fallback values if stats is null, not if individual fields are null
     final hours = stats?.totalHours ?? 127;
     final minutes = stats?.totalMinutes ?? 42;
     final messagesPerDay = stats?.messagesPerDay ?? 47;
@@ -366,8 +537,87 @@ class FreeWrappedNavigator extends StatelessWidget {
         ),
         // Index 1 - Your Signature Word (Most Used Word)
         MostUsedWordScreen(
-          mostUsedWord: stats?.mainTopic ?? 'literally',
-          wordCount: stats?.mostUsedWordCount ?? 247,
+          mostUsedWord: () {
+            final word = stats?.mainTopic;
+            print('🔵 STATS_DEBUG: mainTopic = $word');
+            print('🔵 STATS_DEBUG: stats is null = ${stats == null}');
+            if (stats != null) {
+              print('🔵 STATS_DEBUG: totalMessages = ${stats!.totalMessages}');
+              print('🔵 STATS_DEBUG: totalConversations = ${stats!.totalConversations}');
+            }
+            // Only use fallback if stats is null OR word is truly null/empty
+            // Don't use fallback if stats exists but mainTopic is null - that means analysis didn't find a word
+            if (stats == null) {
+              print('🔵 STATS_DEBUG: stats is null, using fallback');
+              return 'literally';
+            }
+            // Check if word is null, empty, or the string "null"
+            if (word == null || word.isEmpty || word.toLowerCase() == 'null') {
+              print('🔵 STATS_DEBUG: mainTopic is null/empty/null string - recalculating from conversations');
+              // Try to calculate from parsedConversations if available
+              if (parsedConversations != null && parsedConversations!.isNotEmpty) {
+                final allMessages = <MessageData>[];
+                for (var conv in parsedConversations!) {
+                  allMessages.addAll(conv.messages);
+                }
+                if (allMessages.isNotEmpty) {
+                  final calculatedWord = ChatAnalyzer.getMostUsedWord(allMessages);
+                  if (calculatedWord != null && calculatedWord.isNotEmpty && calculatedWord.toLowerCase() != 'null') {
+                    print('🔵 STATS_DEBUG: Calculated word from conversations: $calculatedWord');
+                    return calculatedWord;
+                  } else {
+                    print('🔵 STATS_DEBUG: Calculated word is also null/empty/null string');
+                  }
+                } else {
+                  print('🔵 STATS_DEBUG: No messages found in parsedConversations');
+                }
+              } else {
+                print('🔵 STATS_DEBUG: parsedConversations is null or empty');
+              }
+              print('🔵 STATS_DEBUG: Using fallback after all attempts');
+              return 'literally';
+            }
+            // Ensure word is not the string "null"
+            if (word.toLowerCase() == 'null') {
+              print('🔵 STATS_DEBUG: Word is string "null", using fallback');
+              return 'literally';
+            }
+            return word;
+          }(),
+          wordCount: () {
+            final count = stats?.mostUsedWordCount;
+            print('🔵 STATS_DEBUG: mostUsedWordCount = $count');
+            // Only use fallback if stats is null
+            if (stats == null) {
+              return 247;
+            }
+            // If count is null or 0, try to calculate it
+            if (count == null || count == 0) {
+              if (parsedConversations != null && parsedConversations!.isNotEmpty) {
+                final allMessages = <MessageData>[];
+                for (var conv in parsedConversations!) {
+                  allMessages.addAll(conv.messages);
+                }
+                if (allMessages.isNotEmpty) {
+                  // Get word - prefer stats.mainTopic but recalculate if it's null or "null"
+                  var word = stats?.mainTopic;
+                  if (word == null || word.isEmpty || word.toLowerCase() == 'null') {
+                    word = ChatAnalyzer.getMostUsedWord(allMessages);
+                  }
+                  
+                  if (word != null && word.isNotEmpty && word.toLowerCase() != 'null') {
+                    final calculatedCount = ChatAnalyzer.getMostUsedWordCount(allMessages, word.toLowerCase());
+                    if (calculatedCount > 0) {
+                      print('🔵 STATS_DEBUG: Calculated count from conversations: $calculatedCount for word: $word');
+                      return calculatedCount;
+                    }
+                  }
+                }
+              }
+              return 247;
+            }
+            return count;
+          }(),
         ),
         // Index 2 - Your Chat Era
         ChatEraScreen(
@@ -401,7 +651,52 @@ class FreeWrappedNavigator extends StatelessWidget {
             print('🔴 PREMIUM_DEBUG: TypeABPreviewScreen onSubscribe clicked');
             print('🔴 PREMIUM_DEBUG: premiumInsights is null: ${premiumInsights == null}');
             print('🔴 PREMIUM_DEBUG: parsedConversations: ${parsedConversations != null}');
-            _handlePremiumTap(context, parsedConversations);
+            print('🔴 PREMIUM_DEBUG: parsedConversations count: ${parsedConversations?.length ?? 0}');
+            
+            // Ensure we have conversations before proceeding
+            if (parsedConversations == null) {
+              print('🔴 PREMIUM_DEBUG: CRITICAL - parsedConversations is null!');
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('No conversations available. Please try logging in again.'),
+                  backgroundColor: Colors.red,
+                  duration: Duration(seconds: 4),
+                ),
+              );
+              return;
+            }
+            
+            final validConversations = parsedConversations!;
+            if (validConversations.isEmpty) {
+              print('🔴 PREMIUM_DEBUG: CRITICAL - parsedConversations is empty!');
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('No conversations available. Please try logging in again.'),
+                  backgroundColor: Colors.red,
+                  duration: Duration(seconds: 4),
+                ),
+              );
+              return;
+            }
+            
+            // Verify conversations have messages
+            final conversationsWithMessages = validConversations.where((conv) => conv.messages.isNotEmpty).toList();
+            print('🔴 PREMIUM_DEBUG: Conversations with messages: ${conversationsWithMessages.length} out of ${validConversations.length}');
+            
+            if (conversationsWithMessages.isEmpty) {
+              print('🔴 PREMIUM_DEBUG: CRITICAL - No conversations with messages!');
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('No conversations with messages found. Please try logging in again.'),
+                  backgroundColor: Colors.red,
+                  duration: Duration(seconds: 4),
+                ),
+              );
+              return;
+            }
+            
+            // Use conversations with messages
+            _handlePremiumTap(context, conversationsWithMessages);
           },
         ),
         // Index 8 - MBTI Personality
@@ -445,7 +740,16 @@ class FreeWrappedNavigator extends StatelessWidget {
           explanation: premiumInsights?.zodiacExplanation ?? 'Based on your chats, you\'re giving major Scorpio energy 🦂✨ Intense conversations? Check. Deep questions at 3 AM? Check. Reading between every single line? That\'s so you. GPT says you\'re the friend who turns small talk into therapy sessions. Mysterious vibes only. 💅',
           subtitle: 'The stars don\'t lie... and neither does AI! ⭐',
         ),
-        // Index 12 - Introvert Extrovert
+        // Index 12 - Song Title
+        SongTitleScreen(
+          question: 'What song title represents your life according to AI?',
+          songTitle: premiumInsights?.songTitle ?? 'Don\'t Stop Believin\'',
+          artist: premiumInsights?.songArtist ?? 'Journey',
+          releaseYear: premiumInsights?.songYear ?? 1981,
+          explanation: premiumInsights?.songExplanation ?? 'Based on your conversations, GPT detected an optimistic and persistent personality. Like this classic anthem, you keep pushing forward, asking questions, and never giving up on your goals.',
+          subtitle: 'Your life has a soundtrack 🎵✨',
+        ),
+        // Index 13 - Introvert Extrovert
         IntrovertExtrovertScreen(
           question: 'Are you an introvert or extrovert according to AI?',
           personalityType: premiumInsights?.introExtroType ?? 'AMBIVERT',
@@ -647,6 +951,14 @@ class _PremiumWrappedNavigator extends StatelessWidget {
           zodiacName: insights.zodiacName,
           explanation: insights.zodiacExplanation,
           subtitle: 'The stars don\'t lie... and neither does AI! ⭐',
+        ),
+        SongTitleScreen(
+          question: 'What song title represents your life according to AI?',
+          songTitle: insights.songTitle,
+          artist: insights.songArtist,
+          releaseYear: insights.songYear,
+          explanation: insights.songExplanation,
+          subtitle: 'Your life has a soundtrack 🎵✨',
         ),
         IntrovertExtrovertScreen(
           question: 'Are you an introvert or extrovert according to AI?',
