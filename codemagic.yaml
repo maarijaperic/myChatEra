@@ -13,20 +13,18 @@ workflows:
     scripts:
       - name: Get Flutter dependencies
         script: |
-          cd ZaMariju
           echo "Current directory: $(pwd)"
           echo "Running flutter pub get..."
           flutter pub get
       - name: Install CocoaPods dependencies
         script: |
-          cd ZaMariju/ios && pod install
+          cd ios
+          pod install
       - name: Set up code signing settings on Xcode project
         script: |
-          cd ZaMariju
           xcode-project use-profiles
       - name: Build ipa for distribution
         script: |
-          cd ZaMariju
           flutter build ipa --release \
             --build-name=1.0.0 \
             --build-number=2
