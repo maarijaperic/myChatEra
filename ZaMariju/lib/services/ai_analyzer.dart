@@ -320,8 +320,42 @@ Analyze these ChatGPT conversation messages and pick a movie that best represent
 User messages:
 ${messagesSample.join('\n')}
 
+IMPORTANT: Choose from a diverse range of movies. Avoid repeating common choices. Consider these categories for inspiration:
+
+DRAMA/INSPIRATIONAL:
+- The Pursuit of Happyness (2006), Good Will Hunting (1997), The Shawshank Redemption (1994), A Beautiful Mind (2001), The Theory of Everything (2014), Hidden Figures (2016), The Imitation Game (2014), The Social Network (2010), Moneyball (2011), The Intern (2015)
+
+COMEDY/LIGHTHEARTED:
+- The Devil Wears Prada (2006), Legally Blonde (2001), Mean Girls (2004), The Internship (2013), Yes Man (2008), The Secret Life of Walter Mitty (2013), Chef (2014), The Grand Budapest Hotel (2014), Little Miss Sunshine (2006), Juno (2007)
+
+ADVENTURE/ACTION:
+- Into the Wild (2007), The Secret Life of Walter Mitty (2013), The Martian (2015), Interstellar (2014), Inception (2010), The Matrix (1999), Blade Runner 2049 (2017), Arrival (2016), Ex Machina (2014), Her (2013)
+
+ROMANTIC/RELATIONSHIPS:
+- 500 Days of Summer (2009), La La Land (2016), Before Sunrise (1995), The Notebook (2004), Eternal Sunshine of the Spotless Mind (2004), Lost in Translation (2003), Amélie (2001), Silver Linings Playbook (2012), Crazy Stupid Love (2011), The Fault in Our Stars (2014)
+
+THRILLER/MYSTERY:
+- Gone Girl (2014), Shutter Island (2010), The Prestige (2006), Memento (2000), Se7en (1995), Zodiac (2007), The Girl with the Dragon Tattoo (2011), Prisoners (2013), Nightcrawler (2014), Parasite (2019)
+
+SCIFI/FUTURISTIC:
+- Her (2013), Ex Machina (2014), Blade Runner (1982), The Matrix (1999), Arrival (2016), Interstellar (2014), Inception (2010), Minority Report (2002), Gattaca (1997), The Truman Show (1998)
+
+INDIE/ARTISTIC:
+- Little Miss Sunshine (2006), Juno (2007), The Grand Budapest Hotel (2014), Moonrise Kingdom (2012), The Royal Tenenbaums (2001), Lost in Translation (2003), Amélie (2001), Eternal Sunshine of the Spotless Mind (2004), The Lobster (2015), Birdman (2014)
+
+CLASSICS:
+- Casablanca (1942), The Godfather (1972), Citizen Kane (1941), 12 Angry Men (1957), To Kill a Mockingbird (1962), The Graduate (1967), Annie Hall (1977), Taxi Driver (1976), One Flew Over the Cuckoo's Nest (1975), Apocalypse Now (1979)
+
+MODERN HITS:
+- Everything Everywhere All at Once (2022), Parasite (2019), Get Out (2017), Lady Bird (2017), Call Me by Your Name (2017), The Shape of Water (2017), Moonlight (2016), Whiplash (2014), The Grand Budapest Hotel (2014), Her (2013)
+
+INTERNATIONAL:
+- Parasite (2019), Amélie (2001), Crouching Tiger Hidden Dragon (2000), Life is Beautiful (1997), Cinema Paradiso (1988), Oldboy (2003), Spirited Away (2001), Amores Perros (2000), City of God (2002), Pan's Labyrinth (2006)
+
+Choose a movie that genuinely matches the user's personality and conversation style. Be creative and avoid the most obvious choices. Pick from different decades and genres to ensure variety.
+
 Provide:
-1. Movie title (string)
+1. Movie title (string) - must be a real, well-known movie
 2. Release year (integer between 1950 and 2025)
 3. Fun explanation (3-4 sentences, cinematic tone, direct "you" language, references how the chats match the movie's themes)
 
@@ -330,6 +364,73 @@ Respond ONLY with valid JSON in this exact format:
   "movieTitle": "The Pursuit of Happyness",
   "releaseYear": 2006,
   "explanation": "Based on your conversations, GPT detected a relentless drive for self-improvement and asking deep questions about life. Like Chris Gardner in the movie, you are constantly searching for answers, optimizing your life, and never giving up on personal growth. Your chats are basically a journey of someone trying to figure it all out - one prompt at a time. Inspiring, honestly."
+}
+''';
+
+    return await _callOpenAI(prompt);
+  }
+
+  /// Generate a song title that matches the user's chat vibe
+  static Future<Map<String, dynamic>> generateSongTitle(
+    List<MessageData> userMessages,
+  ) async {
+    final messagesSample = _getSampleMessages(userMessages, maxCount: 40);
+    
+    final prompt = '''
+Analyze these ChatGPT conversation messages and pick a song that best represents the user's overall vibe, journey, and personality.
+
+User messages:
+${messagesSample.join('\n')}
+
+IMPORTANT: Choose from a diverse range of songs. Avoid repeating common choices. Consider these categories for inspiration:
+
+POP/MAINSTREAM:
+- "Blinding Lights" by The Weeknd (2019), "Shape of You" by Ed Sheeran (2017), "Watermelon Sugar" by Harry Styles (2019), "Levitating" by Dua Lipa (2020), "Good 4 U" by Olivia Rodrigo (2021), "As It Was" by Harry Styles (2022), "Flowers" by Miley Cyrus (2023), "Anti-Hero" by Taylor Swift (2022), "Unholy" by Sam Smith (2022), "About Damn Time" by Lizzo (2022)
+
+ROCK/CLASSIC ROCK:
+- "Don't Stop Believin'" by Journey (1981), "Bohemian Rhapsody" by Queen (1975), "Stairway to Heaven" by Led Zeppelin (1971), "Hotel California" by Eagles (1976), "Sweet Child O' Mine" by Guns N' Roses (1987), "Wonderwall" by Oasis (1995), "Smells Like Teen Spirit" by Nirvana (1991), "Livin' on a Prayer" by Bon Jovi (1986), "We Will Rock You" by Queen (1977), "Eye of the Tiger" by Survivor (1982)
+
+INDIE/ALTERNATIVE:
+- "Somebody That I Used to Know" by Gotye (2011), "Pumped Up Kicks" by Foster the People (2010), "Riptide" by Vance Joy (2013), "Ho Hey" by The Lumineers (2012), "Home" by Edward Sharpe & The Magnetic Zeros (2009), "Dog Days Are Over" by Florence + The Machine (2008), "Little Talks" by Of Monsters and Men (2011), "Shake It Out" by Florence + The Machine (2011), "Tongue Tied" by Grouplove (2011), "Young Folks" by Peter Bjorn and John (2006)
+
+R&B/SOUL:
+- "Blame It" by Jamie Foxx (2008), "Ordinary People" by John Legend (2004), "All of Me" by John Legend (2013), "Thinking Out Loud" by Ed Sheeran (2014), "Stay" by Rihanna (2012), "Love on Top" by Beyoncé (2011), "Adorn" by Miguel (2012), "Best Part" by Daniel Caesar (2017), "Location" by Khalid (2016), "Redbone" by Childish Gambino (2016)
+
+HIP-HOP/RAP:
+- "Lose Yourself" by Eminem (2002), "Stronger" by Kanye West (2007), "Empire State of Mind" by Jay-Z (2009), "God's Plan" by Drake (2018), "Sicko Mode" by Travis Scott (2018), "Old Town Road" by Lil Nas X (2019), "The Box" by Roddy Ricch (2019), "Industry Baby" by Lil Nas X (2021), "Heat Waves" by Glass Animals (2020), "Good as Hell" by Lizzo (2019)
+
+ELECTRONIC/DANCE:
+- "One More Time" by Daft Punk (2000), "Titanium" by David Guetta (2011), "Wake Me Up" by Avicii (2013), "Clarity" by Zedd (2012), "Rather Be" by Clean Bandit (2013), "Lean On" by Major Lazer (2015), "Something Just Like This" by The Chainsmokers (2017), "Midnight City" by M83 (2011), "Summertime Sadness" by Lana Del Rey (2012), "Get Lucky" by Daft Punk (2013)
+
+COUNTRY:
+- "Wagon Wheel" by Old Crow Medicine Show (2004), "Before He Cheats" by Carrie Underwood (2005), "Need You Now" by Lady A (2009), "Cruise" by Florida Georgia Line (2012), "Die a Happy Man" by Thomas Rhett (2015), "Body Like a Back Road" by Sam Hunt (2016), "Tennessee Whiskey" by Chris Stapleton (2015), "The House That Built Me" by Miranda Lambert (2009), "Jolene" by Dolly Parton (1973), "Friends in Low Places" by Garth Brooks (1990)
+
+FOLK/ACOUSTIC:
+- "Hallelujah" by Leonard Cohen (1984), "The Sound of Silence" by Simon & Garfunkel (1964), "Landslide" by Fleetwood Mac (1975), "Fast Car" by Tracy Chapman (1988), "Black" by Pearl Jam (1991), "Mad World" by Tears for Fears (1982), "Creep" by Radiohead (1992), "Bitter Sweet Symphony" by The Verve (1997), "Fix You" by Coldplay (2005), "Yellow" by Coldplay (2000)
+
+CLASSIC/OLDIES:
+- "What a Wonderful World" by Louis Armstrong (1967), "Imagine" by John Lennon (1971), "Here Comes the Sun" by The Beatles (1969), "Let It Be" by The Beatles (1970), "Bridge Over Troubled Water" by Simon & Garfunkel (1970), "Stand by Me" by Ben E. King (1961), "Ain't No Mountain High Enough" by Marvin Gaye (1967), "Respect" by Aretha Franklin (1967), "I Will Always Love You" by Whitney Houston (1992), "My Way" by Frank Sinatra (1969)
+
+EMOTIONAL/BALLADS:
+- "Someone Like You" by Adele (2011), "Hello" by Adele (2015), "All of Me" by John Legend (2013), "Say Something" by A Great Big World (2013), "Stay" by Rihanna (2012), "Fix You" by Coldplay (2005), "Hurt" by Johnny Cash (2002), "The Scientist" by Coldplay (2002), "Skinny Love" by Bon Iver (2007), "Gravity" by John Mayer (2006)
+
+EMPOWERING/INSPIRATIONAL:
+- "Fight Song" by Rachel Platten (2015), "Roar" by Katy Perry (2013), "Stronger" by Kelly Clarkson (2011), "Brave" by Sara Bareilles (2013), "Rise Up" by Andra Day (2015), "I Will Survive" by Gloria Gaynor (1978), "Survivor" by Destiny's Child (2001), "I'm Still Standing" by Elton John (1983), "Eye of the Tiger" by Survivor (1982), "We Are the Champions" by Queen (1977)
+
+Choose a song that genuinely matches the user's personality and conversation style. Be creative and avoid the most obvious choices. Pick from different decades and genres to ensure variety.
+
+Provide:
+1. Song title (string) - must be a real, well-known song
+2. Artist name (string) - the performer/band
+3. Release year (integer between 1960 and 2025)
+4. Fun explanation (3-4 sentences, musical tone, direct "you" language, references how the chats match the song's themes and lyrics)
+
+Respond ONLY with valid JSON in this exact format:
+{
+  "songTitle": "Don't Stop Believin'",
+  "artist": "Journey",
+  "releaseYear": 1981,
+  "explanation": "Based on your conversations, GPT detected an optimistic and persistent personality. Like this classic anthem, you keep pushing forward, asking questions, and never giving up on your goals. Your chats are the soundtrack of someone who believes in the journey, not just the destination. You're basically living your own version of this song - always searching, always moving forward."
 }
 ''';
 
