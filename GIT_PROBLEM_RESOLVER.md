@@ -253,3 +253,7 @@ Ako ništa od ovoga ne radi, proveri:
 2. Da li imaš prava za push (ako si collaborator)
 3. Da li je internet konekcija stabilna
 4. Da li GitHub radi (status.github.com)
+
+
+
+
