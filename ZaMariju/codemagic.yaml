@@ -3,6 +3,7 @@ workflows:
     name: iOS Workflow
     max_build_duration: 120
     instance_type: mac_mini_m1
+    working_directory: ZaMariju
     environment:
       flutter: stable
       xcode: latest
@@ -10,30 +11,22 @@ workflows:
       groups:
         - app_store_credentials
     scripts:
-      - name: Navigate to Flutter project
-        script: |
-          cd ZaMariju
-          pwd
-          ls -la
       - name: Get Flutter dependencies
         script: |
-          cd ZaMariju
           flutter pub get
       - name: Install CocoaPods dependencies
         script: |
-          cd ZaMariju/ios && pod install
+          cd ios && pod install
       - name: Set up code signing settings on Xcode project
         script: |
-          cd ZaMariju
           xcode-project use-profiles
       - name: Build ipa for distribution
         script: |
-          cd ZaMariju
           flutter build ipa --release \
             --build-name=1.0.0 \
             --build-number=2
     artifacts:
-      - ZaMariju/build/ios/ipa/*.ipa
+      - build/ios/ipa/*.ipa
     publishing:
       email:
         recipients:
