@@ -31,8 +31,12 @@ class _MostUsedWordScreenState extends State<MostUsedWordScreen>
 
   String get _cleanWord {
     final raw = widget.mostUsedWord.trim();
-    if (raw.isEmpty || raw.toLowerCase() == 'null' || raw == '—' || raw == '-') {
-      return 'your favorite word';
+    // Never use fallback - if word is empty, it means analysis failed
+    // But we should always have a word from stats if analysis worked
+    if (raw.isEmpty || raw.toLowerCase() == 'null' || raw == '—' || raw == '-' || raw.toLowerCase() == 'your favorite word') {
+      // This should not happen if stats are calculated correctly
+      print('⚠️ WARNING: mostUsedWord is empty/null - this indicates analysis failed');
+      return raw.isNotEmpty ? raw : 'word'; // Return empty or minimal fallback
     }
     return raw;
   }
