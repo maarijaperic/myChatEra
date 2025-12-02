@@ -2,7 +2,7 @@ import 'dart:math';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:gpt_wrapped2/widgets/share_button.dart';
+import 'package:gpt_wrapped2/widgets/instagram_share_button.dart';
 
 class WrappedStatsScreen extends StatefulWidget {
   final String question;
@@ -28,6 +28,7 @@ class _WrappedStatsScreenState extends State<WrappedStatsScreen>
     with TickerProviderStateMixin {
   late AnimationController _fadeController;
   late AnimationController _particlesController;
+  final GlobalKey _screenshotKey = GlobalKey();
 
   // First 6 months (Jan-Jun)
   final List<Map<String, dynamic>> monthlyObsessions = [
@@ -127,9 +128,11 @@ class _WrappedStatsScreenState extends State<WrappedStatsScreen>
     final bottomSpacing = (screenHeight * 0.04).clamp(20.0, 32.0);
     
     return Scaffold(
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
+      body: RepaintBoundary(
+        key: _screenshotKey,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
           // Off white background (like Share with People)
           Container(
             decoration: const BoxDecoration(
@@ -255,10 +258,10 @@ class _WrappedStatsScreenState extends State<WrappedStatsScreen>
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.9,
-                      child: Center(
-                        child: ShareToStoryButton(
-                          shareText: 'My 2025 Monthly Obsessions: From your ex to baking to self-care! Check out my year in review 🎉 #mychateraAI',
-                        ),
+                      child: SmallShareToStoryButton(
+                        shareText: 'My 2025 Monthly Obsessions: From your ex to baking to self-care! Check out my year in review 🎉 #mychateraAI',
+                        screenshotKey: _screenshotKey,
+                        accentGradient: const [Color(0xFFFF8FB1), Color(0xFFFFB5D8)],
                       ),
                     ),
                     
@@ -269,6 +272,7 @@ class _WrappedStatsScreenState extends State<WrappedStatsScreen>
             ),
           ),
         ],
+        ),
       ),
     );
   }
