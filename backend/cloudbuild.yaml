@@ -1,11 +1,15 @@
 steps:
   # Build the container image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/openai-proxy-server:latest', '.']
-  # Push the container image to Container Registry
+    args: ['build', '-t', 'europe-west1-docker.pkg.dev/$PROJECT_ID/openai-proxy-server/openai-proxy-server:latest', '.']
+  # Push the container image to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/openai-proxy-server:latest']
+    args: ['push', 'europe-west1-docker.pkg.dev/$PROJECT_ID/openai-proxy-server/openai-proxy-server:latest']
 images:
-  - 'gcr.io/$PROJECT_ID/openai-proxy-server:latest'
+  - 'europe-west1-docker.pkg.dev/$PROJECT_ID/openai-proxy-server/openai-proxy-server:latest'
+
+
+
+
 
 
