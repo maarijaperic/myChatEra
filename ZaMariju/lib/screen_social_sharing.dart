@@ -3,10 +3,16 @@ import 'dart:ui' as ui;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:gpt_wrapped2/widgets/share_button.dart';
 import 'package:gpt_wrapped2/models/chat_data.dart';
 import 'package:gpt_wrapped2/services/premium_processor.dart';
 import 'package:gpt_wrapped2/screen_preview_analysis.dart';
+import 'package:gpt_wrapped2/services/analysis_tracker.dart';
+import 'package:gpt_wrapped2/services/revenuecat_service.dart';
+import 'package:gpt_wrapped2/services/data_storage.dart';
+import 'package:gpt_wrapped2/services/data_processor.dart';
+import 'package:gpt_wrapped2/screen_premium_analyzing.dart';
+import 'package:gpt_wrapped2/screen_login.dart';
+import 'package:gpt_wrapped2/card_navigator.dart';
 
 class SocialSharingScreen extends StatefulWidget {
   final ChatStats? stats;
@@ -153,16 +159,52 @@ class _SocialSharingScreenState extends State<SocialSharingScreen>
                     
                     SizedBox(height: screenHeight * 0.06),
                     
-                    // Share to Story Button (functional)
+                    // Info text about share button
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.2,
-                      child: Column(
-                        children: [
-                          ShareToStoryButton(
-                            shareText: 'Just shared my GPT Wrapped story! #GPTWrapped',
+                      child: Container(
+                        padding: EdgeInsets.all((screenWidth * 0.04).clamp(16.0, 20.0)),
+                        margin: EdgeInsets.symmetric(horizontal: (screenWidth * 0.04).clamp(16.0, 22.0)),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.9),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: const Color(0xFFFF006E).withOpacity(0.2),
+                            width: 1,
                           ),
-                        ],
+                        ),
+                        child: Text(
+                          '💡 Tip: Each premium screen has a share button at the bottom where you can share or screenshot the screen!',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.inter(
+                            color: const Color(0xFF1F1F21),
+                            fontSize: (screenWidth * 0.035).clamp(13.0, 15.0),
+                            fontWeight: FontWeight.w500,
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                    ),
+                    
+                    SizedBox(height: screenHeight * 0.04),
+                    
+                    // Go to First Premium Screen Button
+                    _AnimatedFade(
+                      controller: _fadeController,
+                      delay: 0.25,
+                      child: const _GoToFirstPremiumButton(),
+                    ),
+                    
+                    SizedBox(height: screenHeight * 0.04),
+                    
+                    // Get Another Analysis Button (for premium users)
+                    _AnimatedFade(
+                      controller: _fadeController,
+                      delay: 0.3,
+                      child: _GetAnotherAnalysisButton(
+                        stats: widget.stats,
+                        premiumInsights: widget.premiumInsights,
                       ),
                     ),
                     
@@ -477,4 +519,394 @@ class _SubtleParticlesPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
+/// Widget for "Get Another Analysis" button
+class _GetAnotherAnalysisButton extends StatefulWidget {
+  final ChatStats? stats;
+  final PremiumInsights? premiumInsights;
+
+  const _GetAnotherAnalysisButton({
+    this.stats,
+    this.premiumInsights,
+  });
+
+  @override
+  State<_GetAnotherAnalysisButton> createState() => _GetAnotherAnalysisButtonState();
+}
+
+class _GetAnotherAnalysisButtonState extends State<_GetAnotherAnalysisButton> {
+  bool _isLoading = false;
+  bool _canGenerate = false;
+  int _remaining = 0;
+  String? _subscriptionType;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAvailability();
+  }
+
+  Future<void> _checkAvailability() async {
+    try {
+      final isPremium = await RevenueCatService.isPremium();
+      if (!isPremium) {
+        setState(() {
+          _canGenerate = false;
+        });
+        return;
+      }
+
+      final subscriptionType = await RevenueCatService.getSubscriptionType();
+      if (subscriptionType == null) {
+        setState(() {
+          _canGenerate = false;
+        });
+        return;
+      }
+
+      final canGenerate = await AnalysisTracker.canGenerateAnalysis();
+      final remaining = await AnalysisTracker.getRemainingAnalyses();
+
+      setState(() {
+        _canGenerate = canGenerate;
+        _remaining = remaining;
+        _subscriptionType = subscriptionType;
+      });
+    } catch (e) {
+      print('Error checking analysis availability: $e');
+      setState(() {
+        _canGenerate = false;
+      });
+    }
+  }
+
+  Future<void> _handleGetAnotherAnalysis() async {
+    if (_isLoading || !_canGenerate) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Check if we have saved conversations
+      final conversations = await DataStorage.loadConversations();
+
+      if (conversations.isEmpty || conversations.any((c) => c.messages.isEmpty)) {
+        // No saved conversations or empty - go to login
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (ctx) => LoginScreen(
+                onLoginSuccess: (conversations) async {
+                  // After login, parse conversations and navigate to premium analyzing
+                  if (conversations != null && conversations.isNotEmpty) {
+                    // Parse conversations from List<dynamic> to List<ConversationData>
+                    final parsedConversations = DataProcessor.parseConversations(conversations);
+                    final conversationsWithMessages = parsedConversations.where((conv) => conv.messages.isNotEmpty).toList();
+                    
+                    if (conversationsWithMessages.isNotEmpty) {
+                      Navigator.of(ctx).push(
+                        MaterialPageRoute(
+                          builder: (context) => PremiumAnalyzingScreen(
+                            conversations: conversationsWithMessages,
+                            onAnalysisComplete: (insights, convs) {
+                              // Navigate back to social sharing or premium screens
+                              Navigator.of(context).popUntil((route) => route.isFirst);
+                            },
+                            onError: (error) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(error),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(ctx).showSnackBar(
+                        const SnackBar(
+                          content: Text('No conversations with messages found. Please try again.'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  }
+                },
+              ),
+            ),
+          );
+        }
+      } else {
+        // We have saved conversations - go directly to analysis
+        if (mounted) {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (ctx) => PremiumAnalyzingScreen(
+                conversations: conversations,
+                onAnalysisComplete: (insights, convs) {
+                  // Navigate back to social sharing
+                  Navigator.of(ctx).pop();
+                  // Refresh the button state
+                  _checkAvailability();
+                },
+                onError: (error) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(error),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                },
+              ),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      print('Error handling get another analysis: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_canGenerate) {
+      // Don't show button if user doesn't have premium or has no remaining analyses
+      return const SizedBox.shrink();
+    }
+
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: (screenWidth * 0.06).clamp(20.0, 24.0)),
+      child: Column(
+        children: [
+          GestureDetector(
+            onTap: _isLoading ? null : _handleGetAnotherAnalysis,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              decoration: BoxDecoration(
+                gradient: _isLoading
+                    ? null
+                    : const LinearGradient(
+                        colors: [
+                          Color(0xFFFF6B9D),
+                          Color(0xFFFF8E9E),
+                        ],
+                      ),
+                color: _isLoading ? Colors.grey : null,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: _isLoading
+                    ? null
+                    : [
+                        BoxShadow(
+                          color: const Color(0xFFFF6B9D).withOpacity(0.3),
+                          blurRadius: 15,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+              ),
+              child: _isLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.refresh,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Get Another Analysis',
+                          style: GoogleFonts.inter(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                        if (_remaining > 0) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '$_remaining left',
+                              style: GoogleFonts.inter(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+            ),
+          ),
+          if (_remaining == 0 && _subscriptionType != 'one_time')
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                'You\'ve used all analyses this month. Wait until next month or upgrade.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                  color: const Color(0xFF8E8E93),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Widget for "Go to First Premium Screen" button
+class _GoToFirstPremiumButton extends StatelessWidget {
+  const _GoToFirstPremiumButton();
+
+  Future<void> _goToFirstPremiumScreen(BuildContext context) async {
+    print('🔵 GoToFirstPremium: Button clicked - Navigating to first premium screen');
+    
+    try {
+      // Method 1: Use CardNavigator.of() static method
+      print('🔵 GoToFirstPremium: Method 1 - Using CardNavigator.of()...');
+      final cardNavigatorState = CardNavigator.of(context);
+      
+      if (cardNavigatorState != null) {
+        print('🔵 GoToFirstPremium: ✅ Found CardNavigatorState using CardNavigator.of()!');
+        print('🔵 GoToFirstPremium: Current index: ${cardNavigatorState.currentIndex}');
+        print('🔵 GoToFirstPremium: Total screens: ${cardNavigatorState.widget.screens.length}');
+        
+        // Try goToIndex first
+        print('🔵 GoToFirstPremium: Calling goToIndex(0)...');
+        await cardNavigatorState.goToIndex(0);
+        
+        // Also try goToFirstScreen as backup (in case goToIndex didn't work)
+        print('🔵 GoToFirstPremium: Also calling goToFirstScreen() as backup...');
+        await cardNavigatorState.goToFirstScreen();
+        
+        print('🔵 GoToFirstPremium: Navigation methods called successfully');
+        return;
+      }
+      
+      print('🔵 GoToFirstPremium: ❌ CardNavigatorState not found with CardNavigator.of()');
+      
+      // Method 2: Try findAncestorStateOfType directly
+      print('🔵 GoToFirstPremium: Method 2 - Using findAncestorStateOfType...');
+      final state2 = context.findAncestorStateOfType<CardNavigatorState>();
+      if (state2 != null) {
+        print('🔵 GoToFirstPremium: ✅ Found CardNavigatorState with findAncestorStateOfType!');
+        print('🔵 GoToFirstPremium: Current index: ${state2.currentIndex}');
+        state2.goToIndex(0);
+        return;
+      }
+      
+      print('🔵 GoToFirstPremium: ❌ CardNavigatorState not found with findAncestorStateOfType');
+      
+      // Method 3: Show error message
+      print('🔵 GoToFirstPremium: ❌ All methods failed');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Unable to navigate. Please swipe left to go back to the first screen.'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e, stackTrace) {
+      print('🔵 GoToFirstPremium: ❌ Exception: $e');
+      print('🔵 GoToFirstPremium: Stack trace: $stackTrace');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final horizontalPadding = (screenWidth * 0.04).clamp(16.0, 22.0);
+
+    return GestureDetector(
+      onTap: () => _goToFirstPremiumScreen(context),
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 14),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [
+              Color(0xFFFFB4D8), // Svetlija roze nijansa
+              Color(0xFFFFD1E8), // Još svetlija roze nijansa
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(22),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFFFB4D8).withOpacity(0.3),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.arrow_back,
+              color: Colors.white,
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Back to First Premium Screen',
+              style: GoogleFonts.inter(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.3,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
