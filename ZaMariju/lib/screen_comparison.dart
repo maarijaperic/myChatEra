@@ -2,7 +2,7 @@ import 'dart:math';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:gpt_wrapped2/widgets/share_button.dart';
+import 'package:gpt_wrapped2/widgets/instagram_share_button.dart';
 
 class ComparisonStatsScreen extends StatefulWidget {
   final String question;
@@ -36,6 +36,7 @@ class _ComparisonStatsScreenState extends State<ComparisonStatsScreen>
     with TickerProviderStateMixin {
   late AnimationController _fadeController;
   late AnimationController _particlesController;
+  final GlobalKey _screenshotKey = GlobalKey();
 
   // Last 6 months (Jul-Dec)
   final List<Map<String, dynamic>> monthlyObsessions = [
@@ -135,9 +136,11 @@ class _ComparisonStatsScreenState extends State<ComparisonStatsScreen>
     final bottomSpacing = (screenHeight * 0.04).clamp(20.0, 32.0);
     
     return Scaffold(
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
+      body: RepaintBoundary(
+        key: _screenshotKey,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
           // Off white background (like Share with People)
           Container(
             decoration: const BoxDecoration(
@@ -184,11 +187,11 @@ class _ComparisonStatsScreenState extends State<ComparisonStatsScreen>
                         children: [
                           // Title
                           Text(
-                            'Your GPT Wrapped',
+                            'Your 2025 in Review pt 2',
                             textAlign: TextAlign.center,
                             style: GoogleFonts.inter(
                               color: const Color(0xFF1F1F21),
-                              fontSize: (screenWidth * 0.08).clamp(28.0, isLargeScreen ? 44.0 : 36.0),
+                              fontSize: (screenWidth * 0.07).clamp(24.0, isLargeScreen ? 38.0 : 32.0),
                               fontWeight: FontWeight.w700,
                               letterSpacing: -0.2,
                             ),
@@ -263,10 +266,10 @@ class _ComparisonStatsScreenState extends State<ComparisonStatsScreen>
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.9,
-                      child: Center(
-                        child: ShareToStoryButton(
-                          shareText: 'My GPT Wrapped Monthly Obsessions: From summer vibes to reflection! Check out my year 🎉 #mychateraAI',
-                        ),
+                      child: SmallShareToStoryButton(
+                        shareText: 'My 2025 Monthly Obsessions pt 2: From summer vibes to reflection! Check out my year 🎉 #mychateraAI',
+                        screenshotKey: _screenshotKey,
+                        accentGradient: const [Color(0xFFFF8FB1), Color(0xFFFFB5D8)],
                       ),
                     ),
                     
@@ -277,6 +280,7 @@ class _ComparisonStatsScreenState extends State<ComparisonStatsScreen>
             ),
           ),
         ],
+        ),
       ),
     );
   }
