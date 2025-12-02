@@ -100,7 +100,7 @@ class _AdviceMostAskedScreenState extends State<AdviceMostAskedScreen>
                   child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    SizedBox(height: screenHeight * 0.03),
+                    SizedBox(height: screenHeight * 0.06),
                     
                     // Header + hero card
                     _AnimatedFade(
