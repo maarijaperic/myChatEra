@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'dart:async';
 import 'package:gpt_wrapped2/screen_analyzing_loading.dart';
 import 'package:gpt_wrapped2/main.dart' show FreeWrappedNavigator;
+import 'package:gpt_wrapped2/models/chat_data.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -282,6 +283,23 @@ class _LoginScreenState extends State<LoginScreen>
     // Store conversations first
     _conversations = fullConversations;
     
+    // Debug: Log conversation details
+    print('🔵 LOGIN_DEBUG: Fetched ${fullConversations.length} conversations');
+    int conversationsWithMessages = 0;
+    for (int i = 0; i < fullConversations.length; i++) {
+      final conv = fullConversations[i];
+      // Check if conversation has messages
+      final hasMapping = conv.containsKey('mapping') && conv['mapping'] != null;
+      final hasMessages = conv.containsKey('messages') && conv['messages'] is List && (conv['messages'] as List).isNotEmpty;
+      if (hasMapping || hasMessages) {
+        conversationsWithMessages++;
+      }
+      if (i < 3) { // Log first 3 conversations
+        print('🔵 LOGIN_DEBUG: Conversation $i: id=${conv['id']}, hasMapping=$hasMapping, hasMessages=$hasMessages');
+      }
+    }
+    print('🔵 LOGIN_DEBUG: Conversations with messages: $conversationsWithMessages out of ${fullConversations.length}');
+    
     if (mounted) {
       setState(() {
         _status = 'Loading complete ✓';
@@ -290,8 +308,10 @@ class _LoginScreenState extends State<LoginScreen>
     }
 
     // Auto-complete login after fetching
+    // Add a small delay to ensure all conversations are fully loaded
     Future.delayed(const Duration(milliseconds: 500), () {
       print('🔵 Future.delayed callback - mounted: $mounted');
+      print('🔵 LOGIN_DEBUG: About to call _completeLogin with ${_conversations?.length ?? 0} conversations');
       if (!mounted) {
         print('⚠️ Widget not mounted, calling _completeLogin anyway');
         _completeLogin();
@@ -473,6 +493,21 @@ class _LoginScreenState extends State<LoginScreen>
     // Clear password from memory (never stored)
     _passwordController.clear();
     
+    // Debug: Verify conversations before passing
+    if (_conversations != null) {
+      print('🔵 LOGIN_DEBUG: Verifying conversations before passing to AnalyzingLoadingScreen...');
+      int conversationsWithData = 0;
+      for (int i = 0; i < _conversations!.length; i++) {
+        final conv = _conversations![i];
+        final hasMapping = conv.containsKey('mapping') && conv['mapping'] != null;
+        final hasMessages = conv.containsKey('messages') && conv['messages'] is List && (conv['messages'] as List).isNotEmpty;
+        if (hasMapping || hasMessages) {
+          conversationsWithData++;
+        }
+      }
+      print('🔵 LOGIN_DEBUG: Conversations with data: $conversationsWithData out of ${_conversations!.length}');
+    }
+    
     if (!mounted) {
       print('⚠️ LoginScreen not mounted, calling callback anyway');
       widget.onLoginSuccess(_conversations);
@@ -489,30 +524,66 @@ class _LoginScreenState extends State<LoginScreen>
             final parsedCount = parsedConversations?.length ?? 0;
             print('🔵 onAnalysisComplete - stats: ${stats != null}, premiumInsights: ${premiumInsights != null}, parsedConversations: $parsedCount');
             
+            // CRITICAL: Log conversation details for debugging
+            if (parsedConversations != null) {
+              int conversationsWithMessages = 0;
+              for (int i = 0; i < parsedConversations.length; i++) {
+                final conv = parsedConversations[i];
+                if (conv.messages.isNotEmpty) {
+                  conversationsWithMessages++;
+                }
+                if (i < 3) {
+                  print('🔵 LOGIN_DEBUG: Conversation $i: id=${conv.id}, title=${conv.title}, messages=${conv.messages.length}');
+                }
+              }
+              print('🔵 LOGIN_DEBUG: Conversations with messages: $conversationsWithMessages out of ${parsedConversations.length}');
+            }
+            
             // Navigate directly to FreeWrappedNavigator (Daily Dose screen) - skipping IntroScreen
             print('🔵 onAnalysisComplete - navigating directly to FreeWrappedNavigator');
+            print('🔵 LOGIN_DEBUG: parsedConversations to pass: ${parsedConversations?.length ?? 0}');
+            
+            // CRITICAL: Ensure we have conversations with messages before passing
+            List<ConversationData>? conversationsToPass = parsedConversations;
+            if (conversationsToPass != null && conversationsToPass.isNotEmpty) {
+              // Filter to only conversations with messages
+              final filtered = conversationsToPass.where((conv) => conv.messages.isNotEmpty).toList();
+              
+              if (filtered.isNotEmpty) {
+                conversationsToPass = filtered;
+                print('🔵 LOGIN_DEBUG: Filtered conversations with messages: ${filtered.length}');
+              } else {
+                print('🔵 LOGIN_DEBUG: WARNING - No conversations with messages after filtering!');
+                // Keep original conversations - maybe they'll work
+                print('🔵 LOGIN_DEBUG: Keeping original ${conversationsToPass.length} conversations');
+              }
+            }
+            
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
                 builder: (context) {
-                  // We need onPremiumTap callback, but we can't access _startPremiumWrapped from here
-                  // So we'll create a dummy callback that shows an error
+                  print('🔵 LOGIN_DEBUG: Building FreeWrappedNavigator with ${conversationsToPass?.length ?? 0} conversations');
+                  
+                  if (conversationsToPass == null || conversationsToPass.isEmpty) {
+                    print('🔵 LOGIN_DEBUG: ERROR - No conversations to pass to FreeWrappedNavigator!');
+                  }
+                  
+                  // Create a proper onPremiumTap callback that uses the parsed conversations
                   return FreeWrappedNavigator(
                     onPremiumTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Premium features require app restart.'),
-                        ),
-                      );
+                      // This callback will be replaced by _handlePremiumTap in FreeWrappedNavigator
+                      // But we need to ensure conversations are available
+                      print('🔵 LOGIN_DEBUG: onPremiumTap called (this should not be used)');
                     },
                     stats: stats,
                     premiumInsights: premiumInsights,
-                    parsedConversations: parsedConversations,
+                    parsedConversations: conversationsToPass, // This is List<ConversationData>?
                   );
                 },
               ),
             );
           },
-          conversations: _conversations,
+          conversations: _conversations, // This is List<dynamic>? from web view
         ),
       ),
     );
