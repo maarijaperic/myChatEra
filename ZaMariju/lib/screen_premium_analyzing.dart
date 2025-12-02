@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'dart:async';
 import 'package:gpt_wrapped2/models/chat_data.dart';
 import 'package:gpt_wrapped2/services/premium_processor.dart';
+import 'package:gpt_wrapped2/services/analysis_tracker.dart';
 
 class PremiumAnalyzingScreen extends StatefulWidget {
   final List<ConversationData> conversations;
@@ -63,12 +64,49 @@ class _PremiumAnalyzingScreenState extends State<PremiumAnalyzingScreen>
   Future<void> _startAnalysis() async {
     _fadeController.forward();
 
+    // Check if user can generate analysis
+    final canGenerate = await AnalysisTracker.canGenerateAnalysis();
+    if (!canGenerate) {
+      final remaining = await AnalysisTracker.getRemainingAnalyses();
+      if (widget.onError != null) {
+        widget.onError!(
+          remaining == 0
+              ? 'You have reached your analysis limit. Please wait until next month or upgrade your plan.'
+              : 'Unable to generate analysis. Please try again.',
+        );
+      }
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+      return;
+    }
+
+    // Debug: Log conversation details
+    print('🔴 PREMIUM_DEBUG: Starting premium analysis');
+    print('🔴 PREMIUM_DEBUG: Total conversations received: ${widget.conversations.length}');
+    
+    // Log details about each conversation
+    for (int i = 0; i < widget.conversations.length; i++) {
+      final conv = widget.conversations[i];
+      print('🔴 PREMIUM_DEBUG: Conversation $i: id=${conv.id}, title=${conv.title}, messages=${conv.messages.length}');
+      if (conv.messages.isEmpty) {
+        print('🔴 PREMIUM_DEBUG: WARNING - Conversation $i has no messages!');
+      } else {
+        print('🔴 PREMIUM_DEBUG: Conversation $i first message: ${conv.messages.first.content.substring(0, conv.messages.first.content.length > 50 ? 50 : conv.messages.first.content.length)}...');
+      }
+    }
+
     final conversationsWithMessages =
         widget.conversations.where((conv) => conv.messages.isNotEmpty).toList();
 
+    print('🔴 PREMIUM_DEBUG: Conversations with messages: ${conversationsWithMessages.length}');
+
     if (conversationsWithMessages.isEmpty) {
+      print('🔴 PREMIUM_DEBUG: ERROR - No conversations with messages found!');
+      print('🔴 PREMIUM_DEBUG: This might be a timing issue - conversations may not be fully parsed yet');
+      
       if (widget.onError != null) {
-        widget.onError!('No conversations with messages found.');
+        widget.onError!('No conversations with messages found. Please try again or restart the app.');
       }
       if (mounted) {
         Navigator.of(context).pop();
@@ -113,6 +151,9 @@ class _PremiumAnalyzingScreenState extends State<PremiumAnalyzingScreen>
         });
         await Future.delayed(const Duration(milliseconds: 500));
       }
+
+      // Increment analysis count in Firebase
+      await AnalysisTracker.incrementAnalysisCount();
 
       // Complete
       if (mounted) {
