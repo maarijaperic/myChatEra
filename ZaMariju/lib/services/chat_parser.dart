@@ -28,18 +28,30 @@ class ChatParser {
     try {
       final List<dynamic> rawData = json.decode(jsonString);
       final conversations = <ConversationData>[];
+      
+      print('🔵 PARSER_DEBUG: Total conversations in JSON: ${rawData.length}');
 
       for (var convJson in rawData) {
         try {
           final conversation = _parseConversation(convJson);
           if (conversation.messages.isNotEmpty) {
             conversations.add(conversation);
+            print('🔵 PARSER_DEBUG: Parsed conversation "${conversation.title}" with ${conversation.messages.length} messages');
+          } else {
+            print('🔵 PARSER_DEBUG: Skipped conversation "${conversation.title}" - no messages');
           }
         } catch (e) {
-          print('Error parsing conversation: $e');
+          print('🔵 PARSER_DEBUG: Error parsing conversation: $e');
           continue;
         }
       }
+      
+      print('🔵 PARSER_DEBUG: Total conversations with messages: ${conversations.length}');
+      int totalMessages = 0;
+      for (var conv in conversations) {
+        totalMessages += conv.messages.length;
+      }
+      print('🔵 PARSER_DEBUG: Total messages parsed: $totalMessages');
 
       return conversations;
     } catch (e) {
@@ -54,6 +66,10 @@ class ChatParser {
     // Parse mapping to get messages
     final mapping = json['mapping'] as Map<String, dynamic>?;
     if (mapping != null) {
+      print('🔵 PARSER_DEBUG: Found mapping with ${mapping.length} entries');
+      int userMessages = 0;
+      int assistantMessages = 0;
+      
       for (var entry in mapping.values) {
         if (entry is! Map<String, dynamic>) continue;
         
@@ -64,12 +80,18 @@ class ChatParser {
           final message = _parseMessage(entry['id'] ?? '', messageData);
           if (message != null) {
             messages.add(message);
+            if (message.isUser) userMessages++;
+            else assistantMessages++;
           }
         } catch (e) {
-          print('Error parsing message: $e');
+          print('🔵 PARSER_DEBUG: Error parsing message: $e');
           continue;
         }
       }
+      
+      print('🔵 PARSER_DEBUG: Parsed ${messages.length} messages (${userMessages} user, ${assistantMessages} assistant)');
+    } else {
+      print('🔵 PARSER_DEBUG: WARNING - No mapping found in conversation!');
     }
 
     // Sort messages by timestamp
