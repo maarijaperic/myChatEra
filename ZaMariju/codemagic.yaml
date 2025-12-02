@@ -10,22 +10,30 @@ workflows:
       groups:
         - app_store_credentials
     scripts:
+      - name: Navigate to Flutter project
+        script: |
+          cd ZaMariju
+          pwd
+          ls -la
       - name: Get Flutter dependencies
         script: |
+          cd ZaMariju
           flutter pub get
       - name: Install CocoaPods dependencies
         script: |
-          cd ios && pod install
+          cd ZaMariju/ios && pod install
       - name: Set up code signing settings on Xcode project
         script: |
+          cd ZaMariju
           xcode-project use-profiles
       - name: Build ipa for distribution
         script: |
+          cd ZaMariju
           flutter build ipa --release \
             --build-name=1.0.0 \
             --build-number=2
     artifacts:
-      - build/ios/ipa/*.ipa
+      - ZaMariju/build/ios/ipa/*.ipa
     publishing:
       email:
         recipients:
