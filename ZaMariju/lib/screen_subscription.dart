@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:gpt_wrapped2/services/revenuecat_service.dart';
 
 class SubscriptionScreen extends StatefulWidget {
   final VoidCallback onSubscribe;
@@ -15,6 +16,7 @@ class SubscriptionScreen extends StatefulWidget {
 
 class _SubscriptionScreenState extends State<SubscriptionScreen> {
   int _selectedIndex = 1; // Default to monthly (middle option, best value)
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -141,47 +143,55 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               
               const SizedBox(height: 16),
               
-              // Continue button
+              // Continue/Purchase button
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: GestureDetector(
-                  onTap: () {
-                    print('🔴 PREMIUM_DEBUG: SubscriptionScreen - Continue button tapped');
-                    // Close this screen and trigger premium navigation
-                    Navigator.pop(context);
-                    print('🔴 PREMIUM_DEBUG: SubscriptionScreen - Calling widget.onSubscribe()');
-                    widget.onSubscribe();
-                  },
-                  behavior: HitTestBehavior.opaque, // Ensure this captures taps
+                  onTap: _isLoading ? null : _handlePurchase,
+                  behavior: HitTestBehavior.opaque,
                   child: Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 18),
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [
-                          Color(0xFFFF6B9D),
-                          Color(0xFFFF8E9E),
-                        ],
-                      ),
+                      gradient: _isLoading
+                          ? null
+                          : const LinearGradient(
+                              colors: [
+                                Color(0xFFFF6B9D),
+                                Color(0xFFFF8E9E),
+                              ],
+                            ),
+                      color: _isLoading ? Colors.grey : null,
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFFFF6B9D).withOpacity(0.4),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
+                      boxShadow: _isLoading
+                          ? null
+                          : [
+                              BoxShadow(
+                                color: const Color(0xFFFF6B9D).withOpacity(0.4),
+                                blurRadius: 20,
+                                offset: const Offset(0, 10),
+                              ),
+                            ],
                     ),
-                    child: Text(
-                      'Continue',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.inter(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.3,
-                      ),
-                    ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          )
+                        : Text(
+                            'Continue',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.inter(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.3,
+                            ),
+                          ),
                   ),
                 ),
               ),
@@ -213,11 +223,72 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       case 2: // Yearly
         return [
           'All premium insights',
-          'Available for all future versions',
+          '5 analyses per month',
           'Billed once per year',
         ];
       default:
         return [];
+    }
+  }
+
+  Future<void> _handlePurchase() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // TEST MODE: Bypass RevenueCat purchase and directly trigger premium analysis
+      // Set to false before production release!
+      const bool ENABLE_TEST_MODE = true;
+      
+      if (ENABLE_TEST_MODE) {
+        print('🧪 TEST MODE: Bypassing RevenueCat purchase - directly enabling premium');
+        await Future.delayed(const Duration(milliseconds: 500)); // Simulate purchase delay
+        if (mounted) {
+          Navigator.pop(context);
+          widget.onSubscribe();
+        }
+      } else {
+        // Production mode: Use RevenueCat
+        final productId = RevenueCatService.getProductId(_selectedIndex);
+        print('🔴 PREMIUM_DEBUG: Purchasing product: $productId');
+
+        final success = await RevenueCatService.purchaseProduct(productId);
+
+        if (success) {
+          print('🔴 PREMIUM_DEBUG: Purchase successful');
+          if (mounted) {
+            Navigator.pop(context);
+            widget.onSubscribe();
+          }
+        } else {
+          print('🔴 PREMIUM_DEBUG: Purchase failed or cancelled');
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Purchase cancelled or failed. Please try again.'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      print('🔴 PREMIUM_DEBUG: Purchase error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
