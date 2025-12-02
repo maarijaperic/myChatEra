@@ -172,7 +172,7 @@ class _RoastMeScreenState extends State<RoastMeScreen>
                           child: Column(
                             children: [
                               Text(
-                                widget.roastText,
+                                '${widget.roastText} But honestly, we love that for you - at least you\'re getting things done!',
                                 textAlign: TextAlign.center,
                                 style: GoogleFonts.inter(
                                   color: const Color(0xFF555555),
