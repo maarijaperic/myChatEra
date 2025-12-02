@@ -145,3 +145,7 @@ If you have questions about these Terms, please contact us at:
 ---
 
 **By using MyChatEra AI, you acknowledge that you have read, understood, and agree to these Terms of Service.**
+
+
+
+
