@@ -136,3 +136,7 @@ if ($remoteExists) {
 
 Write-Host ""
 Write-Host "=== Završeno ===" -ForegroundColor Cyan
+
+
+
+
