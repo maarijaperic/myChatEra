@@ -19,13 +19,22 @@ class CardNavigator extends StatefulWidget {
   });
 
   @override
-  State<CardNavigator> createState() => _CardNavigatorState();
+  State<CardNavigator> createState() => CardNavigatorState();
+  
+  // Static method to get navigator from context
+  static CardNavigatorState? of(BuildContext context) {
+    return context.findAncestorStateOfType<CardNavigatorState>();
+  }
 }
 
-class _CardNavigatorState extends State<CardNavigator>
+// Export the state class so it can be accessed from other files
+class CardNavigatorState extends State<CardNavigator>
     with SingleTickerProviderStateMixin {
   int _currentIndex = 0;
   late AnimationController _transitionController;
+  
+  // Getter to access current index (for debugging)
+  int get currentIndex => _currentIndex;
 
   @override
   void initState() {
@@ -74,6 +83,38 @@ class _CardNavigatorState extends State<CardNavigator>
       });
       _transitionController.reset();
     }
+  }
+
+  /// Navigate to a specific screen index
+  Future<void> goToIndex(int index) async {
+    print('🔵 CardNavigator: goToIndex called with index=$index, currentIndex=$_currentIndex, totalScreens=${widget.screens.length}');
+    if (index >= 0 && index < widget.screens.length && index != _currentIndex) {
+      print('🔵 CardNavigator: Navigating to index $index');
+      await _transitionController.forward();
+      if (mounted) {
+        setState(() {
+          _currentIndex = index;
+          print('🔵 CardNavigator: Updated _currentIndex to $index');
+        });
+      }
+      _transitionController.reset();
+    } else {
+      print('🔵 CardNavigator: Invalid index or same as current. index=$index, currentIndex=$_currentIndex, screens.length=${widget.screens.length}');
+    }
+  }
+  
+  /// Navigate to the first screen (index 0)
+  Future<void> goToFirstScreen() async {
+    print('🔵 CardNavigator: goToFirstScreen called, currentIndex=$_currentIndex');
+    if (_currentIndex == 0) {
+      print('🔵 CardNavigator: Already on first screen');
+      return;
+    }
+    
+    // Directly set index to 0
+    print('🔵 CardNavigator: Directly navigating to index 0');
+    await goToIndex(0);
+    print('🔵 CardNavigator: Reached first screen (index 0)');
   }
 
   @override
@@ -173,12 +214,8 @@ class _CardNavigatorState extends State<CardNavigator>
       return false;
     }
     
-    // Disable on last screen
-    if (_currentIndex == widget.screens.length - 1) {
-      return false;
-    }
-    
-    // Enable tap zones for all other screens
+    // Allow navigation on last screen (SocialSharingScreen) - can go back
+    // Enable tap zones for all screens
     return true;
   }
 
