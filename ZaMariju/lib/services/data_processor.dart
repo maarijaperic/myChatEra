@@ -37,26 +37,42 @@ class DataProcessor {
   /// Convert raw JSON conversation entries into ConversationData objects
   static List<ConversationData> parseConversations(List<dynamic> jsonData) {
     final conversations = <ConversationData>[];
+    final seenIds = <String, ConversationData>{};
 
     for (var json in jsonData) {
       try {
         final jsonMap = json as Map<String, dynamic>;
+        final conversationId = (jsonMap['id'] ?? '').toString();
+
+        ConversationData? conv;
 
         // If we already have simplified messages, parse them directly
         if (jsonMap.containsKey('messages') && jsonMap['messages'] is List) {
-          final conv = _parseConversationWithMessageList(jsonMap);
-          conversations.add(conv);
-          continue;
+          conv = _parseConversationWithMessageList(jsonMap);
         }
-
         // If we have mapping (full conversation with messages), parse it
-        if (jsonMap.containsKey('mapping') && jsonMap['mapping'] != null) {
-          final conv = _parseConversationWithMessages(jsonMap);
-          conversations.add(conv);
+        else if (jsonMap.containsKey('mapping') && jsonMap['mapping'] != null) {
+          conv = _parseConversationWithMessages(jsonMap);
         } else {
           // Otherwise, just parse metadata
-          final conv = ConversationData.fromJson(jsonMap);
-          conversations.add(conv);
+          conv = ConversationData.fromJson(jsonMap);
+        }
+
+        if (conv == null) continue;
+
+        // Handle duplicates: keep the one with more messages
+        if (seenIds.containsKey(conversationId)) {
+          final existing = seenIds[conversationId]!;
+          if (conv.messages.length > existing.messages.length) {
+            // Replace with version that has more messages
+            seenIds[conversationId] = conv;
+            print('🔵 PARSER_DEBUG: Replacing duplicate conversation $conversationId (${existing.messages.length} -> ${conv.messages.length} messages)');
+          } else {
+            // Keep existing version (has more or equal messages)
+            print('🔵 PARSER_DEBUG: Skipping duplicate conversation $conversationId (existing has ${existing.messages.length}, new has ${conv.messages.length} messages)');
+          }
+        } else {
+          seenIds[conversationId] = conv;
         }
       } catch (e) {
         print('Error parsing conversation: $e');
@@ -64,7 +80,10 @@ class DataProcessor {
       }
     }
 
-    return conversations;
+    // Return deduplicated conversations
+    final result = seenIds.values.toList();
+    print('🔵 PARSER_DEBUG: Parsed ${result.length} unique conversations (removed ${jsonData.length - result.length} duplicates)');
+    return result;
   }
 
   /// Public helper to analyze already parsed conversations
@@ -126,10 +145,27 @@ class DataProcessor {
     if (allMessages.isNotEmpty) {
       final stats = ChatAnalyzer.analyze(conversations);
       // Calculate additional metrics
-      final mostUsedWord = stats.mainTopic;
-      final mostUsedWordCount = mostUsedWord != null 
-          ? ChatAnalyzer.getMostUsedWordCount(allMessages, mostUsedWord)
+      // ALWAYS recalculate mainTopic from actual messages to ensure accuracy
+      var mostUsedWord = ChatAnalyzer.getMostUsedWord(allMessages);
+      
+      // If still null/empty, try to get from stats as fallback
+      if (mostUsedWord == null || mostUsedWord.isEmpty || mostUsedWord.toLowerCase() == 'null') {
+        print('🔵 PROCESSOR_DEBUG: getMostUsedWord returned null/empty, trying stats.mainTopic...');
+        mostUsedWord = stats.mainTopic;
+        // If stats.mainTopic is also null/empty, try one more time with different approach
+        if (mostUsedWord == null || mostUsedWord.isEmpty || mostUsedWord.toLowerCase() == 'null') {
+          print('🔵 PROCESSOR_DEBUG: stats.mainTopic is also null/empty, recalculating...');
+          mostUsedWord = ChatAnalyzer.getMostUsedWord(allMessages);
+        }
+      }
+      
+      print('🔵 PROCESSOR_DEBUG: Final mostUsedWord = $mostUsedWord');
+      
+      final mostUsedWordCount = (mostUsedWord != null && mostUsedWord.isNotEmpty && mostUsedWord.toLowerCase() != 'null')
+          ? ChatAnalyzer.getMostUsedWordCount(allMessages, mostUsedWord.toLowerCase())
           : 0;
+      
+      print('🔵 PROCESSOR_DEBUG: mostUsedWordCount = $mostUsedWordCount');
       final totalDays = ChatAnalyzer.countUniqueDays(allMessages);
       final yearPercentage = ChatAnalyzer.calculateYearPercentage(allMessages);
       final averageResponseTime = ChatAnalyzer.calculateAverageResponseTime(allMessages);
@@ -143,7 +179,7 @@ class DataProcessor {
         peakTime: stats.peakTime,
         peakHour: stats.peakHour,
         randomQuestion: stats.randomQuestion,
-        mainTopic: stats.mainTopic,
+        mainTopic: mostUsedWord, // Always use recalculated word
         firstChatDate: stats.firstChatDate,
         lastChatDate: stats.lastChatDate,
         totalConversations: stats.totalConversations,
