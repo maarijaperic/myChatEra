@@ -239,29 +239,44 @@ class ChatAnalyzer {
       }
     }
 
-    if (wordCounts.isEmpty) return null;
+    if (wordCounts.isEmpty) {
+      print('🔵 ANALYZER_DEBUG: No words found in messages');
+      return null;
+    }
 
-    // Find most common word (must appear at least 3 times to be significant)
+    print('🔵 ANALYZER_DEBUG: Found ${wordCounts.length} unique words');
+    // Log top 10 words for debugging
+    final sortedWords = wordCounts.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+    print('🔵 ANALYZER_DEBUG: Top 10 words:');
+    for (int i = 0; i < sortedWords.length && i < 10; i++) {
+      print('🔵 ANALYZER_DEBUG:   ${sortedWords[i].key}: ${sortedWords[i].value}');
+    }
+
+    // Find most common word - return the word with highest count (no minimum threshold)
     String? mostUsedWord;
     int maxCount = 0;
     
     wordCounts.forEach((word, count) {
-      if (count >= 3 && count > maxCount) {
+      // Skip the word "null" if it appears
+      if (word.toLowerCase() == 'null') {
+        print('🔵 ANALYZER_DEBUG: Skipping word "null"');
+        return;
+      }
+      if (count > maxCount) {
         maxCount = count;
         mostUsedWord = word;
       }
     });
 
-    // If no word appears 3+ times, return the most common one anyway
-    if (mostUsedWord == null && wordCounts.isNotEmpty) {
-      wordCounts.forEach((word, count) {
-        if (count > maxCount) {
-          maxCount = count;
-          mostUsedWord = word;
-        }
-      });
+    // Capitalize first letter for better display
+    if (mostUsedWord != null && mostUsedWord!.isNotEmpty && mostUsedWord!.toLowerCase() != 'null') {
+      mostUsedWord = mostUsedWord![0].toUpperCase() + mostUsedWord!.substring(1);
+    } else if (mostUsedWord != null && mostUsedWord!.toLowerCase() == 'null') {
+      print('🔵 ANALYZER_DEBUG: Most used word is "null", returning null instead');
+      mostUsedWord = null;
     }
 
+    print('🔵 ANALYZER_DEBUG: Most used word = $mostUsedWord (count: $maxCount)');
     return mostUsedWord;
   }
 
