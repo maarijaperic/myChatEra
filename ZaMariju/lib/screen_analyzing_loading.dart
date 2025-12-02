@@ -125,15 +125,44 @@ class _AnalyzingLoadingScreenState extends State<AnalyzingLoadingScreen>
     // Actually process the conversations
     if (widget.conversations != null && widget.conversations!.isNotEmpty) {
       try {
+        print('🔵 ANALYZING_DEBUG: Starting to parse ${widget.conversations!.length} conversations...');
         parsedConversations = DataProcessor.parseConversations(widget.conversations!);
+        print('🔵 ANALYZING_DEBUG: Parsed ${parsedConversations.length} conversations');
+        
+        // Debug: Log conversation details
+        int totalMessages = 0;
+        for (int i = 0; i < parsedConversations.length; i++) {
+          final conv = parsedConversations[i];
+          totalMessages += conv.messages.length;
+          if (i < 5) { // Log first 5 conversations
+            print('🔵 ANALYZING_DEBUG: Conversation $i: id=${conv.id}, title=${conv.title}, messages=${conv.messages.length}');
+          }
+        }
+        print('🔵 ANALYZING_DEBUG: Total messages parsed: $totalMessages');
+        
+        // Verify that conversations have messages
+        final conversationsWithMessages = parsedConversations.where((conv) => conv.messages.isNotEmpty).toList();
+        print('🔵 ANALYZING_DEBUG: Conversations with messages: ${conversationsWithMessages.length} out of ${parsedConversations.length}');
+        
+        if (conversationsWithMessages.isEmpty) {
+          print('🔵 ANALYZING_DEBUG: WARNING - No conversations with messages after parsing!');
+        }
+        
         analyzedStats = DataProcessor.analyzeConversations(parsedConversations);
-      } catch (e) {
-        print('Error analyzing conversations: $e');
+        print('🔵 ANALYZING_DEBUG: Analysis complete - stats calculated');
+        print('🔵 ANALYZING_DEBUG: mainTopic = ${analyzedStats.mainTopic}');
+        print('🔵 ANALYZING_DEBUG: mostUsedWordCount = ${analyzedStats.mostUsedWordCount}');
+        print('🔵 ANALYZING_DEBUG: totalMessages = ${analyzedStats.totalMessages}');
+        print('🔵 ANALYZING_DEBUG: totalConversations = ${analyzedStats.totalConversations}');
+      } catch (e, stackTrace) {
+        print('🔵 ANALYZING_DEBUG: Error analyzing conversations: $e');
+        print('🔵 ANALYZING_DEBUG: Stack trace: $stackTrace');
         // Use empty stats if analysis fails
         analyzedStats = ChatStats.empty();
       }
     } else {
       // No conversations, use empty stats
+      print('🔵 ANALYZING_DEBUG: No conversations provided');
       analyzedStats = ChatStats.empty();
     }
     await Future.delayed(const Duration(milliseconds: 800));
@@ -166,10 +195,22 @@ class _AnalyzingLoadingScreenState extends State<AnalyzingLoadingScreen>
     // Pass parsed conversations so premium analysis can be done later
     // Premium insights will be null - will be generated when user subscribes
     if (mounted) {
+      print('🔵 ANALYZING_DEBUG: Calling onAnalysisComplete');
+      print('🔵 ANALYZING_DEBUG: Stats: ${analyzedStats.totalConversations} conversations, ${analyzedStats.totalMessages} messages');
+      print('🔵 ANALYZING_DEBUG: Parsed conversations: ${parsedConversations.length}');
+      
+      // Verify conversations have messages before passing
+      final conversationsWithMessages = parsedConversations.where((conv) => conv.messages.isNotEmpty).toList();
+      print('🔵 ANALYZING_DEBUG: Conversations with messages to pass: ${conversationsWithMessages.length}');
+      
+      print('🔵 ANALYZING_DEBUG: About to call onAnalysisComplete');
+      print('🔵 ANALYZING_DEBUG: analyzedStats.mainTopic = ${analyzedStats.mainTopic}');
+      print('🔵 ANALYZING_DEBUG: analyzedStats.mostUsedWordCount = ${analyzedStats.mostUsedWordCount}');
+      
       widget.onAnalysisComplete(
         analyzedStats,
         null, // Premium insights will be analyzed when user subscribes
-        parsedConversations.isNotEmpty ? parsedConversations : null,
+        conversationsWithMessages.isNotEmpty ? conversationsWithMessages : null,
       );
     }
   }
