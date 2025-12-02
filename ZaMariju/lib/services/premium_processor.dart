@@ -55,6 +55,12 @@ class PremiumInsights {
   final String movieTitle;
   final int movieYear;
   final String movieExplanation;
+  
+  // Song Recommendation
+  final String songTitle;
+  final String songArtist;
+  final int songYear;
+  final String songExplanation;
 
   PremiumInsights({
     required this.personalityType,
@@ -90,6 +96,10 @@ class PremiumInsights {
     required this.movieTitle,
     required this.movieYear,
     required this.movieExplanation,
+    required this.songTitle,
+    required this.songArtist,
+    required this.songYear,
+    required this.songExplanation,
   });
 }
 
@@ -165,7 +175,12 @@ class PremiumProcessor {
       final movieResult = await AIAnalyzer.generateMovieTitle(userMessages);
       print('Premium debug — movieResult: $movieResult');
       
-      // 10. Analyze Past Life Persona
+      // 10. Determine song title
+      onProgress?.call('Finding your life soundtrack...');
+      final songResult = await AIAnalyzer.generateSongTitle(userMessages);
+      print('Premium debug — songResult: $songResult');
+      
+      // 11. Analyze Past Life Persona
       onProgress?.call('Revealing past life persona...');
       final personaResult = await AIAnalyzer.analyzePastLifePersona(userMessages);
       print('Premium debug — personaResult: $personaResult');
@@ -181,6 +196,7 @@ class PremiumProcessor {
       print('  zodiacResult[zodiacName]: ${zodiacResult['zodiacName']}');
       print('  loveLanguageResult[loveLanguage]: ${loveLanguageResult['loveLanguage']}');
       print('  movieResult[movieTitle]: ${movieResult['movieTitle']}');
+      print('  songResult[songTitle]: ${songResult['songTitle']}');
       
       // Combine all results
       final insights = PremiumInsights(
@@ -221,6 +237,10 @@ class PremiumProcessor {
         movieTitle: movieResult['movieTitle'] ?? 'The Pursuit of Happyness',
         movieYear: int.tryParse('${movieResult['releaseYear']}') ?? 2006,
         movieExplanation: movieResult['explanation'] ?? 'Based on your conversations, GPT detected a relentless drive for self-improvement and asking deep questions about life. Like Chris Gardner in the movie, you are constantly searching for answers, optimizing your life, and never giving up on personal growth. Your chats are basically a journey of someone trying to figure it all out - one prompt at a time.',
+        songTitle: songResult['songTitle'] ?? 'Don\'t Stop Believin\'',
+        songArtist: songResult['artist'] ?? 'Journey',
+        songYear: int.tryParse('${songResult['releaseYear']}') ?? 1981,
+        songExplanation: songResult['explanation'] ?? 'Based on your conversations, GPT detected an optimistic and persistent personality. Like this classic anthem, you keep pushing forward, asking questions, and never giving up on your goals. Your chats are the soundtrack of someone who believes in the journey, not just the destination.',
       );
       
       print('🔴 PREMIUM_DEBUG: Created PremiumInsights - personalityType: ${insights.personalityType}, mbtiType: ${insights.mbtiType}, zodiacName: ${insights.zodiacName}');
@@ -281,6 +301,10 @@ class PremiumProcessor {
       movieTitle: 'The Pursuit of Happyness',
       movieYear: 2006,
       movieExplanation: 'Based on your conversations, GPT detected a relentless drive for self-improvement and asking deep questions about life. Like Chris Gardner in the movie, you are constantly searching for answers, optimizing your life, and never giving up on personal growth. Your chats are basically a journey of someone trying to figure it all out - one prompt at a time.',
+      songTitle: 'Don\'t Stop Believin\'',
+      songArtist: 'Journey',
+      songYear: 1981,
+      songExplanation: 'Based on your conversations, GPT detected an optimistic and persistent personality. Like this classic anthem, you keep pushing forward, asking questions, and never giving up on your goals. Your chats are the soundtrack of someone who believes in the journey, not just the destination.',
     );
   }
 }
