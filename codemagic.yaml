@@ -4,12 +4,15 @@ workflows:
     max_build_duration: 120
     instance_type: mac_mini_m1
     working_directory: ZaMariju
+    integrations:
+      app_store_connect: app-store-connect
     environment:
       flutter: stable
       xcode: latest
       cocoapods: default
-      groups:
-        - app_store_credentials  # Zameni sa imenom tvoje grupe ako je drugačije!
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.mychatera
     scripts:
       - name: Get Flutter dependencies
         script: |
@@ -20,10 +23,21 @@ workflows:
         script: |
           cd ios
           pod install
-      - name: Set up keychain and code signing
+      - name: Set up keychain to be used for code signing
         script: |
           keychain initialize
-          xcode-project use-profiles --archive-method app-store
+      - name: Fetch signing files from App Store Connect (create if needed)
+        script: |
+          echo "Fetching signing files using App Store Connect API key..."
+          app-store-connect fetch-signing-files "com.mychatera" \
+            --type IOS_APP_STORE \
+            --create || echo "Note: Signing files may already exist or will be created during build"
+      - name: Add certificates to keychain
+        script: |
+          keychain add-certificates || echo "No certificates to add yet"
+      - name: Set up code signing settings on Xcode project
+        script: |
+          xcode-project use-profiles --archive-method app-store || echo "use-profiles may fail if certificates don't exist yet, continuing..."
       - name: Build ipa for distribution
         script: |
           flutter build ipa --release \
@@ -39,8 +53,5 @@ workflows:
           success: true
           failure: false
       app_store_connect:
-        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
-        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
-        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
         submit_to_testflight: true
         submit_to_app_store: false
