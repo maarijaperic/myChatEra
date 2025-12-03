@@ -22,10 +22,7 @@ workflows:
           pod install
       - name: Set up code signing settings on Xcode project
         script: |
-          xcode-project use-profiles \
-            --team-id 522DMZ83DM \
-            --bundle-id com.mychatera \
-            --profile-type app-store
+          xcode-project use-profiles --archive-method app-store
       - name: Build ipa for distribution
         script: |
           flutter build ipa --release \
