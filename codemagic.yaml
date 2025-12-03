@@ -27,10 +27,7 @@ workflows:
         script: |
           app-store-connect fetch-signing-files "com.mychatera" \
             --type IOS_APP_STORE \
-            --create \
-            --issuer-id=$APP_STORE_ISSUER_ID \
-            --api-key-id=$APP_STORE_KEY_ID \
-            --api-private-key="$APP_STORE_PRIVATE_KEY"
+            --create
       - name: Set up code signing settings on Xcode project
         script: |
           xcode-project use-profiles
@@ -49,8 +46,8 @@ workflows:
           success: true
           failure: false
       app_store_connect:
-        api_key: $APP_STORE_PRIVATE_KEY
-        key_id: $APP_STORE_KEY_ID
-        issuer_id: $APP_STORE_ISSUER_ID
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
         submit_to_testflight: true
         submit_to_app_store: false
