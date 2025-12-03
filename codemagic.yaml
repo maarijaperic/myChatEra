@@ -20,26 +20,29 @@ workflows:
         script: |
           cd ios
           pod install
-      - name: Set up keychain to be used for code signing
-        script: |
-          keychain initialize
-      - name: Fetch signing files from App Store Connect
-        script: |
-          echo "Fetching signing files using App Store Connect API key..."
-          app-store-connect fetch-signing-files "com.mychatera" \
-            --type IOS_APP_STORE \
-            --create
-      - name: Add certificates to keychain
-        script: |
-          keychain add-certificates
-      - name: Set up code signing settings on Xcode project
-        script: |
-          xcode-project use-profiles
       - name: Build ipa for distribution
         script: |
           flutter build ipa --release \
             --build-name=1.0.0 \
-            --build-number=2
+            --build-number=2 \
+            --export-options-plist=/dev/stdin <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>teamID</key>
+            <string>522DMZ83DM</string>
+            <key>signingStyle</key>
+            <string>automatic</string>
+            <key>uploadBitcode</key>
+            <false/>
+            <key>uploadSymbols</key>
+            <true/>
+          </dict>
+          </plist>
+          EOF
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:
