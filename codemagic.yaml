@@ -20,31 +20,32 @@ workflows:
         script: |
           cd ios
           pod install
-      - name: Set up keychain to be used for code signing
+      - name: Build ipa for distribution with explicit App Store signing
         script: |
-          keychain initialize
-      - name: Create certificate using App Store Connect API key
-        script: |
-          echo "Creating certificate using App Store Connect API key..."
-          app-store-connect certificates create \
-            --type IOS_DISTRIBUTION \
-            --certificate-key "$(openssl genrsa 2048 | base64)" || echo "Certificate may already exist, continuing..."
-      - name: Fetch signing files from App Store Connect
-        script: |
-          echo "Fetching signing files..."
-          app-store-connect fetch-signing-files "com.mychatera" \
-            --type IOS_APP_STORE || echo "Signing files fetch failed, trying to continue..."
-      - name: Add certificates to keychain
-        script: |
-          keychain add-certificates || echo "No certificates to add, continuing..."
-      - name: Set up code signing settings on Xcode project
-        script: |
-          xcode-project use-profiles --archive-method app-store || echo "use-profiles failed, trying automatic signing..."
-      - name: Build ipa for distribution
-        script: |
+          cat > /tmp/export_options.plist <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>teamID</key>
+            <string>522DMZ83DM</string>
+            <key>signingStyle</key>
+            <string>automatic</string>
+            <key>uploadBitcode</key>
+            <false/>
+            <key>uploadSymbols</key>
+            <true/>
+            <key>manageAppVersionAndBuildNumber</key>
+            <false/>
+          </dict>
+          </plist>
+          EOF
           flutter build ipa --release \
             --build-name=1.0.0 \
-            --build-number=2
+            --build-number=2 \
+            --export-options-plist=/tmp/export_options.plist
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:
