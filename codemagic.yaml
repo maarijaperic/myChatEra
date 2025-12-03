@@ -20,32 +20,15 @@ workflows:
         script: |
           cd ios
           pod install
-      - name: Build ipa for distribution with explicit App Store signing
+      - name: Set up keychain and code signing
         script: |
-          cat > /tmp/export_options.plist <<EOF
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key>
-            <string>app-store</string>
-            <key>teamID</key>
-            <string>522DMZ83DM</string>
-            <key>signingStyle</key>
-            <string>automatic</string>
-            <key>uploadBitcode</key>
-            <false/>
-            <key>uploadSymbols</key>
-            <true/>
-            <key>manageAppVersionAndBuildNumber</key>
-            <false/>
-          </dict>
-          </plist>
-          EOF
+          keychain initialize
+          xcode-project use-profiles --archive-method app-store
+      - name: Build ipa for distribution
+        script: |
           flutter build ipa --release \
             --build-name=1.0.0 \
-            --build-number=2 \
-            --export-options-plist=/tmp/export_options.plist
+            --build-number=2
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:
