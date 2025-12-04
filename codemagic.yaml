@@ -10,9 +10,6 @@ workflows:
       flutter: stable
       xcode: latest
       cocoapods: default
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.mychatera
     scripts:
       - name: Get Flutter dependencies
         script: |
