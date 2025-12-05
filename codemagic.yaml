@@ -20,26 +20,46 @@ workflows:
         script: |
           cd ios
           pod install
-      - name: Set up keychain to be used for code signing
+      - name: Build IPA using xcodebuild with automatic provisioning
         script: |
-          keychain initialize
-      - name: Fetch signing files from App Store Connect (create if needed)
-        script: |
-          echo "Fetching signing files using App Store Connect API key..."
-          app-store-connect fetch-signing-files "com.mychatera" \
-            --type IOS_APP_STORE \
-            --create || echo "Note: Signing files may already exist or will be created during build"
-      - name: Add certificates to keychain
-        script: |
-          keychain add-certificates || echo "No certificates to add yet"
-      - name: Set up code signing settings on Xcode project
-        script: |
-          xcode-project use-profiles --archive-method app-store || echo "use-profiles may fail if certificates don't exist yet, continuing..."
-      - name: Build ipa for distribution
-        script: |
-          flutter build ipa --release \
-            --build-name=1.0.0 \
-            --build-number=2
+          cd ios
+          xcodebuild -workspace Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Release \
+            -archivePath build/Runner.xcarchive \
+            archive \
+            -allowProvisioningUpdates \
+            CODE_SIGN_STYLE="Automatic" \
+            DEVELOPMENT_TEAM="522DMZ83DM" \
+            PRODUCT_BUNDLE_IDENTIFIER="com.mychatera" \
+            PROVISIONING_PROFILE_SPECIFIER="" \
+            CODE_SIGN_IDENTITY="Apple Distribution"
+          
+          xcodebuild -exportArchive \
+            -archivePath build/Runner.xcarchive \
+            -exportPath ../build/ios/ipa \
+            -exportOptionsPlist /dev/stdin <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>teamID</key>
+            <string>522DMZ83DM</string>
+            <key>signingStyle</key>
+            <string>automatic</string>
+            <key>uploadBitcode</key>
+            <false/>
+            <key>uploadSymbols</key>
+            <true/>
+          </dict>
+          </plist>
+          EOF
+          
+          # Copy IPA to expected location
+          mkdir -p ../build/ios/ipa
+          cp build/Runner.xcarchive/Products/Applications/Runner.app ../build/ios/ipa/ || true
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:
