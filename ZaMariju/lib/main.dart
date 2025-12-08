@@ -529,8 +529,8 @@ class FreeWrappedNavigator extends StatelessWidget {
         timeDescription = 'at night';
     }
 
-    return CardNavigator(
-      screens: [
+    // Create screens list
+    final List<Widget> screensList = [
         // Index 0 - Daily Dose
         DailyDoseScreen(
           messagesPerDay: messagesPerDay,
@@ -810,7 +810,14 @@ class FreeWrappedNavigator extends StatelessWidget {
           stats: stats,
           premiumInsights: premiumInsights,
         ),
-      ],
+    ];
+    
+    // Debug: Log screen count
+    print('🔵 FREEWRAPPED_DEBUG: Total screens in list: ${screensList.length}');
+    print('🔵 FREEWRAPPED_DEBUG: Screen types: ${screensList.map((s) => s.runtimeType.toString()).join(", ")}');
+    
+    return CardNavigator(
+      screens: screensList,
       startIndex: 0,
       premiumStartIndex: null, // Allow navigation to all screens including Share with People
     );
