@@ -158,7 +158,7 @@ class _SocialSharingScreenState extends State<SocialSharingScreen>
                           SizedBox(height: screenHeight * 0.045),
                           _ShareHeroCard(
                             screenWidth: screenWidth,
-                            onPreviewTap: () {
+                            onPreviewTap: () async {
                               try {
                                 print('🔵 SocialSharingScreen: onPreviewTap called');
                                 print('🔵 SocialSharingScreen: stats is null = ${widget.stats == null}');
@@ -169,14 +169,33 @@ class _SocialSharingScreenState extends State<SocialSharingScreen>
                                   return;
                                 }
                                 
-                                Navigator.of(context).push(
+                                // Wait a bit to ensure context is ready
+                                await Future.delayed(const Duration(milliseconds: 100));
+                                
+                                if (!mounted) {
+                                  print('❌ SocialSharingScreen: Context not mounted after delay');
+                                  return;
+                                }
+                                
+                                print('🔵 SocialSharingScreen: Pushing PreviewAnalysisScreen...');
+                                await Navigator.of(context).push(
                                   MaterialPageRoute(
                                     builder: (context) {
                                       print('🔵 SocialSharingScreen: Building PreviewAnalysisScreen');
-                                      return PreviewAnalysisScreen(
-                                        stats: widget.stats,
-                                        premiumInsights: widget.premiumInsights,
-                                      );
+                                      try {
+                                        return PreviewAnalysisScreen(
+                                          stats: widget.stats,
+                                          premiumInsights: widget.premiumInsights,
+                                        );
+                                      } catch (e, stackTrace) {
+                                        print('❌ SocialSharingScreen: Error building PreviewAnalysisScreen: $e');
+                                        print('❌ SocialSharingScreen: Stack trace: $stackTrace');
+                                        return Scaffold(
+                                          body: Center(
+                                            child: Text('Error loading preview: $e'),
+                                          ),
+                                        );
+                                      }
                                     },
                                   ),
                                 );
@@ -189,6 +208,7 @@ class _SocialSharingScreenState extends State<SocialSharingScreen>
                                     SnackBar(
                                       content: Text('Error opening preview: $e'),
                                       backgroundColor: Colors.red,
+                                      duration: const Duration(seconds: 3),
                                     ),
                                   );
                                 }
@@ -878,8 +898,23 @@ class _GoToFirstPremiumButton extends StatelessWidget {
         print('🔵 GoToFirstPremium: Current index: ${cardNavigatorState.currentIndex}');
         print('🔵 GoToFirstPremium: Total screens: ${cardNavigatorState.widget.screens.length}');
         
-        // MBTI Personality screen is at index 8 (first premium screen after "Unlock Premium" at index 7)
-        const mbtiScreenIndex = 8;
+        // Check which navigator we're in by checking the first screen type
+        final firstScreen = cardNavigatorState.widget.screens.isNotEmpty 
+            ? cardNavigatorState.widget.screens[0].runtimeType.toString()
+            : 'Unknown';
+        print('🔵 GoToFirstPremium: First screen type: $firstScreen');
+        
+        // If first screen is MBTIPersonalityScreen, we're in PremiumWrappedNavigator (index 0)
+        // If first screen is DailyDoseScreen, we're in FreeWrappedNavigator (index 8)
+        int mbtiScreenIndex;
+        if (firstScreen == 'MBTIPersonalityScreen') {
+          mbtiScreenIndex = 0; // Premium navigator - MBTI is at index 0
+          print('🔵 GoToFirstPremium: Detected PremiumWrappedNavigator - MBTI at index 0');
+        } else {
+          mbtiScreenIndex = 8; // Free navigator - MBTI is at index 8
+          print('🔵 GoToFirstPremium: Detected FreeWrappedNavigator - MBTI at index 8');
+        }
+        
         print('🔵 GoToFirstPremium: Navigating to MBTI screen at index $mbtiScreenIndex...');
         await cardNavigatorState.goToIndex(mbtiScreenIndex);
         
@@ -895,7 +930,20 @@ class _GoToFirstPremiumButton extends StatelessWidget {
       if (state2 != null) {
         print('🔵 GoToFirstPremium: ✅ Found CardNavigatorState with findAncestorStateOfType!');
         print('🔵 GoToFirstPremium: Current index: ${state2.currentIndex}');
-        const mbtiScreenIndex = 8;
+        
+        // Check which navigator we're in
+        final firstScreen = state2.widget.screens.isNotEmpty 
+            ? state2.widget.screens[0].runtimeType.toString()
+            : 'Unknown';
+        print('🔵 GoToFirstPremium: First screen type: $firstScreen');
+        
+        int mbtiScreenIndex;
+        if (firstScreen == 'MBTIPersonalityScreen') {
+          mbtiScreenIndex = 0;
+        } else {
+          mbtiScreenIndex = 8;
+        }
+        
         print('🔵 GoToFirstPremium: Navigating to MBTI screen at index $mbtiScreenIndex...');
         await state2.goToIndex(mbtiScreenIndex);
         return;
