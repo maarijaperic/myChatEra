@@ -154,14 +154,40 @@ class _SocialSharingScreenState extends State<SocialSharingScreen>
                           _ShareHeroCard(
                             screenWidth: screenWidth,
                             onPreviewTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => PreviewAnalysisScreen(
-                                    stats: widget.stats,
-                                    premiumInsights: widget.premiumInsights,
+                              try {
+                                print('🔵 SocialSharingScreen: onPreviewTap called');
+                                print('🔵 SocialSharingScreen: stats is null = ${widget.stats == null}');
+                                print('🔵 SocialSharingScreen: premiumInsights is null = ${widget.premiumInsights == null}');
+                                
+                                if (!mounted) {
+                                  print('❌ SocialSharingScreen: Context not mounted');
+                                  return;
+                                }
+                                
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) {
+                                      print('🔵 SocialSharingScreen: Building PreviewAnalysisScreen');
+                                      return PreviewAnalysisScreen(
+                                        stats: widget.stats,
+                                        premiumInsights: widget.premiumInsights,
+                                      );
+                                    },
                                   ),
-                                ),
-                              );
+                                );
+                                print('🔵 SocialSharingScreen: Navigation to PreviewAnalysisScreen completed');
+                              } catch (e, stackTrace) {
+                                print('❌ SocialSharingScreen: Error in onPreviewTap: $e');
+                                print('❌ SocialSharingScreen: Stack trace: $stackTrace');
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Error opening preview: $e'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              }
                             },
                           ),
                         ],
