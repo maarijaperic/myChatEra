@@ -100,16 +100,22 @@ class _PreviewAnalysisScreenState extends State<PreviewAnalysisScreen>
             ),
           ),
 
-          // Subtle animated particles
-          AnimatedBuilder(
-            animation: _particlesController,
-            builder: (context, child) {
-              return CustomPaint(
-                painter: _SubtleParticlesPainter(_particlesController.value),
-                child: Container(),
-              );
-            },
-          ),
+          // Subtle animated particles (only if controller is valid)
+          if (_particlesController.value.isFinite)
+            AnimatedBuilder(
+              animation: _particlesController,
+              builder: (context, child) {
+                try {
+                  return CustomPaint(
+                    painter: _SubtleParticlesPainter(_particlesController.value),
+                    child: Container(),
+                  );
+                } catch (e) {
+                  print('❌ PreviewAnalysisScreen: Error building particles: $e');
+                  return Container(); // Return empty container on error
+                }
+              },
+            ),
 
           // Main content
           SafeArea(
@@ -560,23 +566,49 @@ class _SubtleParticlesPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withOpacity(0.3)
-      ..style = PaintingStyle.fill;
+    // Validate size before painting
+    if (size.width <= 0 || size.height <= 0 || 
+        size.width.isInfinite || size.height.isInfinite ||
+        size.width.isNaN || size.height.isNaN) {
+      print('❌ _SubtleParticlesPainter: Invalid size: width=${size.width}, height=${size.height}');
+      return;
+    }
+    
+    // Validate animationValue
+    if (animationValue.isNaN || animationValue.isInfinite) {
+      print('❌ _SubtleParticlesPainter: Invalid animationValue: $animationValue');
+      return;
+    }
+    
+    try {
+      final paint = Paint()
+        ..color = Colors.white.withOpacity(0.3)
+        ..style = PaintingStyle.fill;
 
-    // Draw subtle floating dots
-    for (int i = 0; i < 15; i++) {
-      final x = (i * 67.0) % size.width;
-      final y = (i * 43.0) % size.height;
-      final timeOffset = (animationValue * 2 * pi) + (i * 0.4);
-      final float = 0.2 + 0.3 * sin(timeOffset);
-      final dotSize = 1.0 + (1.0 * float);
+      // Draw subtle floating dots
+      for (int i = 0; i < 15; i++) {
+        final x = (i * 67.0) % size.width;
+        final y = (i * 43.0) % size.height;
+        final timeOffset = (animationValue * 2 * pi) + (i * 0.4);
+        final float = 0.2 + 0.3 * sin(timeOffset);
+        final dotSize = 1.0 + (1.0 * float);
+        
+        // Validate values before drawing
+        if (dotSize <= 0 || dotSize.isNaN || dotSize.isInfinite ||
+            x.isNaN || x.isInfinite || y.isNaN || y.isInfinite) {
+          continue; // Skip invalid dots
+        }
 
-      canvas.drawCircle(
-        Offset(x, y),
-        dotSize,
-        paint..color = Colors.white.withOpacity(float * 0.4),
-      );
+        canvas.drawCircle(
+          Offset(x, y),
+          dotSize.clamp(0.1, 10.0), // Ensure valid size
+          paint..color = Colors.white.withOpacity((float * 0.4).clamp(0.0, 1.0)),
+        );
+      }
+    } catch (e, stackTrace) {
+      print('❌ _SubtleParticlesPainter: Error in paint: $e');
+      print('❌ _SubtleParticlesPainter: Stack trace: $stackTrace');
+      // Don't crash, just skip painting
     }
   }
 
