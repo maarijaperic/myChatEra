@@ -36,18 +36,27 @@ class _SocialSharingScreenState extends State<SocialSharingScreen>
   @override
   void initState() {
     super.initState();
+    
+    try {
+      print('🔵 SocialSharingScreen: initState called');
+      print('🔵 SocialSharingScreen: stats is null = ${widget.stats == null}');
+      print('🔵 SocialSharingScreen: premiumInsights is null = ${widget.premiumInsights == null}');
 
-    _fadeController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    );
+      _fadeController = AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 1500),
+      );
 
-    _particlesController = AnimationController(
-      duration: const Duration(seconds: 4),
-      vsync: this,
-    )..repeat();
+      _particlesController = AnimationController(
+        duration: const Duration(seconds: 4),
+        vsync: this,
+      )..repeat();
 
-    _startAnimations();
+      _startAnimations();
+    } catch (e, stackTrace) {
+      print('❌ SocialSharingScreen: Error in initState: $e');
+      print('❌ SocialSharingScreen: Stack trace: $stackTrace');
+    }
   }
 
   Future<void> _startAnimations() async {
@@ -64,10 +73,12 @@ class _SocialSharingScreenState extends State<SocialSharingScreen>
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
-    
-    return Scaffold(
+    try {
+      print('🔵 SocialSharingScreen: build called');
+      final screenWidth = MediaQuery.of(context).size.width;
+      final screenHeight = MediaQuery.of(context).size.height;
+      
+      return Scaffold(
       body: Stack(
         fit: StackFit.expand,
         children: [
@@ -269,6 +280,16 @@ class _SocialSharingScreenState extends State<SocialSharingScreen>
         ],
       ),
     );
+    } catch (e, stackTrace) {
+      print('❌ SocialSharingScreen: Error in build: $e');
+      print('❌ SocialSharingScreen: Stack trace: $stackTrace');
+      // Return a safe fallback widget
+      return Scaffold(
+        body: Center(
+          child: Text('Error loading screen: $e'),
+        ),
+      );
+    }
   }
 }
 
