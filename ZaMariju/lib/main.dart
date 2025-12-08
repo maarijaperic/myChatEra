@@ -812,7 +812,7 @@ class FreeWrappedNavigator extends StatelessWidget {
         ),
       ],
       startIndex: 0,
-      premiumStartIndex: 19, // Prevent tapping past index 18
+      premiumStartIndex: null, // Allow navigation to all screens including Share with People
     );
   }
 
