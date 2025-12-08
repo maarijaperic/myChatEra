@@ -28,18 +28,27 @@ class _PreviewAnalysisScreenState extends State<PreviewAnalysisScreen>
   @override
   void initState() {
     super.initState();
+    
+    try {
+      print('🔵 PreviewAnalysisScreen: initState called');
+      print('🔵 PreviewAnalysisScreen: stats is null = ${widget.stats == null}');
+      print('🔵 PreviewAnalysisScreen: premiumInsights is null = ${widget.premiumInsights == null}');
 
-    _fadeController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    );
+      _fadeController = AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 1500),
+      );
 
-    _particlesController = AnimationController(
-      duration: const Duration(seconds: 4),
-      vsync: this,
-    )..repeat();
+      _particlesController = AnimationController(
+        duration: const Duration(seconds: 4),
+        vsync: this,
+      )..repeat();
 
-    _startAnimations();
+      _startAnimations();
+    } catch (e, stackTrace) {
+      print('❌ PreviewAnalysisScreen: Error in initState: $e');
+      print('❌ PreviewAnalysisScreen: Stack trace: $stackTrace');
+    }
   }
 
   Future<void> _startAnimations() async {
@@ -56,11 +65,13 @@ class _PreviewAnalysisScreenState extends State<PreviewAnalysisScreen>
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
+    try {
+      print('🔵 PreviewAnalysisScreen: build called');
+      final screenWidth = MediaQuery.of(context).size.width;
+      final screenHeight = MediaQuery.of(context).size.height;
 
-    // Get stats or use demo data
-    final hours = widget.stats?.totalHours ?? 127;
+      // Get stats or use demo data
+      final hours = widget.stats?.totalHours ?? 127;
     final minutes = widget.stats?.totalMinutes ?? 42;
     final messagesPerDay = widget.stats?.messagesPerDay ?? 47;
     final streakDays = widget.stats?.longestStreak ?? 14;
@@ -344,6 +355,16 @@ class _PreviewAnalysisScreenState extends State<PreviewAnalysisScreen>
         ],
       ),
     );
+    } catch (e, stackTrace) {
+      print('❌ PreviewAnalysisScreen: Error in build: $e');
+      print('❌ PreviewAnalysisScreen: Stack trace: $stackTrace');
+      // Return a safe fallback widget
+      return Scaffold(
+        body: Center(
+          child: Text('Error loading preview: $e'),
+        ),
+      );
+    }
   }
 }
 
