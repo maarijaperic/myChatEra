@@ -404,25 +404,37 @@ class _ShareHeroCard extends StatelessWidget {
                     ),
                   ),
                   const Spacer(),
-                  CupertinoButton(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                    borderRadius: BorderRadius.circular(18),
-                    color: const Color(0xFF007AFF).withOpacity(0.08),
-                    onPressed: onPreviewTap,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(CupertinoIcons.play_fill, size: 16, color: Color(0xFF007AFF)),
-                        const SizedBox(width: 6),
-                        Text(
-                          'View preview',
-                          style: GoogleFonts.inter(
-                            color: const Color(0xFF007AFF),
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
+                  GestureDetector(
+                    onTap: () {
+                      print('🔵 _ShareHeroCard: View Preview button tapped');
+                      if (onPreviewTap != null) {
+                        print('🔵 _ShareHeroCard: Calling onPreviewTap callback');
+                        onPreviewTap!();
+                      } else {
+                        print('❌ _ShareHeroCard: onPreviewTap is null!');
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF007AFF).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(CupertinoIcons.play_fill, size: 16, color: Color(0xFF007AFF)),
+                          const SizedBox(width: 6),
+                          Text(
+                            'View preview',
+                            style: GoogleFonts.inter(
+                              color: const Color(0xFF007AFF),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ],
