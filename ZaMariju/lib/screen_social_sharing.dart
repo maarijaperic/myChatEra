@@ -158,62 +158,8 @@ class _SocialSharingScreenState extends State<SocialSharingScreen>
                           SizedBox(height: screenHeight * 0.045),
                           _ShareHeroCard(
                             screenWidth: screenWidth,
-                            onPreviewTap: () async {
-                              try {
-                                print('🔵 SocialSharingScreen: onPreviewTap called');
-                                print('🔵 SocialSharingScreen: stats is null = ${widget.stats == null}');
-                                print('🔵 SocialSharingScreen: premiumInsights is null = ${widget.premiumInsights == null}');
-                                
-                                if (!mounted) {
-                                  print('❌ SocialSharingScreen: Context not mounted');
-                                  return;
-                                }
-                                
-                                // Wait a bit to ensure context is ready
-                                await Future.delayed(const Duration(milliseconds: 100));
-                                
-                                if (!mounted) {
-                                  print('❌ SocialSharingScreen: Context not mounted after delay');
-                                  return;
-                                }
-                                
-                                print('🔵 SocialSharingScreen: Pushing PreviewAnalysisScreen...');
-                                await Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) {
-                                      print('🔵 SocialSharingScreen: Building PreviewAnalysisScreen');
-                                      try {
-                                        return PreviewAnalysisScreen(
-                                          stats: widget.stats,
-                                          premiumInsights: widget.premiumInsights,
-                                        );
-                                      } catch (e, stackTrace) {
-                                        print('❌ SocialSharingScreen: Error building PreviewAnalysisScreen: $e');
-                                        print('❌ SocialSharingScreen: Stack trace: $stackTrace');
-                                        return Scaffold(
-                                          body: Center(
-                                            child: Text('Error loading preview: $e'),
-                                          ),
-                                        );
-                                      }
-                                    },
-                                  ),
-                                );
-                                print('🔵 SocialSharingScreen: Navigation to PreviewAnalysisScreen completed');
-                              } catch (e, stackTrace) {
-                                print('❌ SocialSharingScreen: Error in onPreviewTap: $e');
-                                print('❌ SocialSharingScreen: Stack trace: $stackTrace');
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('Error opening preview: $e'),
-                                      backgroundColor: Colors.red,
-                                      duration: const Duration(seconds: 3),
-                                    ),
-                                  );
-                                }
-                              }
-                            },
+                            stats: widget.stats,
+                            premiumInsights: widget.premiumInsights,
                           ),
                         ],
                       ),
@@ -344,13 +290,90 @@ class _SocialSharingScreenState extends State<SocialSharingScreen>
   }
 }
 
+// Simple View Preview Button that directly navigates
+class _ViewPreviewButton extends StatelessWidget {
+  final ChatStats? stats;
+  final PremiumInsights? premiumInsights;
+
+  const _ViewPreviewButton({
+    required this.stats,
+    required this.premiumInsights,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () async {
+        try {
+          print('🔵 _ViewPreviewButton: Button tapped - Navigating to PreviewAnalysisScreen');
+          
+          if (!context.mounted) {
+            print('❌ _ViewPreviewButton: Context not mounted');
+            return;
+          }
+          
+          await Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) {
+                print('🔵 _ViewPreviewButton: Building PreviewAnalysisScreen');
+                return PreviewAnalysisScreen(
+                  stats: stats,
+                  premiumInsights: premiumInsights,
+                );
+              },
+            ),
+          );
+          
+          print('🔵 _ViewPreviewButton: Navigation completed');
+        } catch (e, stackTrace) {
+          print('❌ _ViewPreviewButton: Error: $e');
+          print('❌ _ViewPreviewButton: Stack trace: $stackTrace');
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error opening preview: $e'),
+                backgroundColor: Colors.red,
+                duration: const Duration(seconds: 3),
+              ),
+            );
+          }
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        decoration: BoxDecoration(
+          color: const Color(0xFF007AFF).withOpacity(0.1),
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(CupertinoIcons.play_fill, size: 16, color: Color(0xFF007AFF)),
+            const SizedBox(width: 6),
+            Text(
+              'View preview',
+              style: GoogleFonts.inter(
+                color: const Color(0xFF007AFF),
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _ShareHeroCard extends StatelessWidget {
   final double screenWidth;
-  final VoidCallback? onPreviewTap;
+  final ChatStats? stats;
+  final PremiumInsights? premiumInsights;
 
   const _ShareHeroCard({
     required this.screenWidth,
-    this.onPreviewTap,
+    this.stats,
+    this.premiumInsights,
   });
 
   @override
@@ -404,38 +427,9 @@ class _ShareHeroCard extends StatelessWidget {
                     ),
                   ),
                   const Spacer(),
-                  GestureDetector(
-                    onTap: () {
-                      print('🔵 _ShareHeroCard: View Preview button tapped');
-                      if (onPreviewTap != null) {
-                        print('🔵 _ShareHeroCard: Calling onPreviewTap callback');
-                        onPreviewTap!();
-                      } else {
-                        print('❌ _ShareHeroCard: onPreviewTap is null!');
-                      }
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF007AFF).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(CupertinoIcons.play_fill, size: 16, color: Color(0xFF007AFF)),
-                          const SizedBox(width: 6),
-                          Text(
-                            'View preview',
-                            style: GoogleFonts.inter(
-                              color: const Color(0xFF007AFF),
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                  _ViewPreviewButton(
+                    stats: widget.stats,
+                    premiumInsights: widget.premiumInsights,
                   ),
                 ],
               ),
