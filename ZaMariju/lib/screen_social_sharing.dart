@@ -428,8 +428,8 @@ class _ShareHeroCard extends StatelessWidget {
                   ),
                   const Spacer(),
                   _ViewPreviewButton(
-                    stats: widget.stats,
-                    premiumInsights: widget.premiumInsights,
+                    stats: stats,
+                    premiumInsights: premiumInsights,
                   ),
                 ],
               ),
