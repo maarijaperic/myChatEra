@@ -63,14 +63,23 @@ class CardNavigatorState extends State<CardNavigator>
           return;
         }
         
-        print('🔵 CardNavigator: Navigating from index $_currentIndex to ${_currentIndex + 1}');
+        final nextIndex = _currentIndex + 1;
+        print('🔵 CardNavigator: Navigating from index $_currentIndex to $nextIndex');
         print('🔵 CardNavigator: Total screens: ${widget.screens.length}');
+        print('🔵 CardNavigator: Next screen type: ${widget.screens[nextIndex].runtimeType}');
+        
+        // Check if next screen exists and is valid
+        if (nextIndex >= widget.screens.length) {
+          print('❌ CardNavigator: Next index $nextIndex is out of bounds!');
+          return;
+        }
         
         await _transitionController.forward();
         if (mounted) {
           setState(() {
-            _currentIndex++;
+            _currentIndex = nextIndex;
           });
+          print('🔵 CardNavigator: Successfully navigated to index $_currentIndex');
         }
         _transitionController.reset();
       } else {
@@ -84,6 +93,10 @@ class CardNavigatorState extends State<CardNavigator>
       print('❌ CardNavigator: Error in _goToNext: $e');
       print('❌ CardNavigator: Stack trace: $stackTrace');
       // Don't crash the app, just log the error
+      // Try to recover by staying on current screen
+      if (mounted) {
+        _transitionController.reset();
+      }
     }
   }
 
