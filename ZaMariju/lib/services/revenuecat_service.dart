@@ -7,28 +7,54 @@ class RevenueCatService {
   static const String _yearlyProductId = 'yearly_subscription';
   static const String _entitlementId = 'premium';
 
+
+  static bool _isConfigured = false;
+  
+  /// Check if RevenueCat is configured
+  static bool get isConfigured => _isConfigured;
+  
   /// Initialize RevenueCat
   static Future<void> initialize(String apiKey) async {
-    await Purchases.setDebugLogsEnabled(true); // Set to false in production
-    await Purchases.configure(
-      PurchasesConfiguration(apiKey)
-        ..appUserID = null, // RevenueCat will auto-generate
-    );
+    try {
+      if (apiKey == 'YOUR_REVENUECAT_PUBLIC_KEY_HERE' || apiKey.isEmpty) {
+        print('⚠️ RevenueCat: API key not set - skipping initialization');
+        _isConfigured = false;
+        return;
+      }
+      await Purchases.setDebugLogsEnabled(true); // Set to false in production
+      await Purchases.configure(
+        PurchasesConfiguration(apiKey)
+          ..appUserID = null, // RevenueCat will auto-generate
+      );
+      _isConfigured = true;
+      print('✅ RevenueCat: Successfully configured');
+    } catch (e) {
+      print('❌ RevenueCat: Error initializing: $e');
+      _isConfigured = false;
+    }
   }
 
   /// Check if user has active premium subscription
   static Future<bool> isPremium() async {
+    if (!_isConfigured) {
+      print('⚠️ RevenueCat: Not configured - returning false for isPremium');
+      return false;
+    }
     try {
       final customerInfo = await Purchases.getCustomerInfo();
       return customerInfo.entitlements.active.containsKey(_entitlementId);
     } catch (e) {
-      print('Error checking premium status: $e');
+      print('❌ RevenueCat: Error checking premium status: $e');
       return false;
     }
   }
 
   /// Get subscription type (one_time, monthly, yearly, or null)
   static Future<String?> getSubscriptionType() async {
+    if (!_isConfigured) {
+      print('⚠️ RevenueCat: Not configured - returning null for getSubscriptionType');
+      return null;
+    }
     try {
       final customerInfo = await Purchases.getCustomerInfo();
       final activeEntitlements = customerInfo.entitlements.active;
@@ -47,7 +73,7 @@ class RevenueCatService {
       
       return null;
     } catch (e) {
-      print('Error getting subscription type: $e');
+      print('❌ RevenueCat: Error getting subscription type: $e');
       return null;
     }
   }
