@@ -54,24 +54,36 @@ class CardNavigatorState extends State<CardNavigator>
   }
 
   void _goToNext() async {
-    if (_currentIndex < widget.screens.length - 1) {
-      // Check if we're at the premium gate
-      if (widget.premiumStartIndex != null &&
-          _currentIndex == widget.premiumStartIndex! - 1) {
-        // Don't advance, user needs to click "Go Premium" button
-        return;
+    try {
+      if (_currentIndex < widget.screens.length - 1) {
+        // Check if we're at the premium gate
+        if (widget.premiumStartIndex != null &&
+            _currentIndex == widget.premiumStartIndex! - 1) {
+          // Don't advance, user needs to click "Go Premium" button
+          return;
+        }
+        
+        print('🔵 CardNavigator: Navigating from index $_currentIndex to ${_currentIndex + 1}');
+        print('🔵 CardNavigator: Total screens: ${widget.screens.length}');
+        
+        await _transitionController.forward();
+        if (mounted) {
+          setState(() {
+            _currentIndex++;
+          });
+        }
+        _transitionController.reset();
+      } else {
+        // We're at the last screen
+        print('🔵 CardNavigator: At last screen (index $_currentIndex), calling onComplete');
+        if (widget.onComplete != null) {
+          widget.onComplete!();
+        }
       }
-      
-      await _transitionController.forward();
-      setState(() {
-        _currentIndex++;
-      });
-      _transitionController.reset();
-    } else {
-      // We're at the last screen
-      if (widget.onComplete != null) {
-        widget.onComplete!();
-      }
+    } catch (e, stackTrace) {
+      print('❌ CardNavigator: Error in _goToNext: $e');
+      print('❌ CardNavigator: Stack trace: $stackTrace');
+      // Don't crash the app, just log the error
     }
   }
 
