@@ -100,22 +100,22 @@ class _PreviewAnalysisScreenState extends State<PreviewAnalysisScreen>
             ),
           ),
 
-          // Subtle animated particles (only if controller is valid)
-          if (_particlesController.value.isFinite)
-            AnimatedBuilder(
-              animation: _particlesController,
-              builder: (context, child) {
-                try {
-                  return CustomPaint(
-                    painter: _SubtleParticlesPainter(_particlesController.value),
-                    child: Container(),
-                  );
-                } catch (e) {
-                  print('❌ PreviewAnalysisScreen: Error building particles: $e');
-                  return Container(); // Return empty container on error
-                }
-              },
-            ),
+          // Subtle animated particles (TEMPORARILY DISABLED due to painting errors)
+          // if (_particlesController.value.isFinite)
+          //   AnimatedBuilder(
+          //     animation: _particlesController,
+          //     builder: (context, child) {
+          //       try {
+          //         return CustomPaint(
+          //           painter: _SubtleParticlesPainter(_particlesController.value),
+          //           child: Container(),
+          //         );
+          //       } catch (e) {
+          //         print('❌ PreviewAnalysisScreen: Error building particles: $e');
+          //         return Container(); // Return empty container on error
+          //       }
+          //     },
+          //   ),
 
           // Main content
           SafeArea(
