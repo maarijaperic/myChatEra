@@ -99,16 +99,21 @@ class _SocialSharingScreenState extends State<SocialSharingScreen>
             ),
           ),
           
-          // Subtle animated particles
-          AnimatedBuilder(
-            animation: _particlesController,
-            builder: (context, child) {
-              return CustomPaint(
-                painter: _SubtleParticlesPainter(_particlesController.value),
-                child: Container(),
-              );
-            },
-          ),
+          // Subtle animated particles (TEMPORARILY DISABLED due to painting errors)
+          // AnimatedBuilder(
+          //   animation: _particlesController,
+          //   builder: (context, child) {
+          //     try {
+          //       return CustomPaint(
+          //         painter: _SubtleParticlesPainter(_particlesController.value),
+          //         child: Container(),
+          //       );
+          //     } catch (e) {
+          //       print('❌ SocialSharingScreen: Error building particles: $e');
+          //       return Container();
+          //     }
+          //   },
+          // ),
           
           // Main content
           SafeArea(
@@ -861,7 +866,7 @@ class _GoToFirstPremiumButton extends StatelessWidget {
   const _GoToFirstPremiumButton();
 
   Future<void> _goToFirstPremiumScreen(BuildContext context) async {
-    print('🔵 GoToFirstPremium: Button clicked - Navigating to first premium screen');
+    print('🔵 GoToFirstPremium: Button clicked - Navigating to first premium screen (MBTI)');
     
     try {
       // Method 1: Use CardNavigator.of() static method
@@ -873,15 +878,12 @@ class _GoToFirstPremiumButton extends StatelessWidget {
         print('🔵 GoToFirstPremium: Current index: ${cardNavigatorState.currentIndex}');
         print('🔵 GoToFirstPremium: Total screens: ${cardNavigatorState.widget.screens.length}');
         
-        // Try goToIndex first
-        print('🔵 GoToFirstPremium: Calling goToIndex(0)...');
-        await cardNavigatorState.goToIndex(0);
+        // MBTI Personality screen is at index 8 (first premium screen after "Unlock Premium" at index 7)
+        const mbtiScreenIndex = 8;
+        print('🔵 GoToFirstPremium: Navigating to MBTI screen at index $mbtiScreenIndex...');
+        await cardNavigatorState.goToIndex(mbtiScreenIndex);
         
-        // Also try goToFirstScreen as backup (in case goToIndex didn't work)
-        print('🔵 GoToFirstPremium: Also calling goToFirstScreen() as backup...');
-        await cardNavigatorState.goToFirstScreen();
-        
-        print('🔵 GoToFirstPremium: Navigation methods called successfully');
+        print('🔵 GoToFirstPremium: Navigation to MBTI screen completed successfully');
         return;
       }
       
@@ -893,7 +895,9 @@ class _GoToFirstPremiumButton extends StatelessWidget {
       if (state2 != null) {
         print('🔵 GoToFirstPremium: ✅ Found CardNavigatorState with findAncestorStateOfType!');
         print('🔵 GoToFirstPremium: Current index: ${state2.currentIndex}');
-        state2.goToIndex(0);
+        const mbtiScreenIndex = 8;
+        print('🔵 GoToFirstPremium: Navigating to MBTI screen at index $mbtiScreenIndex...');
+        await state2.goToIndex(mbtiScreenIndex);
         return;
       }
       
