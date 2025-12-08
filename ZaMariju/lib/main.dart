@@ -758,7 +758,7 @@ class FreeWrappedNavigator extends StatelessWidget {
           explanation: premiumInsights?.introExtroExplanation ?? 'According to your conversations, AI detected that you have a balanced personality. You are an ambivert: you enjoy both moments of solitary reflection and social interactions. You have the ability to adapt to different situations, being introspective when you need to process information and sociable when you want to share ideas.',
           subtitle: _getIntroExtroSubtitle(premiumInsights?.introExtroType ?? 'AMBIVERT'),
         ),
-        // Index 13 - Advice Most Asked
+        // Index 14 - Advice Most Asked
         AdviceMostAskedScreen(
           question: 'What advice have you asked AI for the most?',
           mostAskedAdvice: premiumInsights?.mostAskedAdvice ?? 'How to improve my personal relationships',
@@ -767,7 +767,7 @@ class FreeWrappedNavigator extends StatelessWidget {
           explanation: premiumInsights?.adviceExplanation ?? 'According to the analysis of your conversations, you have sought advice about personal relationships more than any other topic. This shows that you value human connections and always seek to improve the way you relate to others. Your curiosity to better understand social dynamics is admirable.',
           subtitle: 'Wisdom is knowing what to ask 💡',
         ),
-        // Index 14 - Love Language
+        // Index 15 - Love Language
         LoveLanguageScreen(
           question: 'What\'s your love language according to AI?',
           loveLanguage: premiumInsights?.loveLanguage ?? 'Words of Affirmation',
@@ -776,7 +776,7 @@ class FreeWrappedNavigator extends StatelessWidget {
           subtitle: 'Love is spoken in many languages 💕',
           loveLanguagePercentages: _getLoveLanguageDistribution(premiumInsights?.loveLanguage ?? 'Words of Affirmation'),
         ),
-        // Index 15 - Past Life Persona (Last premium screen)
+        // Index 16 - Past Life Persona (Last premium screen)
         PastLifePersonaScreen(
           question: 'Who were you in a past life according to AI?',
           personaTitle: premiumInsights?.personaTitle ?? 'Renaissance Philosopher-Artist',
@@ -785,7 +785,7 @@ class FreeWrappedNavigator extends StatelessWidget {
           description: premiumInsights?.personaDescription ?? 'You were a Renaissance thinker who questioned everything and created beauty from chaos. Your conversations reveal a mind that blends logic with creativity, always seeking deeper meaning. Like Da Vinci, you jump between disciplines—art, science, philosophy—never satisfied with surface-level answers. You probably had a dramatic scarf and too many unfinished projects.',
           subtitle: 'History echoes in who we are today ✨',
         ),
-        // Index 16 - Your 2025 in Wrapped
+        // Index 17 - Your 2025 in Wrapped
         WrappedStatsScreen(
           question: 'Your 2025 in Wrapped',
           statNumber: 2025,
@@ -793,7 +793,7 @@ class FreeWrappedNavigator extends StatelessWidget {
           poeticMessage: 'Get ready for another year of growth, discovery, and countless conversations with an AI that will know you even better! Here\'s to asking even more interesting questions! 🎉',
           monthlyTopics: monthlyTopicsJanJun,
         ),
-        // Index 17 - Your GPT Wrapped
+        // Index 18 - Your GPT Wrapped
         ComparisonStatsScreen(
           question: 'Your GPT Wrapped',
           firstName: 'You',
@@ -805,7 +805,7 @@ class FreeWrappedNavigator extends StatelessWidget {
           poeticMessage: 'You\'ve created a beautiful partnership with AI this year. While others see AI as a tool, you\'ve made it your conversation partner, creative collaborator, and digital confidant. Here\'s to many more meaningful exchanges! 🌟',
           monthlyTopics: monthlyTopicsJulDec,
         ),
-        // Index 18 - Share with People
+        // Index 19 - Share with People
         SocialSharingScreen(
           stats: stats,
           premiumInsights: premiumInsights,
