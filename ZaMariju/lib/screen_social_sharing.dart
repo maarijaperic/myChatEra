@@ -565,40 +565,58 @@ class _GetAnotherAnalysisButtonState extends State<_GetAnotherAnalysisButton> {
   @override
   void initState() {
     super.initState();
-    _checkAvailability();
+    // Don't call async method directly in initState - use WidgetsBinding
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAvailability();
+    });
   }
 
   Future<void> _checkAvailability() async {
     try {
+      if (!mounted) return;
       final isPremium = await RevenueCatService.isPremium();
+      if (!mounted) return;
       if (!isPremium) {
-        setState(() {
-          _canGenerate = false;
-        });
+        if (mounted) {
+          setState(() {
+            _canGenerate = false;
+          });
+        }
         return;
       }
 
+      if (!mounted) return;
       final subscriptionType = await RevenueCatService.getSubscriptionType();
+      if (!mounted) return;
       if (subscriptionType == null) {
-        setState(() {
-          _canGenerate = false;
-        });
+        if (mounted) {
+          setState(() {
+            _canGenerate = false;
+          });
+        }
         return;
       }
 
+      if (!mounted) return;
       final canGenerate = await AnalysisTracker.canGenerateAnalysis();
+      if (!mounted) return;
       final remaining = await AnalysisTracker.getRemainingAnalyses();
 
-      setState(() {
-        _canGenerate = canGenerate;
-        _remaining = remaining;
-        _subscriptionType = subscriptionType;
-      });
-    } catch (e) {
-      print('Error checking analysis availability: $e');
-      setState(() {
-        _canGenerate = false;
-      });
+      if (mounted) {
+        setState(() {
+          _canGenerate = canGenerate;
+          _remaining = remaining;
+          _subscriptionType = subscriptionType;
+        });
+      }
+    } catch (e, stackTrace) {
+      print('❌ _GetAnotherAnalysisButton: Error checking analysis availability: $e');
+      print('❌ _GetAnotherAnalysisButton: Stack trace: $stackTrace');
+      if (mounted) {
+        setState(() {
+          _canGenerate = false;
+        });
+      }
     }
   }
 
