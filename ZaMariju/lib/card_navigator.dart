@@ -185,15 +185,31 @@ class CardNavigatorState extends State<CardNavigator>
                     ),
                   ),
                   // Right tap zone (67% of screen width) - Go Next
+                  // Disabled on SocialSharingScreen to allow button clicks
                   Expanded(
                     flex: 67,
-                    child: GestureDetector(
-                      onTap: _goToNext,
-                      behavior: HitTestBehavior.translucent,
-                      child: Container(color: Colors.transparent),
-                    ),
+                    child: _shouldEnableRightTapZone()
+                        ? GestureDetector(
+                            onTap: _goToNext,
+                            behavior: HitTestBehavior.translucent,
+                            child: Container(color: Colors.transparent),
+                          )
+                        : Container(), // Empty container - no tap zone
                   ),
                 ],
+              ),
+            ),
+          // Special case: Left tap zone only for SocialSharingScreen (to go back)
+          if (_shouldEnableLeftTapZoneOnly())
+            Positioned(
+              top: MediaQuery.of(context).size.height * 0.2,
+              bottom: MediaQuery.of(context).size.height * 0.2,
+              left: 0,
+              width: MediaQuery.of(context).size.width * 0.33, // Only left 33%
+              child: GestureDetector(
+                onTap: _goToPrevious,
+                behavior: HitTestBehavior.translucent,
+                child: Container(color: Colors.transparent),
               ),
             ),
 
@@ -227,7 +243,6 @@ class CardNavigatorState extends State<CardNavigator>
     const screensWithoutNavigation = [
       'TypeABPreviewScreen', // Unlock Premium screen - no swipe navigation, only button click
       'SubscriptionScreen', // Subscription screen - no navigation
-      'SocialSharingScreen', // Share with People screen - buttons need to be clickable
     ];
 
     if (screensWithoutNavigation.contains(screenType)) {
@@ -243,6 +258,26 @@ class CardNavigatorState extends State<CardNavigator>
     // Allow navigation on last screen (SocialSharingScreen) - can go back
     // Enable tap zones for all screens
     return true;
+  }
+
+  bool _shouldEnableRightTapZone() {
+    // Disable right tap zone on SocialSharingScreen to allow button clicks
+    final currentScreen = widget.screens[_currentIndex];
+    final screenType = currentScreen.runtimeType.toString();
+    
+    if (screenType == 'SocialSharingScreen') {
+      return false; // Disable right tap zone to allow "View preview" button clicks
+    }
+    
+    return true;
+  }
+
+  bool _shouldEnableLeftTapZoneOnly() {
+    // Enable only left tap zone on SocialSharingScreen (to go back)
+    final currentScreen = widget.screens[_currentIndex];
+    final screenType = currentScreen.runtimeType.toString();
+    
+    return screenType == 'SocialSharingScreen';
   }
 
   int _getTotalScreensInCurrentSection() {
