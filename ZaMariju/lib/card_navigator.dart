@@ -227,6 +227,7 @@ class CardNavigatorState extends State<CardNavigator>
     const screensWithoutNavigation = [
       'TypeABPreviewScreen', // Unlock Premium screen - no swipe navigation, only button click
       'SubscriptionScreen', // Subscription screen - no navigation
+      'SocialSharingScreen', // Share with People screen - buttons need to be clickable
     ];
 
     if (screensWithoutNavigation.contains(screenType)) {
