@@ -1,14 +1,20 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'revenuecat_service.dart';
 
 /// Service for tracking analysis usage per user
 class AnalysisTracker {
-  static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  static FirebaseFirestore get _firestore {
+    if (Firebase.apps.isEmpty) {
+      throw Exception('Firebase is not initialized');
+    }
+    return FirebaseFirestore.instance;
+  }
   static const String _collectionName = 'user_analyses';
   
   // TEST MODE: Set to true to bypass RevenueCat checks for testing
   // Set to false before production release!
-  static const bool ENABLE_TEST_MODE = true;
+  static const bool ENABLE_TEST_MODE = false;
 
   /// Check if user can generate a new analysis
   static Future<bool> canGenerateAnalysis() async {
@@ -56,6 +62,10 @@ class AnalysisTracker {
   /// Check if one-time user can generate analysis
   static Future<bool> _canGenerateOneTime(String userId) async {
     try {
+      if (Firebase.apps.isEmpty) {
+        print('⚠️ AnalysisTracker: Firebase not initialized - returning false');
+        return false;
+      }
       final doc = await _firestore.collection(_collectionName).doc(userId).get();
       
       if (!doc.exists) {
@@ -76,6 +86,10 @@ class AnalysisTracker {
   /// Check if monthly/yearly user can generate analysis
   static Future<bool> _canGenerateMonthly(String userId) async {
     try {
+      if (Firebase.apps.isEmpty) {
+        print('⚠️ AnalysisTracker: Firebase not initialized - returning false');
+        return false;
+      }
       final now = DateTime.now();
       final monthKey = '${now.year}-${now.month.toString().padLeft(2, '0')}';
       
@@ -131,6 +145,10 @@ class AnalysisTracker {
   /// Increment one-time analysis count
   static Future<void> _incrementOneTime(String userId) async {
     try {
+      if (Firebase.apps.isEmpty) {
+        print('⚠️ AnalysisTracker: Firebase not initialized - skipping increment');
+        return;
+      }
       await _firestore.collection(_collectionName).doc(userId).set({
         'userId': userId,
         'oneTimeUsed': true,
@@ -147,6 +165,10 @@ class AnalysisTracker {
   /// Increment monthly analysis count
   static Future<void> _incrementMonthly(String userId) async {
     try {
+      if (Firebase.apps.isEmpty) {
+        print('⚠️ AnalysisTracker: Firebase not initialized - skipping increment');
+        return;
+      }
       final now = DateTime.now();
       final monthKey = '${now.year}-${now.month.toString().padLeft(2, '0')}';
       
@@ -189,6 +211,10 @@ class AnalysisTracker {
   /// Get remaining analyses for current month
   static Future<int> getRemainingAnalyses() async {
     try {
+      if (Firebase.apps.isEmpty) {
+        print('⚠️ AnalysisTracker: Firebase not initialized - returning 0');
+        return 0;
+      }
       final subscriptionType = await RevenueCatService.getSubscriptionType();
       if (subscriptionType == null) return 0;
 
@@ -223,6 +249,10 @@ class AnalysisTracker {
   /// Get analysis count for current month
   static Future<int> getCurrentMonthAnalysisCount() async {
     try {
+      if (Firebase.apps.isEmpty) {
+        print('⚠️ AnalysisTracker: Firebase not initialized - returning 0');
+        return 0;
+      }
       final userId = await RevenueCatService.getUserId();
       if (userId.isEmpty) return 0;
 

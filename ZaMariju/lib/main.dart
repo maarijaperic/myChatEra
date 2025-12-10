@@ -53,13 +53,12 @@ void main() async {
   
   try {
     // Initialize RevenueCat
-    // TODO: Replace with your actual RevenueCat Public SDK Key
     const String revenueCatApiKey = String.fromEnvironment(
       'REVENUECAT_API_KEY',
-      defaultValue: 'YOUR_REVENUECAT_PUBLIC_KEY_HERE', // Replace with your key
+      defaultValue: 'appl_iyuhBMEgnkPVPcTvkfvkHddBRuj', // RevenueCat Public SDK Key
     );
     
-    if (revenueCatApiKey != 'YOUR_REVENUECAT_PUBLIC_KEY_HERE') {
+    if (revenueCatApiKey.isNotEmpty && revenueCatApiKey != 'YOUR_REVENUECAT_PUBLIC_KEY_HERE') {
       print('🔵 Initializing RevenueCat...');
       await RevenueCatService.initialize(revenueCatApiKey);
       print('✅ RevenueCat initialized');
