@@ -100,3 +100,6 @@ https://openai-proxy-server-301757777366.europe-west1.run.app/api/app-version
 ```
 
 Trebalo bi: `{"useFakeVersion": true}`
+
+
+

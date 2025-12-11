@@ -147,3 +147,6 @@ gcloud builds submit --config cloudbuild.yaml
 cd C:\Users\Korisnik\Documents\GPTWrapped-1\backend
 gcloud builds submit --config cloudbuild.yaml
 ```
+
+
+

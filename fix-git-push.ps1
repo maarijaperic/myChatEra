@@ -140,3 +140,6 @@ Write-Host "=== Završeno ===" -ForegroundColor Cyan
 
 
 
+
+
+

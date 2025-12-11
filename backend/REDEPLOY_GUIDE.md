@@ -178,3 +178,6 @@ gcloud run services update openai-proxy-server \
 - `OPENAI_API_KEY` - tvoj OpenAI API key
 - `USE_FAKE_VERSION` - `true` ili `false`
 - `PORT` - `8000` (opciono)
+
+
+

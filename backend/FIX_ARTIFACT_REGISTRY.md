@@ -126,3 +126,6 @@ Trebalo bi: `{"useFakeVersion": true}`
 ## 💡 Preporuka
 
 **Koristi Cloud Build Console** - najlakše je i automatski koristi Artifact Registry. Ne treba ti ništa da konfigurišeš!
+
+
+

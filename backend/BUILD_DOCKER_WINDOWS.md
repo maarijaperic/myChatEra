@@ -206,3 +206,4 @@ gcloud run deploy openai-proxy-server `
 **Sada bi trebalo da radi! 🚀**
 
 
+

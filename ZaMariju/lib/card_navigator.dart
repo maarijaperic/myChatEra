@@ -55,13 +55,13 @@ class CardNavigatorState extends State<CardNavigator>
 
   void _goToNext() async {
     try {
-      if (_currentIndex < widget.screens.length - 1) {
-        // Check if we're at the premium gate
-        if (widget.premiumStartIndex != null &&
-            _currentIndex == widget.premiumStartIndex! - 1) {
-          // Don't advance, user needs to click "Go Premium" button
-          return;
-        }
+    if (_currentIndex < widget.screens.length - 1) {
+      // Check if we're at the premium gate
+      if (widget.premiumStartIndex != null &&
+          _currentIndex == widget.premiumStartIndex! - 1) {
+        // Don't advance, user needs to click "Go Premium" button
+        return;
+      }
         
         final nextIndex = _currentIndex + 1;
         print('🔵 CardNavigator: Navigating from index $_currentIndex to $nextIndex');
@@ -73,20 +73,20 @@ class CardNavigatorState extends State<CardNavigator>
           print('❌ CardNavigator: Next index $nextIndex is out of bounds!');
           return;
         }
-        
-        await _transitionController.forward();
+      
+      await _transitionController.forward();
         if (mounted) {
-          setState(() {
+      setState(() {
             _currentIndex = nextIndex;
-          });
+      });
           print('🔵 CardNavigator: Successfully navigated to index $_currentIndex');
         }
-        _transitionController.reset();
-      } else {
-        // We're at the last screen
+      _transitionController.reset();
+    } else {
+      // We're at the last screen
         print('🔵 CardNavigator: At last screen (index $_currentIndex), calling onComplete');
-        if (widget.onComplete != null) {
-          widget.onComplete!();
+      if (widget.onComplete != null) {
+        widget.onComplete!();
         }
       }
     } catch (e, stackTrace) {
@@ -190,9 +190,9 @@ class CardNavigatorState extends State<CardNavigator>
                     flex: 67,
                     child: _shouldEnableRightTapZone()
                         ? GestureDetector(
-                            onTap: _goToNext,
-                            behavior: HitTestBehavior.translucent,
-                            child: Container(color: Colors.transparent),
+                      onTap: _goToNext,
+                      behavior: HitTestBehavior.translucent,
+                      child: Container(color: Colors.transparent),
                           )
                         : Container(), // Empty container - no tap zone
                   ),

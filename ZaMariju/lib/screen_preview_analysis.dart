@@ -28,23 +28,23 @@ class _PreviewAnalysisScreenState extends State<PreviewAnalysisScreen>
   @override
   void initState() {
     super.initState();
-    
+
     try {
       print('🔵 PreviewAnalysisScreen: initState called');
       print('🔵 PreviewAnalysisScreen: stats is null = ${widget.stats == null}');
       print('🔵 PreviewAnalysisScreen: premiumInsights is null = ${widget.premiumInsights == null}');
 
-      _fadeController = AnimationController(
-        vsync: this,
-        duration: const Duration(milliseconds: 1500),
-      );
+    _fadeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
 
-      _particlesController = AnimationController(
-        duration: const Duration(seconds: 4),
-        vsync: this,
-      )..repeat();
+    _particlesController = AnimationController(
+      duration: const Duration(seconds: 4),
+      vsync: this,
+    )..repeat();
 
-      _startAnimations();
+    _startAnimations();
     } catch (e, stackTrace) {
       print('❌ PreviewAnalysisScreen: Error in initState: $e');
       print('❌ PreviewAnalysisScreen: Stack trace: $stackTrace');
@@ -67,11 +67,11 @@ class _PreviewAnalysisScreenState extends State<PreviewAnalysisScreen>
   Widget build(BuildContext context) {
     try {
       print('🔵 PreviewAnalysisScreen: build called');
-      final screenWidth = MediaQuery.of(context).size.width;
-      final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
 
-      // Get stats or use demo data
-      final hours = widget.stats?.totalHours ?? 127;
+    // Get stats or use demo data
+    final hours = widget.stats?.totalHours ?? 127;
     final minutes = widget.stats?.totalMinutes ?? 42;
     final messagesPerDay = widget.stats?.messagesPerDay ?? 47;
     final streakDays = widget.stats?.longestStreak ?? 14;
@@ -581,17 +581,17 @@ class _SubtleParticlesPainter extends CustomPainter {
     }
     
     try {
-      final paint = Paint()
-        ..color = Colors.white.withOpacity(0.3)
-        ..style = PaintingStyle.fill;
+    final paint = Paint()
+      ..color = Colors.white.withOpacity(0.3)
+      ..style = PaintingStyle.fill;
 
-      // Draw subtle floating dots
-      for (int i = 0; i < 15; i++) {
-        final x = (i * 67.0) % size.width;
-        final y = (i * 43.0) % size.height;
-        final timeOffset = (animationValue * 2 * pi) + (i * 0.4);
-        final float = 0.2 + 0.3 * sin(timeOffset);
-        final dotSize = 1.0 + (1.0 * float);
+    // Draw subtle floating dots
+    for (int i = 0; i < 15; i++) {
+      final x = (i * 67.0) % size.width;
+      final y = (i * 43.0) % size.height;
+      final timeOffset = (animationValue * 2 * pi) + (i * 0.4);
+      final float = 0.2 + 0.3 * sin(timeOffset);
+      final dotSize = 1.0 + (1.0 * float);
         
         // Validate values before drawing
         if (dotSize <= 0 || dotSize.isNaN || dotSize.isInfinite ||
@@ -599,11 +599,11 @@ class _SubtleParticlesPainter extends CustomPainter {
           continue; // Skip invalid dots
         }
 
-        canvas.drawCircle(
-          Offset(x, y),
+      canvas.drawCircle(
+        Offset(x, y),
           dotSize.clamp(0.1, 10.0), // Ensure valid size
           paint..color = Colors.white.withOpacity((float * 0.4).clamp(0.0, 1.0)),
-        );
+      );
       }
     } catch (e, stackTrace) {
       print('❌ _SubtleParticlesPainter: Error in paint: $e');

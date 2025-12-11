@@ -14,7 +14,7 @@ class AnalysisTracker {
   
   // TEST MODE: Set to true to bypass RevenueCat checks for testing
   // Set to false before production release!
-  static const bool ENABLE_TEST_MODE = false;
+  static const bool ENABLE_TEST_MODE = true; // TEMPORARY: Enable for TestFlight testing
 
   /// Check if user can generate a new analysis
   static Future<bool> canGenerateAnalysis() async {
