@@ -91,12 +91,60 @@ class RevenueCatService {
 
   /// Purchase a subscription/product
   static Future<bool> purchaseProduct(String productId) async {
+    if (!_isConfigured) {
+      print('⚠️ RevenueCat: Not configured - cannot purchase product');
+      return false;
+    }
+    
     try {
-      final purchaseResult = await Purchases.purchaseProduct(productId);
-      // In version 9.x, purchaseResult has customerInfo property
-      return purchaseResult.customerInfo.entitlements.active.containsKey(_entitlementId);
-    } catch (e) {
-      print('Error purchasing product: $e');
+      print('🔴 RevenueCat: Attempting to purchase product: $productId');
+      
+      // First, try to get the product from offerings
+      final offerings = await Purchases.getOfferings();
+      if (offerings.current == null) {
+        print('❌ RevenueCat: No current offering found');
+        return false;
+      }
+      
+      // Find the package with the matching product
+      Package? targetPackage;
+      for (final package in offerings.current!.availablePackages) {
+        if (package.storeProduct.identifier == productId) {
+          targetPackage = package;
+          break;
+        }
+      }
+      
+      if (targetPackage == null) {
+        print('❌ RevenueCat: Product $productId not found in offerings');
+        print('🔴 RevenueCat: Available products: ${offerings.current!.availablePackages.map((p) => p.storeProduct.identifier).toList()}');
+        // Fallback: try direct purchase
+        print('🔴 RevenueCat: Attempting direct purchase with productId: $productId');
+        final purchaseResult = await Purchases.purchaseProduct(productId);
+        return purchaseResult.customerInfo.entitlements.active.containsKey(_entitlementId);
+      }
+      
+      print('✅ RevenueCat: Found package for product: $productId');
+      final purchaseResult = await Purchases.purchasePackage(targetPackage);
+      print('✅ RevenueCat: Purchase result received');
+      final hasEntitlement = purchaseResult.customerInfo.entitlements.active.containsKey(_entitlementId);
+      print('🔴 RevenueCat: Has premium entitlement: $hasEntitlement');
+      return hasEntitlement;
+    } on PurchasesError catch (e) {
+      print('❌ RevenueCat: PurchasesError purchasing product: ${e.code} - ${e.message}');
+      if (e.code == PurchasesErrorCode.purchaseCancelledError) {
+        print('🔴 RevenueCat: User cancelled purchase');
+      } else if (e.code == PurchasesErrorCode.productNotAvailableForPurchaseError) {
+        print('❌ RevenueCat: Product not available in store');
+      } else if (e.code == PurchasesErrorCode.purchaseNotAllowedError) {
+        print('❌ RevenueCat: Purchase not allowed');
+      } else {
+        print('❌ RevenueCat: Other error code: ${e.code}');
+      }
+      return false;
+    } catch (e, stackTrace) {
+      print('❌ RevenueCat: Error purchasing product: $e');
+      print('❌ RevenueCat: Stack trace: $stackTrace');
       return false;
     }
   }
