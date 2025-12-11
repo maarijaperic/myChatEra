@@ -232,6 +232,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   }
 
   Future<void> _handlePurchase() async {
+    print('🔴 PREMIUM_DEBUG: _handlePurchase CALLED - Starting purchase flow');
     setState(() {
       _isLoading = true;
     });
@@ -240,8 +241,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       // Production mode: Use RevenueCat
       final productId = RevenueCatService.getProductId(_selectedIndex);
       print('🔴 PREMIUM_DEBUG: Purchasing product: $productId');
+      print('🔴 PREMIUM_DEBUG: Selected index: $_selectedIndex');
+      print('🔴 PREMIUM_DEBUG: About to call RevenueCatService.purchaseProduct()');
 
       final success = await RevenueCatService.purchaseProduct(productId);
+      print('🔴 PREMIUM_DEBUG: RevenueCatService.purchaseProduct() returned: $success');
 
       if (success) {
         print('🔴 PREMIUM_DEBUG: Purchase successful');
@@ -251,22 +255,26 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         }
       } else {
         print('🔴 PREMIUM_DEBUG: Purchase failed or cancelled');
+        print('🔴 PREMIUM_DEBUG: Check RevenueCat logs above for details');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Purchase cancelled or failed. Please try again.'),
+              content: Text('Purchase cancelled or failed. Check console logs for details.'),
               backgroundColor: Colors.red,
+              duration: Duration(seconds: 5),
             ),
           );
         }
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       print('🔴 PREMIUM_DEBUG: Purchase error: $e');
+      print('🔴 PREMIUM_DEBUG: Stack trace: $stackTrace');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: ${e.toString()}'),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
           ),
         );
       }
