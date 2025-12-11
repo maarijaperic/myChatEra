@@ -36,23 +36,23 @@ class _SocialSharingScreenState extends State<SocialSharingScreen>
   @override
   void initState() {
     super.initState();
-    
+
     try {
       print('🔵 SocialSharingScreen: initState called');
       print('🔵 SocialSharingScreen: stats is null = ${widget.stats == null}');
       print('🔵 SocialSharingScreen: premiumInsights is null = ${widget.premiumInsights == null}');
 
-      _fadeController = AnimationController(
-        vsync: this,
-        duration: const Duration(milliseconds: 1500),
-      );
+    _fadeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
 
-      _particlesController = AnimationController(
-        duration: const Duration(seconds: 4),
-        vsync: this,
-      )..repeat();
+    _particlesController = AnimationController(
+      duration: const Duration(seconds: 4),
+      vsync: this,
+    )..repeat();
 
-      _startAnimations();
+    _startAnimations();
     } catch (e, stackTrace) {
       print('❌ SocialSharingScreen: Error in initState: $e');
       print('❌ SocialSharingScreen: Stack trace: $stackTrace');
@@ -75,10 +75,10 @@ class _SocialSharingScreenState extends State<SocialSharingScreen>
   Widget build(BuildContext context) {
     try {
       print('🔵 SocialSharingScreen: build called');
-      final screenWidth = MediaQuery.of(context).size.width;
-      final screenHeight = MediaQuery.of(context).size.height;
-      
-      return Scaffold(
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    
+    return Scaffold(
       body: Stack(
         fit: StackFit.expand,
         children: [
@@ -158,8 +158,8 @@ class _SocialSharingScreenState extends State<SocialSharingScreen>
                           SizedBox(height: screenHeight * 0.045),
                           _ShareHeroCard(
                             screenWidth: screenWidth,
-                            stats: widget.stats,
-                            premiumInsights: widget.premiumInsights,
+                                    stats: widget.stats,
+                                    premiumInsights: widget.premiumInsights,
                           ),
                         ],
                       ),
@@ -624,7 +624,7 @@ class _GetAnotherAnalysisButtonState extends State<_GetAnotherAnalysisButton> {
     super.initState();
     // Don't call async method directly in initState - use WidgetsBinding
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkAvailability();
+    _checkAvailability();
     });
   }
 
@@ -635,9 +635,9 @@ class _GetAnotherAnalysisButtonState extends State<_GetAnotherAnalysisButton> {
       if (!mounted) return;
       if (!isPremium) {
         if (mounted) {
-          setState(() {
-            _canGenerate = false;
-          });
+        setState(() {
+          _canGenerate = false;
+        });
         }
         return;
       }
@@ -647,9 +647,9 @@ class _GetAnotherAnalysisButtonState extends State<_GetAnotherAnalysisButton> {
       if (!mounted) return;
       if (subscriptionType == null) {
         if (mounted) {
-          setState(() {
-            _canGenerate = false;
-          });
+        setState(() {
+          _canGenerate = false;
+        });
         }
         return;
       }
@@ -660,19 +660,19 @@ class _GetAnotherAnalysisButtonState extends State<_GetAnotherAnalysisButton> {
       final remaining = await AnalysisTracker.getRemainingAnalyses();
 
       if (mounted) {
-        setState(() {
-          _canGenerate = canGenerate;
-          _remaining = remaining;
-          _subscriptionType = subscriptionType;
-        });
+      setState(() {
+        _canGenerate = canGenerate;
+        _remaining = remaining;
+        _subscriptionType = subscriptionType;
+      });
       }
     } catch (e, stackTrace) {
       print('❌ _GetAnotherAnalysisButton: Error checking analysis availability: $e');
       print('❌ _GetAnotherAnalysisButton: Stack trace: $stackTrace');
       if (mounted) {
-        setState(() {
-          _canGenerate = false;
-        });
+      setState(() {
+        _canGenerate = false;
+      });
       }
     }
   }

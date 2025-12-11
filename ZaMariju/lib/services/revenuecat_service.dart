@@ -21,11 +21,11 @@ class RevenueCatService {
         _isConfigured = false;
         return;
       }
-      await Purchases.setDebugLogsEnabled(true); // Set to false in production
-      await Purchases.configure(
-        PurchasesConfiguration(apiKey)
-          ..appUserID = null, // RevenueCat will auto-generate
-      );
+    await Purchases.setDebugLogsEnabled(true); // Set to false in production
+    await Purchases.configure(
+      PurchasesConfiguration(apiKey)
+        ..appUserID = null, // RevenueCat will auto-generate
+    );
       _isConfigured = true;
       print('✅ RevenueCat: Successfully configured');
     } catch (e) {

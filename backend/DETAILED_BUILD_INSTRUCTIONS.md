@@ -201,3 +201,6 @@ gcloud run deploy openai-proxy-server --image europe-west1-docker.pkg.dev/301757
 ```
 
 **To je sve!** Ne treba ti ništa u browseru.
+
+
+
