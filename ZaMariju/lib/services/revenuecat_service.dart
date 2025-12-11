@@ -99,45 +99,30 @@ class RevenueCatService {
     try {
       print('🔴 RevenueCat: Attempting to purchase product: $productId');
       
-      // First, try to get the product from offerings
-      final offerings = await Purchases.getOfferings();
-      if (offerings.current == null) {
-        print('❌ RevenueCat: No current offering found');
-        return false;
-      }
-      
-      // Find the package with the matching product
-      Package? targetPackage;
-      for (final package in offerings.current!.availablePackages) {
-        if (package.storeProduct.identifier == productId) {
-          targetPackage = package;
-          break;
-        }
-      }
-      
-      if (targetPackage == null) {
-        print('❌ RevenueCat: Product $productId not found in offerings');
-        print('🔴 RevenueCat: Available products: ${offerings.current!.availablePackages.map((p) => p.storeProduct.identifier).toList()}');
-        // Fallback: try direct purchase
-        print('🔴 RevenueCat: Attempting direct purchase with productId: $productId');
-        final purchaseResult = await Purchases.purchaseProduct(productId);
-        return purchaseResult.customerInfo.entitlements.active.containsKey(_entitlementId);
-      }
-      
-      print('✅ RevenueCat: Found package for product: $productId');
-      final purchaseResult = await Purchases.purchasePackage(targetPackage);
+      // Try direct purchase first (simpler and more reliable)
+      print('🔴 RevenueCat: Attempting direct purchase with productId: $productId');
+      final purchaseResult = await Purchases.purchaseProduct(productId);
       print('✅ RevenueCat: Purchase result received');
       final hasEntitlement = purchaseResult.customerInfo.entitlements.active.containsKey(_entitlementId);
       print('🔴 RevenueCat: Has premium entitlement: $hasEntitlement');
+      
+      if (!hasEntitlement) {
+        print('⚠️ RevenueCat: Purchase successful but no premium entitlement found');
+        print('🔴 RevenueCat: Active entitlements: ${purchaseResult.customerInfo.entitlements.active.keys.toList()}');
+      }
+      
       return hasEntitlement;
     } on PurchasesError catch (e) {
       print('❌ RevenueCat: PurchasesError purchasing product: ${e.code} - ${e.message}');
+      print('❌ RevenueCat: Error underlyingErrorMessage: ${e.underlyingErrorMessage}');
       if (e.code == PurchasesErrorCode.purchaseCancelledError) {
         print('🔴 RevenueCat: User cancelled purchase');
       } else if (e.code == PurchasesErrorCode.productNotAvailableForPurchaseError) {
         print('❌ RevenueCat: Product not available in store');
       } else if (e.code == PurchasesErrorCode.purchaseNotAllowedError) {
         print('❌ RevenueCat: Purchase not allowed');
+      } else if (e.code == PurchasesErrorCode.storeProductNotAvailableError) {
+        print('❌ RevenueCat: Store product not available');
       } else {
         print('❌ RevenueCat: Other error code: ${e.code}');
       }
