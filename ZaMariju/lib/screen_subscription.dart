@@ -237,40 +237,27 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     });
 
     try {
-      // TEST MODE: Bypass RevenueCat purchase and directly trigger premium analysis
-      // Set to false before production release!
-      const bool ENABLE_TEST_MODE = true;
-      
-      if (ENABLE_TEST_MODE) {
-        print('🧪 TEST MODE: Bypassing RevenueCat purchase - directly enabling premium');
-        await Future.delayed(const Duration(milliseconds: 500)); // Simulate purchase delay
+      // Production mode: Use RevenueCat
+      final productId = RevenueCatService.getProductId(_selectedIndex);
+      print('🔴 PREMIUM_DEBUG: Purchasing product: $productId');
+
+      final success = await RevenueCatService.purchaseProduct(productId);
+
+      if (success) {
+        print('🔴 PREMIUM_DEBUG: Purchase successful');
         if (mounted) {
           Navigator.pop(context);
           widget.onSubscribe();
         }
       } else {
-        // Production mode: Use RevenueCat
-        final productId = RevenueCatService.getProductId(_selectedIndex);
-        print('🔴 PREMIUM_DEBUG: Purchasing product: $productId');
-
-        final success = await RevenueCatService.purchaseProduct(productId);
-
-        if (success) {
-          print('🔴 PREMIUM_DEBUG: Purchase successful');
-          if (mounted) {
-            Navigator.pop(context);
-            widget.onSubscribe();
-          }
-        } else {
-          print('🔴 PREMIUM_DEBUG: Purchase failed or cancelled');
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Purchase cancelled or failed. Please try again.'),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
+        print('🔴 PREMIUM_DEBUG: Purchase failed or cancelled');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Purchase cancelled or failed. Please try again.'),
+              backgroundColor: Colors.red,
+            ),
+          );
         }
       }
     } catch (e) {
