@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:gpt_wrapped2/models/chat_data.dart';
 import 'package:gpt_wrapped2/services/premium_processor.dart';
 import 'package:gpt_wrapped2/services/analysis_tracker.dart';
+import 'package:gpt_wrapped2/services/revenuecat_service.dart';
 
 class PremiumAnalyzingScreen extends StatefulWidget {
   final List<ConversationData> conversations;
@@ -67,6 +68,22 @@ class _PremiumAnalyzingScreenState extends State<PremiumAnalyzingScreen>
     // Check if user can generate analysis
     final canGenerate = await AnalysisTracker.canGenerateAnalysis();
     if (!canGenerate) {
+      // First check if user is premium
+      final isPremium = await RevenueCatService.isPremium();
+      if (!isPremium) {
+        // User is not premium - they need to purchase
+        if (widget.onError != null) {
+          widget.onError!(
+            'Please purchase a subscription to access premium analysis.',
+          );
+        }
+        if (mounted) {
+          Navigator.of(context).pop();
+        }
+        return;
+      }
+      
+      // User is premium but reached limit
       final remaining = await AnalysisTracker.getRemainingAnalyses();
       if (widget.onError != null) {
         widget.onError!(
