@@ -137,26 +137,43 @@ class RevenueCatService {
       
       // Purchase using package
       print('🔴 RevenueCat: Purchasing package: ${targetPackage.identifier}');
-      final purchaseResult = await Purchases.purchasePackage(targetPackage);
-      print('✅ RevenueCat: Purchase result received');
-      final hasEntitlement = purchaseResult.customerInfo.entitlements.active.containsKey(_entitlementId);
-      print('🔴 RevenueCat: Has premium entitlement: $hasEntitlement');
-      
-      if (!hasEntitlement) {
-        print('⚠️ RevenueCat: Purchase successful but no premium entitlement found');
-        print('🔴 RevenueCat: Active entitlements: ${purchaseResult.customerInfo.entitlements.active.keys.toList()}');
+      try {
+        final purchaseResult = await Purchases.purchasePackage(targetPackage);
+        print('✅ RevenueCat: Purchase result received');
+        final hasEntitlement = purchaseResult.customerInfo.entitlements.active.containsKey(_entitlementId);
+        print('🔴 RevenueCat: Has premium entitlement: $hasEntitlement');
+        
+        if (!hasEntitlement) {
+          print('⚠️ RevenueCat: Purchase successful but no premium entitlement found');
+          print('🔴 RevenueCat: Active entitlements: ${purchaseResult.customerInfo.entitlements.active.keys.toList()}');
+        }
+        
+        return hasEntitlement;
+      } catch (packageError) {
+        // If package purchase fails, try direct product purchase (for StoreKit Configuration File)
+        print('⚠️ RevenueCat: Package purchase failed, trying direct product purchase: $packageError');
+        print('🔴 RevenueCat: Attempting direct purchase with productId: $productId');
+        final purchaseResult = await Purchases.purchaseProduct(productId);
+        print('✅ RevenueCat: Direct purchase result received');
+        final hasEntitlement = purchaseResult.customerInfo.entitlements.active.containsKey(_entitlementId);
+        print('🔴 RevenueCat: Has premium entitlement: $hasEntitlement');
+        return hasEntitlement;
       }
-      
-      return hasEntitlement;
     } on PurchasesError catch (e) {
       print('❌ RevenueCat: PurchasesError purchasing product: ${e.code} - ${e.message}');
       print('❌ RevenueCat: Error underlyingErrorMessage: ${e.underlyingErrorMessage}');
+      print('❌ RevenueCat: Error readableErrorCode: ${e.readableErrorCode}');
+      print('❌ RevenueCat: Full error details: ${e.toString()}');
+      
       if (e.code == PurchasesErrorCode.purchaseCancelledError) {
         print('🔴 RevenueCat: User cancelled purchase');
       } else if (e.code == PurchasesErrorCode.productNotAvailableForPurchaseError) {
         print('❌ RevenueCat: Product not available in store');
       } else if (e.code == PurchasesErrorCode.purchaseNotAllowedError) {
         print('❌ RevenueCat: Purchase not allowed');
+      } else if (e.code == PurchasesErrorCode.configurationError) {
+        print('❌ RevenueCat: Configuration error - products not found in App Store Connect');
+        print('❌ RevenueCat: Check RevenueCat Dashboard → Products → Verify all products are "Ready to Submit"');
       } else {
         print('❌ RevenueCat: Other error code: ${e.code}');
       }
