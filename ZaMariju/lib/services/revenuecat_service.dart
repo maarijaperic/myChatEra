@@ -99,9 +99,45 @@ class RevenueCatService {
     try {
       print('🔴 RevenueCat: Attempting to purchase product: $productId');
       
-      // Try direct purchase first (simpler and more reliable)
-      print('🔴 RevenueCat: Attempting direct purchase with productId: $productId');
-      final purchaseResult = await Purchases.purchaseProduct(productId);
+      // First, try to get the product from offerings
+      print('🔴 RevenueCat: Fetching offerings...');
+      final offerings = await Purchases.getOfferings();
+      
+      if (offerings.current == null) {
+        print('❌ RevenueCat: No current offering found');
+        print('🔴 RevenueCat: Available offerings: ${offerings.all.keys.toList()}');
+        return false;
+      }
+      
+      print('✅ RevenueCat: Found current offering: ${offerings.current!.identifier}');
+      print('🔴 RevenueCat: Available packages: ${offerings.current!.availablePackages.map((p) => p.identifier).toList()}');
+      
+      // Find the package with the matching product
+      Package? targetPackage;
+      for (final package in offerings.current!.availablePackages) {
+        print('🔴 RevenueCat: Checking package ${package.identifier} - product: ${package.storeProduct.identifier}');
+        if (package.storeProduct.identifier == productId) {
+          targetPackage = package;
+          print('✅ RevenueCat: Found matching package: ${package.identifier}');
+          break;
+        }
+      }
+      
+      if (targetPackage == null) {
+        print('❌ RevenueCat: Product $productId not found in offerings');
+        print('🔴 RevenueCat: Available products in packages: ${offerings.current!.availablePackages.map((p) => p.storeProduct.identifier).toList()}');
+        // Fallback: try direct purchase
+        print('🔴 RevenueCat: Attempting direct purchase with productId: $productId');
+        final purchaseResult = await Purchases.purchaseProduct(productId);
+        print('✅ RevenueCat: Purchase result received');
+        final hasEntitlement = purchaseResult.customerInfo.entitlements.active.containsKey(_entitlementId);
+        print('🔴 RevenueCat: Has premium entitlement: $hasEntitlement');
+        return hasEntitlement;
+      }
+      
+      // Purchase using package
+      print('🔴 RevenueCat: Purchasing package: ${targetPackage.identifier}');
+      final purchaseResult = await Purchases.purchasePackage(targetPackage);
       print('✅ RevenueCat: Purchase result received');
       final hasEntitlement = purchaseResult.customerInfo.entitlements.active.containsKey(_entitlementId);
       print('🔴 RevenueCat: Has premium entitlement: $hasEntitlement');
