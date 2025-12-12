@@ -117,15 +117,47 @@ class AnalysisTracker {
       
       if (!doc.exists) {
         // First time - can generate
+        print('🔴 AnalysisTracker: Document does not exist - first time user, can generate');
         return true;
       }
 
       final data = doc.data();
       final oneTimeUsed = data?['oneTimeUsed'] as bool? ?? false;
+      final lastAnalysis = data?['lastAnalysis'] as Timestamp?;
       
-      return !oneTimeUsed; // Can generate if not used
-    } catch (e) {
-      print('Error checking one-time limit: $e');
+      print('🔴 AnalysisTracker: Document exists - oneTimeUsed: $oneTimeUsed, lastAnalysis: $lastAnalysis');
+      
+      // Check if user just purchased one_time_purchase
+      // If oneTimeUsed is true but purchase was just made, allow generation
+      // We'll check the purchase timestamp vs lastAnalysis timestamp
+      if (oneTimeUsed) {
+        // Check if user has active one_time_purchase entitlement
+        final isPremium = await RevenueCatService.isPremium();
+        final subscriptionType = await RevenueCatService.getSubscriptionType();
+        
+        print('🔴 AnalysisTracker: oneTimeUsed is true, checking if user has active one_time purchase');
+        print('🔴 AnalysisTracker: isPremium: $isPremium, subscriptionType: $subscriptionType');
+        
+        // If user has active one_time purchase, allow them to use it
+        if (isPremium && subscriptionType == 'one_time') {
+          print('🔴 AnalysisTracker: User has active one_time purchase - allowing generation');
+          // Reset oneTimeUsed to false to allow this purchase to be used
+          await _firestore.collection(_collectionName).doc(userId).update({
+            'oneTimeUsed': false,
+            'lastUpdated': FieldValue.serverTimestamp(),
+          });
+          return true;
+        }
+        
+        print('🔴 AnalysisTracker: oneTimeUsed is true and no active one_time purchase - cannot generate');
+        return false;
+      }
+      
+      print('🔴 AnalysisTracker: oneTimeUsed is false - can generate');
+      return true; // Can generate if not used
+    } catch (e, stackTrace) {
+      print('❌ AnalysisTracker: Error checking one-time limit: $e');
+      print('❌ AnalysisTracker: Stack trace: $stackTrace');
       return false;
     }
   }
