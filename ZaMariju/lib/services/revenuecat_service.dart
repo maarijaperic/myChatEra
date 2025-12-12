@@ -162,15 +162,70 @@ class RevenueCatService {
         }
         
         return hasEntitlement;
-      } catch (packageError) {
+      } on PurchasesError catch (packageError) {
+        // Check if it's a network error that might be retryable
+        if (packageError.code == PurchasesErrorCode.networkError || 
+            packageError.readableErrorCode == 'NETWORK_ERROR') {
+          print('⚠️ RevenueCat: Network error during package purchase, retrying once...');
+          print('⚠️ RevenueCat: Error details: ${packageError.message}');
+          
+          // Wait a bit before retry
+          await Future.delayed(const Duration(seconds: 2));
+          
+          try {
+            print('🔴 RevenueCat: Retrying package purchase...');
+            final purchaseResult = await Purchases.purchasePackage(targetPackage);
+            print('✅ RevenueCat: Retry purchase result received');
+            final hasEntitlement = purchaseResult.customerInfo.entitlements.active.containsKey(_entitlementId);
+            return hasEntitlement;
+          } catch (retryError) {
+            print('❌ RevenueCat: Retry also failed: $retryError');
+            // Fall through to direct product purchase
+          }
+        }
+        
         // If package purchase fails, try direct product purchase (for StoreKit Configuration File)
         print('⚠️ RevenueCat: Package purchase failed, trying direct product purchase: $packageError');
         print('🔴 RevenueCat: Attempting direct purchase with productId: $productId');
-        final purchaseResult = await Purchases.purchaseProduct(productId);
-        print('✅ RevenueCat: Direct purchase result received');
-        final hasEntitlement = purchaseResult.customerInfo.entitlements.active.containsKey(_entitlementId);
-        print('🔴 RevenueCat: Has premium entitlement: $hasEntitlement');
-        return hasEntitlement;
+        
+        try {
+          final purchaseResult = await Purchases.purchaseProduct(productId);
+          print('✅ RevenueCat: Direct purchase result received');
+          final hasEntitlement = purchaseResult.customerInfo.entitlements.active.containsKey(_entitlementId);
+          print('🔴 RevenueCat: Has premium entitlement: $hasEntitlement');
+          return hasEntitlement;
+        } on PurchasesError catch (directError) {
+          // If direct purchase also fails with network error, retry once
+          if (directError.code == PurchasesErrorCode.networkError || 
+              directError.readableErrorCode == 'NETWORK_ERROR') {
+            print('⚠️ RevenueCat: Network error during direct purchase, retrying once...');
+            await Future.delayed(const Duration(seconds: 2));
+            
+            try {
+              print('🔴 RevenueCat: Retrying direct purchase...');
+              final purchaseResult = await Purchases.purchaseProduct(productId);
+              final hasEntitlement = purchaseResult.customerInfo.entitlements.active.containsKey(_entitlementId);
+              return hasEntitlement;
+            } catch (retryError) {
+              print('❌ RevenueCat: Direct purchase retry also failed: $retryError');
+              rethrow;
+            }
+          }
+          rethrow;
+        }
+      } catch (packageError) {
+        // Generic catch for non-PurchasesError exceptions
+        print('⚠️ RevenueCat: Package purchase failed with non-PurchasesError: $packageError');
+        print('🔴 RevenueCat: Attempting direct purchase with productId: $productId');
+        try {
+          final purchaseResult = await Purchases.purchaseProduct(productId);
+          print('✅ RevenueCat: Direct purchase result received');
+          final hasEntitlement = purchaseResult.customerInfo.entitlements.active.containsKey(_entitlementId);
+          return hasEntitlement;
+        } catch (e) {
+          print('❌ RevenueCat: Direct purchase also failed: $e');
+          rethrow;
+        }
       }
     } on PurchasesError catch (e) {
       print('❌ RevenueCat: PurchasesError purchasing product: ${e.code} - ${e.message}');
@@ -187,6 +242,16 @@ class RevenueCatService {
       } else if (e.code == PurchasesErrorCode.configurationError) {
         print('❌ RevenueCat: Configuration error - products not found in App Store Connect');
         print('❌ RevenueCat: Check RevenueCat Dashboard → Products → Verify all products are "Ready to Submit"');
+      } else if (e.code == PurchasesErrorCode.networkError || e.readableErrorCode == 'NETWORK_ERROR') {
+        print('❌ RevenueCat: Network error occurred');
+        print('❌ RevenueCat: This might be due to:');
+        print('   - StoreKit Configuration File (Products.storekit) not properly configured');
+        print('   - App Store Connect products not properly synced with RevenueCat');
+        print('   - Network connectivity issues');
+        print('❌ RevenueCat: Try checking:');
+        print('   1. RevenueCat Dashboard → Products → Verify products are synced');
+        print('   2. App Store Connect → In-App Purchases → Verify products are "Ready to Submit"');
+        print('   3. Xcode → Product → Scheme → Edit Scheme → Run → StoreKit Configuration → Select Products.storekit');
       } else {
         print('❌ RevenueCat: Other error code: ${e.code}');
       }
