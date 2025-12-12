@@ -56,21 +56,53 @@ class RevenueCatService {
       return null;
     }
     try {
+      // Refresh customer info to get latest subscription status
       final customerInfo = await Purchases.getCustomerInfo();
       final activeEntitlements = customerInfo.entitlements.active;
       
-      if (activeEntitlements.isEmpty) return null;
+      print('🔴 RevenueCat: Active entitlements: ${activeEntitlements.keys.toList()}');
+      
+      if (activeEntitlements.isEmpty) {
+        print('⚠️ RevenueCat: No active entitlements found');
+        return null;
+      }
       
       // Get the product identifier from the active entitlement
       final entitlement = activeEntitlements[_entitlementId];
-      if (entitlement == null) return null;
+      if (entitlement == null) {
+        print('⚠️ RevenueCat: No premium entitlement found');
+        return null;
+      }
       
       final productId = entitlement.productIdentifier;
+      print('🔴 RevenueCat: Entitlement product ID: $productId');
       
+      // Check all active entitlements to find the highest priority subscription
+      // Priority: yearly > monthly > one_time
+      String? foundType;
+      for (final ent in activeEntitlements.values) {
+        final pid = ent.productIdentifier;
+        if (pid == _yearlyProductId) {
+          foundType = 'yearly';
+          break; // Yearly has highest priority
+        } else if (pid == _monthlyProductId && foundType != 'yearly') {
+          foundType = 'monthly';
+        } else if (pid == _oneTimeProductId && foundType == null) {
+          foundType = 'one_time';
+        }
+      }
+      
+      if (foundType != null) {
+        print('🔴 RevenueCat: Determined subscription type: $foundType');
+        return foundType;
+      }
+      
+      // Fallback to original logic
       if (productId == _oneTimeProductId) return 'one_time';
       if (productId == _monthlyProductId) return 'monthly';
       if (productId == _yearlyProductId) return 'yearly';
       
+      print('⚠️ RevenueCat: Unknown product ID: $productId');
       return null;
     } catch (e) {
       print('❌ RevenueCat: Error getting subscription type: $e');
