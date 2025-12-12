@@ -45,9 +45,12 @@ void main() async {
     // Initialize Firebase
     print('🔵 Initializing Firebase...');
     await Firebase.initializeApp();
-    print('✅ Firebase initialized');
-  } catch (e) {
+    print('✅ Firebase initialized successfully');
+    print('🔵 Firebase apps count: ${Firebase.apps.length}');
+  } catch (e, stackTrace) {
     print('❌ Error initializing Firebase: $e');
+    print('❌ Firebase initialization stack trace: $stackTrace');
+    print('⚠️ Continuing without Firebase - premium analysis features may not work');
     // Continue anyway - Firebase might not be critical for basic functionality
   }
   
