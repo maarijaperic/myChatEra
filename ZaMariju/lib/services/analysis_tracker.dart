@@ -25,36 +25,46 @@ class AnalysisTracker {
     }
     
     try {
+      print('🔴 AnalysisTracker: Checking if can generate analysis...');
+      
       // 1. Check if user has premium subscription
       final isPremium = await RevenueCatService.isPremium();
+      print('🔴 AnalysisTracker: Is premium: $isPremium');
       if (!isPremium) {
-        print('AnalysisTracker: User does not have premium subscription');
+        print('❌ AnalysisTracker: User does not have premium subscription');
         return false;
       }
 
       // 2. Get subscription type
       final subscriptionType = await RevenueCatService.getSubscriptionType();
+      print('🔴 AnalysisTracker: Subscription type: $subscriptionType');
       if (subscriptionType == null) {
-        print('AnalysisTracker: Could not determine subscription type');
+        print('❌ AnalysisTracker: Could not determine subscription type');
         return false;
       }
 
       // 3. Get user ID
       final userId = await RevenueCatService.getUserId();
+      print('🔴 AnalysisTracker: User ID: $userId');
       if (userId.isEmpty) {
-        print('AnalysisTracker: Could not get user ID');
+        print('❌ AnalysisTracker: Could not get user ID');
         return false;
       }
 
       // 4. Check limits based on subscription type
       if (subscriptionType == 'one_time') {
-        return await _canGenerateOneTime(userId);
+        final canGenerate = await _canGenerateOneTime(userId);
+        print('🔴 AnalysisTracker: Can generate one-time: $canGenerate');
+        return canGenerate;
       } else {
         // monthly or yearly
-        return await _canGenerateMonthly(userId);
+        final canGenerate = await _canGenerateMonthly(userId);
+        print('🔴 AnalysisTracker: Can generate monthly: $canGenerate');
+        return canGenerate;
       }
-    } catch (e) {
-      print('Error checking if can generate analysis: $e');
+    } catch (e, stackTrace) {
+      print('❌ AnalysisTracker: Error checking if can generate analysis: $e');
+      print('❌ AnalysisTracker: Stack trace: $stackTrace');
       return false;
     }
   }
