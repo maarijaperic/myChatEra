@@ -16,6 +16,14 @@ class AnalysisTracker {
   // Set to false before production release!
   static const bool ENABLE_TEST_MODE = false; // Disabled for Sandbox testing
 
+  /// Check if Firebase is properly configured
+  static Future<bool> isFirebaseConfigured() async {
+    if (Firebase.apps.isNotEmpty) {
+      return true;
+    }
+    return await _ensureFirebaseInitialized();
+  }
+
   /// Check if user can generate a new analysis
   static Future<bool> canGenerateAnalysis() async {
     // TEST MODE: Allow analysis without RevenueCat
@@ -83,6 +91,20 @@ class AnalysisTracker {
     } catch (e) {
       print('❌ AnalysisTracker: Failed to initialize Firebase: $e');
       print('❌ AnalysisTracker: Stack trace: ${StackTrace.current}');
+      print('');
+      print('🔴 VAŽNO: Firebase nije pravilno konfigurisan!');
+      print('🔴 Problem: Nedostaje GoogleService-Info.plist fajl u iOS projektu.');
+      print('🔴 Rešenje:');
+      print('   1. Idi na Firebase Console: https://console.firebase.google.com/');
+      print('   2. Izaberi svoj projekat → Project Settings → iOS app');
+      print('   3. Download GoogleService-Info.plist');
+      print('   4. Otvori Xcode: cd ZaMariju && open ios/Runner.xcworkspace');
+      print('   5. U Xcode: Desni klik na Runner → Add Files to Runner');
+      print('   6. Izaberi GoogleService-Info.plist');
+      print('   7. ✅ Označi "Copy items if needed" i "Add to targets: Runner"');
+      print('   8. Pokreni: cd ios && pod install && cd ..');
+      print('   9. Restartuj aplikaciju');
+      print('');
       return false;
     }
   }
