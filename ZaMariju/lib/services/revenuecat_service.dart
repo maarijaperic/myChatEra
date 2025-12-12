@@ -138,11 +138,16 @@ class RevenueCatService {
       if (offerings.current == null) {
         print('❌ RevenueCat: No current offering found');
         print('🔴 RevenueCat: Available offerings: ${offerings.all.keys.toList()}');
+        print('❌ RevenueCat: This usually means:');
+        print('   1. No offerings configured in RevenueCat Dashboard');
+        print('   2. Products are not synced with RevenueCat');
+        print('   3. Products are not available in App Store Connect');
         return false;
       }
       
       print('✅ RevenueCat: Found current offering: ${offerings.current!.identifier}');
       print('🔴 RevenueCat: Available packages: ${offerings.current!.availablePackages.map((p) => p.identifier).toList()}');
+      print('🔴 RevenueCat: Package products: ${offerings.current!.availablePackages.map((p) => p.storeProduct.identifier).toList()}');
       
       // Find the package with the matching product
       Package? targetPackage;
@@ -312,17 +317,28 @@ class RevenueCatService {
       print('❌ RevenueCat: PurchasesError purchasing product: ${e.code} - ${e.message}');
       print('❌ RevenueCat: Error underlyingErrorMessage: ${e.underlyingErrorMessage}');
       print('❌ RevenueCat: Error readableErrorCode: ${e.readableErrorCode}');
+      print('❌ RevenueCat: Error userCancelled: ${e.userCancelled}');
       print('❌ RevenueCat: Full error details: ${e.toString()}');
       
-      if (e.code == PurchasesErrorCode.purchaseCancelledError) {
+      if (e.code == PurchasesErrorCode.purchaseCancelledError || e.userCancelled == true) {
         print('🔴 RevenueCat: User cancelled purchase');
       } else if (e.code == PurchasesErrorCode.productNotAvailableForPurchaseError) {
         print('❌ RevenueCat: Product not available in store');
+        print('❌ RevenueCat: This usually means:');
+        print('   1. Product is not created in App Store Connect');
+        print('   2. Product is not "Ready to Submit" in App Store Connect');
+        print('   3. Product is not synced with RevenueCat');
+        print('   4. You are not signed in with Sandbox Test Account on physical device');
       } else if (e.code == PurchasesErrorCode.purchaseNotAllowedError) {
         print('❌ RevenueCat: Purchase not allowed');
+        print('❌ RevenueCat: This usually means:');
+        print('   1. Parental controls are enabled');
+        print('   2. In-app purchases are disabled in device settings');
+        print('   3. You are not signed in with Sandbox Test Account');
       } else if (e.code == PurchasesErrorCode.configurationError) {
         print('❌ RevenueCat: Configuration error - products not found in App Store Connect');
-        print('❌ RevenueCat: Check RevenueCat Dashboard → Products → Verify all products are "Ready to Submit"');
+        print('❌ RevenueCat: Check RevenueCat Dashboard → Products → Verify all products are synced');
+        print('❌ RevenueCat: Check App Store Connect → In-App Purchases → Verify products are "Ready to Submit"');
       } else if (e.code == PurchasesErrorCode.networkError || e.readableErrorCode == 'NETWORK_ERROR') {
         print('❌ RevenueCat: Network error occurred');
         print('❌ RevenueCat: Error code: ${e.code}, readable: ${e.readableErrorCode}');
