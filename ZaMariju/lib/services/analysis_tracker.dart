@@ -5,10 +5,15 @@ import 'revenuecat_service.dart';
 /// Service for tracking analysis usage per user
 class AnalysisTracker {
   static FirebaseFirestore get _firestore {
-    if (Firebase.apps.isEmpty) {
-      throw Exception('Firebase is not initialized');
+    try {
+      if (Firebase.apps.isEmpty) {
+        throw Exception('Firebase is not initialized - no apps found');
+      }
+      return FirebaseFirestore.instance;
+    } catch (e) {
+      print('❌ AnalysisTracker: Error accessing Firestore: $e');
+      rethrow;
     }
-    return FirebaseFirestore.instance;
   }
   static const String _collectionName = 'user_analyses';
   
@@ -71,18 +76,30 @@ class AnalysisTracker {
 
   /// Ensure Firebase is initialized
   static Future<bool> _ensureFirebaseInitialized() async {
-    if (Firebase.apps.isNotEmpty) {
-      return true;
-    }
-    
     try {
+      // Check if Firebase is already initialized by trying to access the default app
+      if (Firebase.apps.isNotEmpty) {
+        // Verify that Firebase is actually working by checking if we can access Firestore
+        try {
+          final test = FirebaseFirestore.instance;
+          print('✅ AnalysisTracker: Firebase is initialized and accessible');
+          return true;
+        } catch (e) {
+          print('⚠️ AnalysisTracker: Firebase apps exist but Firestore is not accessible: $e');
+          // Continue to reinitialize
+        }
+      }
+      
       print('⚠️ AnalysisTracker: Firebase not initialized - attempting to initialize...');
       await Firebase.initializeApp();
+      
+      // Verify initialization by accessing Firestore
+      final test = FirebaseFirestore.instance;
       print('✅ AnalysisTracker: Firebase initialized successfully');
       return true;
-    } catch (e) {
+    } catch (e, stackTrace) {
       print('❌ AnalysisTracker: Failed to initialize Firebase: $e');
-      print('❌ AnalysisTracker: Stack trace: ${StackTrace.current}');
+      print('❌ AnalysisTracker: Stack trace: $stackTrace');
       return false;
     }
   }
