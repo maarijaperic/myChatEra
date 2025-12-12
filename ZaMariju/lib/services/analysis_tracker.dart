@@ -69,10 +69,30 @@ class AnalysisTracker {
     }
   }
 
+  /// Ensure Firebase is initialized
+  static Future<bool> _ensureFirebaseInitialized() async {
+    if (Firebase.apps.isNotEmpty) {
+      return true;
+    }
+    
+    try {
+      print('⚠️ AnalysisTracker: Firebase not initialized - attempting to initialize...');
+      await Firebase.initializeApp();
+      print('✅ AnalysisTracker: Firebase initialized successfully');
+      return true;
+    } catch (e) {
+      print('❌ AnalysisTracker: Failed to initialize Firebase: $e');
+      print('❌ AnalysisTracker: Stack trace: ${StackTrace.current}');
+      return false;
+    }
+  }
+
   /// Check if one-time user can generate analysis
   static Future<bool> _canGenerateOneTime(String userId) async {
     try {
-      if (Firebase.apps.isEmpty) {
+      // Ensure Firebase is initialized before checking
+      final firebaseReady = await _ensureFirebaseInitialized();
+      if (!firebaseReady) {
         print('⚠️ AnalysisTracker: Firebase not initialized - returning false');
         return false;
       }
@@ -96,7 +116,9 @@ class AnalysisTracker {
   /// Check if monthly/yearly user can generate analysis
   static Future<bool> _canGenerateMonthly(String userId) async {
     try {
-      if (Firebase.apps.isEmpty) {
+      // Ensure Firebase is initialized before checking
+      final firebaseReady = await _ensureFirebaseInitialized();
+      if (!firebaseReady) {
         print('⚠️ AnalysisTracker: Firebase not initialized - returning false');
         return false;
       }
@@ -155,7 +177,9 @@ class AnalysisTracker {
   /// Increment one-time analysis count
   static Future<void> _incrementOneTime(String userId) async {
     try {
-      if (Firebase.apps.isEmpty) {
+      // Ensure Firebase is initialized before incrementing
+      final firebaseReady = await _ensureFirebaseInitialized();
+      if (!firebaseReady) {
         print('⚠️ AnalysisTracker: Firebase not initialized - skipping increment');
         return;
       }
@@ -175,7 +199,9 @@ class AnalysisTracker {
   /// Increment monthly analysis count
   static Future<void> _incrementMonthly(String userId) async {
     try {
-      if (Firebase.apps.isEmpty) {
+      // Ensure Firebase is initialized before incrementing
+      final firebaseReady = await _ensureFirebaseInitialized();
+      if (!firebaseReady) {
         print('⚠️ AnalysisTracker: Firebase not initialized - skipping increment');
         return;
       }
@@ -221,7 +247,9 @@ class AnalysisTracker {
   /// Get remaining analyses for current month
   static Future<int> getRemainingAnalyses() async {
     try {
-      if (Firebase.apps.isEmpty) {
+      // Ensure Firebase is initialized before checking
+      final firebaseReady = await _ensureFirebaseInitialized();
+      if (!firebaseReady) {
         print('⚠️ AnalysisTracker: Firebase not initialized - returning 0');
         return 0;
       }
@@ -259,7 +287,9 @@ class AnalysisTracker {
   /// Get analysis count for current month
   static Future<int> getCurrentMonthAnalysisCount() async {
     try {
-      if (Firebase.apps.isEmpty) {
+      // Ensure Firebase is initialized before checking
+      final firebaseReady = await _ensureFirebaseInitialized();
+      if (!firebaseReady) {
         print('⚠️ AnalysisTracker: Firebase not initialized - returning 0');
         return 0;
       }
