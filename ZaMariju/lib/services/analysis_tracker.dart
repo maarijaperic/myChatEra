@@ -16,6 +16,7 @@ class AnalysisTracker {
     }
   }
   static const String _collectionName = 'user_analyses';
+  static const int _monthlyAnalysisLimit = 10; // Number of analyses allowed per month for monthly/yearly subscriptions
   
   // TEST MODE: Set to true to bypass RevenueCat checks for testing
   // Set to false before production release!
@@ -117,6 +118,8 @@ class AnalysisTracker {
   }
 
   /// Check if one-time user can generate analysis
+  /// For one-time purchases: user can buy multiple times, each purchase = 1 analysis
+  /// User can screenshot all screens but cannot access the same analysis again
   static Future<bool> _canGenerateOneTime(String userId) async {
     try {
       // Ensure Firebase is initialized before checking
@@ -136,41 +139,23 @@ class AnalysisTracker {
         }
 
         final data = doc.data();
-        final oneTimeUsed = data?['oneTimeUsed'] as bool? ?? false;
-        final lastAnalysis = data?['lastAnalysis'] as Timestamp?;
+        final oneTimePurchases = (data?['oneTimePurchases'] as int? ?? 0); // Total purchases
+        final oneTimeUsed = (data?['oneTimeUsed'] as int? ?? 0); // Total used
         
-        print('🔴 AnalysisTracker: Document exists - oneTimeUsed: $oneTimeUsed, lastAnalysis: $lastAnalysis');
+        print('🔴 AnalysisTracker: oneTimePurchases: $oneTimePurchases, oneTimeUsed: $oneTimeUsed');
         
-        // Check if user just purchased one_time_purchase
-        if (oneTimeUsed) {
-          // Check if user has active one_time_purchase entitlement
-          final isPremium = await RevenueCatService.isPremium();
-          final subscriptionType = await RevenueCatService.getSubscriptionType();
-          
-          print('🔴 AnalysisTracker: oneTimeUsed is true, checking if user has active one_time purchase');
-          print('🔴 AnalysisTracker: isPremium: $isPremium, subscriptionType: $subscriptionType');
-          
-          // If user has active one_time purchase, allow them to use it
-          if (isPremium && subscriptionType == 'one_time') {
-            print('🔴 AnalysisTracker: User has active one_time purchase - allowing generation');
-            // Try to reset oneTimeUsed, but don't fail if it doesn't work
-            try {
-              await _firestore.collection(_collectionName).doc(userId).update({
-                'oneTimeUsed': false,
-                'lastUpdated': FieldValue.serverTimestamp(),
-              });
-            } catch (updateError) {
-              print('⚠️ AnalysisTracker: Could not update Firestore, but allowing generation anyway: $updateError');
-            }
-            return true;
-          }
-          
-          print('🔴 AnalysisTracker: oneTimeUsed is true and no active one_time purchase - cannot generate');
-          return false;
+        // User can generate if they have unused purchases
+        // Each purchase = 1 analysis
+        final canGenerate = oneTimePurchases > oneTimeUsed;
+        
+        if (canGenerate) {
+          print('🔴 AnalysisTracker: User has unused one-time purchases - can generate');
+        } else {
+          print('🔴 AnalysisTracker: User has used all one-time purchases - cannot generate');
+          print('🔴 AnalysisTracker: User needs to purchase another one_time_purchase to generate new analysis');
         }
         
-        print('🔴 AnalysisTracker: oneTimeUsed is false - can generate');
-        return true; // Can generate if not used
+        return canGenerate;
       } on FirebaseException catch (e) {
         if (e.code == 'permission-denied') {
           print('⚠️ AnalysisTracker: Firestore permission denied - allowing generation as fallback for premium user');
@@ -214,8 +199,8 @@ class AnalysisTracker {
         final monthlyCounts = data?['monthlyCounts'] as Map<String, dynamic>? ?? {};
         final currentMonthCount = monthlyCounts[monthKey] as int? ?? 0;
         
-        print('🔴 AnalysisTracker: Current month count: $currentMonthCount for month $monthKey');
-        return currentMonthCount < 5; // Can generate if less than 5
+        print('🔴 AnalysisTracker: Current month count: $currentMonthCount for month $monthKey (limit: $_monthlyAnalysisLimit)');
+        return currentMonthCount < _monthlyAnalysisLimit; // Can generate if less than limit
       } on FirebaseException catch (e) {
         if (e.code == 'permission-denied') {
           print('⚠️ AnalysisTracker: Firestore permission denied - allowing generation as fallback for premium user');
@@ -265,6 +250,8 @@ class AnalysisTracker {
   }
 
   /// Increment one-time analysis count
+  /// When user generates analysis, increment oneTimeUsed
+  /// When user purchases one_time_purchase, increment oneTimePurchases
   static Future<void> _incrementOneTime(String userId) async {
     try {
       // Ensure Firebase is initialized before incrementing
@@ -273,16 +260,46 @@ class AnalysisTracker {
         print('⚠️ AnalysisTracker: Firebase not initialized - skipping increment');
         return;
       }
+      
+      // Get current values
+      final doc = await _firestore.collection(_collectionName).doc(userId).get();
+      final currentUsed = doc.exists ? (doc.data()?['oneTimeUsed'] as int? ?? 0) : 0;
+      
       await _firestore.collection(_collectionName).doc(userId).set({
         'userId': userId,
-        'oneTimeUsed': true,
+        'oneTimeUsed': currentUsed + 1, // Increment used count
         'lastAnalysis': FieldValue.serverTimestamp(),
         'lastUpdated': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
       
-      print('AnalysisTracker: One-time analysis marked as used for user $userId');
+      print('AnalysisTracker: One-time analysis count incremented for user $userId (used: ${currentUsed + 1})');
     } catch (e) {
       print('Error incrementing one-time count: $e');
+    }
+  }
+  
+  /// Increment one-time purchase count (called when user purchases one_time_purchase)
+  static Future<void> incrementOneTimePurchase(String userId) async {
+    try {
+      final firebaseReady = await _ensureFirebaseInitialized();
+      if (!firebaseReady) {
+        print('⚠️ AnalysisTracker: Firebase not initialized - skipping purchase increment');
+        return;
+      }
+      
+      // Get current values
+      final doc = await _firestore.collection(_collectionName).doc(userId).get();
+      final currentPurchases = doc.exists ? (doc.data()?['oneTimePurchases'] as int? ?? 0) : 0;
+      
+      await _firestore.collection(_collectionName).doc(userId).set({
+        'userId': userId,
+        'oneTimePurchases': currentPurchases + 1, // Increment purchase count
+        'lastUpdated': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      
+      print('AnalysisTracker: One-time purchase count incremented for user $userId (purchases: ${currentPurchases + 1})');
+    } catch (e) {
+      print('Error incrementing one-time purchase count: $e');
     }
   }
 
@@ -350,8 +367,19 @@ class AnalysisTracker {
       if (userId.isEmpty) return 0;
 
       if (subscriptionType == 'one_time') {
-        final canGenerate = await _canGenerateOneTime(userId);
-        return canGenerate ? 1 : 0;
+        try {
+          final doc = await _firestore.collection(_collectionName).doc(userId).get();
+          if (!doc.exists) return 0;
+          
+          final data = doc.data();
+          final oneTimePurchases = (data?['oneTimePurchases'] as int? ?? 0);
+          final oneTimeUsed = (data?['oneTimeUsed'] as int? ?? 0);
+          
+          return (oneTimePurchases - oneTimeUsed).clamp(0, oneTimePurchases);
+        } catch (e) {
+          print('Error getting remaining one-time analyses: $e');
+          return 0;
+        }
       } else {
         final now = DateTime.now();
         final monthKey = '${now.year}-${now.month.toString().padLeft(2, '0')}';
@@ -366,7 +394,7 @@ class AnalysisTracker {
         final monthlyCounts = data?['monthlyCounts'] as Map<String, dynamic>? ?? {};
         final currentMonthCount = monthlyCounts[monthKey] as int? ?? 0;
         
-        return (5 - currentMonthCount).clamp(0, 5);
+        return (_monthlyAnalysisLimit - currentMonthCount).clamp(0, _monthlyAnalysisLimit);
       }
     } catch (e) {
       print('Error getting remaining analyses: $e');

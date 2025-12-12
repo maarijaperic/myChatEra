@@ -1,0 +1,26 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Collection za praćenje analiza
+    match /user_analyses/{userId} {
+      // PRODUKCIJA: Dozvoli čitanje i pisanje samo za korisnika sa istim userId
+      // Ovo koristi RevenueCat User ID kao userId (npr. $RCAnonymousID:xxx ili custom user ID)
+      // 
+      // VAŽNO: Za produkciju, koristi Firebase Authentication ili backend validaciju
+      // za dodatnu sigurnost. Ovo je osnovna validacija koja proverava da userId u path-u
+      // odgovara userId u dokumentu.
+      
+      // Dozvoli čitanje i pisanje ako:
+      // 1. userId u path-u odgovara userId u dokumentu (osnovna validacija)
+      // 2. ILI za testiranje: allow read, write: if true;
+      
+      // PRODUKCIJA - Osnovna validacija:
+      allow read, write: if request.resource.data.userId == userId 
+                        || resource.data.userId == userId;
+      
+      // TEST MODE - Za testiranje (ukloni ovo za produkciju):
+      // allow read, write: if true;
+    }
+  }
+}
+

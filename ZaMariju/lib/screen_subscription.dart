@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:gpt_wrapped2/services/revenuecat_service.dart';
+import 'package:gpt_wrapped2/services/analysis_tracker.dart';
 
 class SubscriptionScreen extends StatefulWidget {
   final VoidCallback onSubscribe;
@@ -249,6 +250,21 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
       if (success) {
         print('🔴 PREMIUM_DEBUG: Purchase successful');
+        
+        // If one_time_purchase, increment purchase count in Firestore
+        if (productId == 'one_time_purchase') {
+          try {
+            final userId = await RevenueCatService.getUserId();
+            if (userId.isNotEmpty) {
+              await AnalysisTracker.incrementOneTimePurchase(userId);
+              print('🔴 PREMIUM_DEBUG: One-time purchase count incremented');
+            }
+          } catch (e) {
+            print('⚠️ PREMIUM_DEBUG: Error incrementing one-time purchase count: $e');
+            // Don't fail the purchase if this fails
+          }
+        }
+        
         if (mounted) {
           Navigator.pop(context);
           widget.onSubscribe();
