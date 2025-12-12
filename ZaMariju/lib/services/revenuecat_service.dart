@@ -121,8 +121,6 @@ class RevenueCatService {
         print('❌ RevenueCat: Product not available in store');
       } else if (e.code == PurchasesErrorCode.purchaseNotAllowedError) {
         print('❌ RevenueCat: Purchase not allowed');
-      } else if (e.code == PurchasesErrorCode.storeProductNotAvailableError) {
-        print('❌ RevenueCat: Store product not available');
       } else {
         print('❌ RevenueCat: Other error code: ${e.code}');
       }
