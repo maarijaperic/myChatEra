@@ -140,12 +140,25 @@ class RevenueCatService {
       try {
         final purchaseResult = await Purchases.purchasePackage(targetPackage);
         print('✅ RevenueCat: Purchase result received');
-        final hasEntitlement = purchaseResult.customerInfo.entitlements.active.containsKey(_entitlementId);
+        
+        // Refresh customer info to ensure latest entitlement status
+        print('🔴 RevenueCat: Refreshing customer info...');
+        final refreshedCustomerInfo = await Purchases.getCustomerInfo();
+        print('🔴 RevenueCat: Refreshed customer info received');
+        
+        final hasEntitlement = refreshedCustomerInfo.entitlements.active.containsKey(_entitlementId);
         print('🔴 RevenueCat: Has premium entitlement: $hasEntitlement');
+        print('🔴 RevenueCat: Active entitlements: ${refreshedCustomerInfo.entitlements.active.keys.toList()}');
+        
+        if (hasEntitlement) {
+          final entitlement = refreshedCustomerInfo.entitlements.active[_entitlementId];
+          print('🔴 RevenueCat: Entitlement product ID: ${entitlement?.productIdentifier}');
+          print('🔴 RevenueCat: Entitlement is active: ${entitlement?.isActive}');
+        }
         
         if (!hasEntitlement) {
           print('⚠️ RevenueCat: Purchase successful but no premium entitlement found');
-          print('🔴 RevenueCat: Active entitlements: ${purchaseResult.customerInfo.entitlements.active.keys.toList()}');
+          print('🔴 RevenueCat: All entitlements: ${refreshedCustomerInfo.entitlements.all.keys.toList()}');
         }
         
         return hasEntitlement;
