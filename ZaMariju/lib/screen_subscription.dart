@@ -272,12 +272,25 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       } else {
         print('🔴 PREMIUM_DEBUG: Purchase failed or cancelled');
         print('🔴 PREMIUM_DEBUG: Check RevenueCat logs above for details');
+        
+        // Try to get more details about why it failed
+        try {
+          final userId = await RevenueCatService.getUserId();
+          print('🔴 PREMIUM_DEBUG: Current user ID: $userId');
+          final isPremium = await RevenueCatService.isPremium();
+          print('🔴 PREMIUM_DEBUG: Is premium: $isPremium');
+          final subscriptionType = await RevenueCatService.getSubscriptionType();
+          print('🔴 PREMIUM_DEBUG: Subscription type: $subscriptionType');
+        } catch (e) {
+          print('🔴 PREMIUM_DEBUG: Could not get user info: $e');
+        }
+        
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Purchase cancelled or failed. Check console logs for details.'),
+              content: Text('Purchase cancelled or failed. Make sure you are signed out from App Store and using Sandbox Test Account. Check console logs for details.'),
               backgroundColor: Colors.red,
-              duration: Duration(seconds: 5),
+              duration: Duration(seconds: 8),
             ),
           );
         }

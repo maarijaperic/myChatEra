@@ -149,6 +149,12 @@ class RevenueCatService {
       print('🔴 RevenueCat: Available packages: ${offerings.current!.availablePackages.map((p) => p.identifier).toList()}');
       print('🔴 RevenueCat: Package products: ${offerings.current!.availablePackages.map((p) => p.storeProduct.identifier).toList()}');
       
+      // Check if products are available for purchase
+      for (final package in offerings.current!.availablePackages) {
+        final product = package.storeProduct;
+        print('🔴 RevenueCat: Product ${product.identifier} - available: ${product.isAvailable}, price: ${product.price} ${product.currencyCode}');
+      }
+      
       // Find the package with the matching product
       Package? targetPackage;
       for (final package in offerings.current!.availablePackages) {
@@ -165,16 +171,42 @@ class RevenueCatService {
         print('🔴 RevenueCat: Available products in packages: ${offerings.current!.availablePackages.map((p) => p.storeProduct.identifier).toList()}');
         // Fallback: try direct purchase
         print('🔴 RevenueCat: Attempting direct purchase with productId: $productId');
-        final purchaseResult = await Purchases.purchaseProduct(productId);
-        print('✅ RevenueCat: Purchase result received');
-        final hasEntitlement = purchaseResult.customerInfo.entitlements.active.containsKey(_entitlementId);
-        print('🔴 RevenueCat: Has premium entitlement: $hasEntitlement');
-        return hasEntitlement;
+        print('🔴 RevenueCat: This is a fallback - product not found in offerings');
+        print('🔴 RevenueCat: Make sure product $productId exists in App Store Connect and is synced with RevenueCat');
+        try {
+          final purchaseResult = await Purchases.purchaseProduct(productId);
+          print('✅ RevenueCat: Direct purchase result received');
+          final hasEntitlement = purchaseResult.customerInfo.entitlements.active.containsKey(_entitlementId);
+          print('🔴 RevenueCat: Has premium entitlement: $hasEntitlement');
+          if (!hasEntitlement) {
+            print('⚠️ RevenueCat: Purchase succeeded but no entitlement found');
+            print('⚠️ RevenueCat: Check RevenueCat Dashboard → Entitlements → Verify "premium" entitlement is attached to product');
+          }
+          return hasEntitlement;
+        } catch (directError) {
+          print('❌ RevenueCat: Direct purchase failed: $directError');
+          rethrow;
+        }
       }
       
       // Purchase using package
       print('🔴 RevenueCat: Purchasing package: ${targetPackage.identifier}');
+      print('🔴 RevenueCat: Package product ID: ${targetPackage.storeProduct.identifier}');
+      print('🔴 RevenueCat: Package price: ${targetPackage.storeProduct.price}');
+      print('🔴 RevenueCat: Package currency: ${targetPackage.storeProduct.currencyCode}');
+      print('🔴 RevenueCat: Package product available: ${targetPackage.storeProduct.isAvailable}');
+      
+      if (!targetPackage.storeProduct.isAvailable) {
+        print('❌ RevenueCat: Product is not available for purchase!');
+        print('❌ RevenueCat: This usually means:');
+        print('   1. Product is not "Ready to Submit" in App Store Connect');
+        print('   2. Product is not synced with RevenueCat');
+        print('   3. You need to sign out from App Store and use Sandbox Test Account');
+        return false;
+      }
+      
       try {
+        print('🔴 RevenueCat: Calling Purchases.purchasePackage()...');
         final purchaseResult = await Purchases.purchasePackage(targetPackage);
         print('✅ RevenueCat: Purchase result received');
         
