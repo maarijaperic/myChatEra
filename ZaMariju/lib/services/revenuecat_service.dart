@@ -132,7 +132,10 @@ class RevenueCatService {
     
     try {
       print('🔴 RevenueCat: ========== PURCHASE START ==========');
+      print('🔴 RevenueCat: Timestamp: ${DateTime.now().toIso8601String()}');
       print('🔴 RevenueCat: Attempting to purchase product: $productId');
+      print('🔴 RevenueCat: Product ID type: ${productId.runtimeType}');
+      print('🔴 RevenueCat: Product ID length: ${productId.length}');
       
       // Important note for physical device vs simulator
       print('🔴 RevenueCat: ⚠️ IMPORTANT:');
@@ -143,18 +146,49 @@ class RevenueCatService {
       print('     2. App Store Connect → Sandbox Testers → Create test account');
       print('     3. When purchase dialog appears, sign in with Sandbox Test Account');
       
+      // Check RevenueCat configuration
+      print('🔴 RevenueCat: Configuration check:');
+      print('   - Is configured: $_isConfigured');
+      print('   - Entitlement ID: $_entitlementId');
+      
       // Check current customer info
       try {
+        print('🔴 RevenueCat: Fetching customer info...');
         final customerInfo = await Purchases.getCustomerInfo();
+        print('🔴 RevenueCat: ✅ Customer info received');
         print('🔴 RevenueCat: Current user ID: ${customerInfo.originalAppUserId}');
+        print('🔴 RevenueCat: User ID type: ${customerInfo.originalAppUserId.runtimeType}');
+        print('🔴 RevenueCat: User ID length: ${customerInfo.originalAppUserId.length}');
         print('🔴 RevenueCat: Active entitlements: ${customerInfo.entitlements.active.keys.toList()}');
-      } catch (e) {
+        print('🔴 RevenueCat: All entitlements: ${customerInfo.entitlements.all.keys.toList()}');
+        print('🔴 RevenueCat: Has premium: ${customerInfo.entitlements.active.containsKey(_entitlementId)}');
+        
+        // Check each entitlement
+        for (final entry in customerInfo.entitlements.all.entries) {
+          print('🔴 RevenueCat: Entitlement "${entry.key}":');
+          print('   - Is active: ${entry.value.isActive}');
+          print('   - Product ID: ${entry.value.productIdentifier}');
+          print('   - Will renew: ${entry.value.willRenew}');
+          print('   - Period type: ${entry.value.periodType}');
+        }
+      } catch (e, stackTrace) {
         print('⚠️ RevenueCat: Could not get customer info: $e');
+        print('⚠️ RevenueCat: Stack trace: $stackTrace');
       }
       
       // First, try to get the product from offerings
+      print('🔴 RevenueCat: ========== FETCHING OFFERINGS ==========');
+      print('🔴 RevenueCat: Timestamp: ${DateTime.now().toIso8601String()}');
       print('🔴 RevenueCat: Fetching offerings...');
+      
+      final offeringsStartTime = DateTime.now();
       final offerings = await Purchases.getOfferings();
+      final offeringsEndTime = DateTime.now();
+      final offeringsDuration = offeringsEndTime.difference(offeringsStartTime);
+      
+      print('🔴 RevenueCat: ✅ Offerings fetched in ${offeringsDuration.inMilliseconds}ms');
+      print('🔴 RevenueCat: All offerings: ${offerings.all.keys.toList()}');
+      print('🔴 RevenueCat: Offerings count: ${offerings.all.length}');
       
       if (offerings.current == null) {
         print('❌ RevenueCat: ❌ NO CURRENT OFFERING FOUND');
@@ -167,23 +201,45 @@ class RevenueCatService {
         return false;
       }
       
+      print('🔴 RevenueCat: ========== CURRENT OFFERING ==========');
       print('✅ RevenueCat: Found current offering: ${offerings.current!.identifier}');
       print('🔴 RevenueCat: Available packages: ${offerings.current!.availablePackages.map((p) => p.identifier).toList()}');
+      print('🔴 RevenueCat: Packages count: ${offerings.current!.availablePackages.length}');
       print('🔴 RevenueCat: Package products: ${offerings.current!.availablePackages.map((p) => p.storeProduct.identifier).toList()}');
       
       // Check if products are available for purchase
+      print('🔴 RevenueCat: ========== PRODUCT DETAILS ==========');
       for (final package in offerings.current!.availablePackages) {
         final product = package.storeProduct;
-        print('🔴 RevenueCat: Product ${product.identifier} - price: ${product.price} ${product.currencyCode}');
+        print('🔴 RevenueCat: Package: ${package.identifier}');
+        print('   - Product ID: ${product.identifier}');
+        print('   - Price: ${product.price}');
+        print('   - Currency: ${product.currencyCode}');
+        print('   - Title: ${product.title}');
+        print('   - Description: ${product.description}');
+        print('   - Subscription period: ${product.subscriptionPeriod}');
+        print('   - Introductory price: ${product.introductoryPrice}');
       }
       
       // Find the package with the matching product
+      print('🔴 RevenueCat: ========== SEARCHING FOR PRODUCT ==========');
+      print('🔴 RevenueCat: Looking for product ID: "$productId"');
+      print('🔴 RevenueCat: Product ID bytes: ${productId.codeUnits}');
+      
       Package? targetPackage;
       for (final package in offerings.current!.availablePackages) {
-        print('🔴 RevenueCat: Checking package ${package.identifier} - product: ${package.storeProduct.identifier}');
-        if (package.storeProduct.identifier == productId) {
+        final packageProductId = package.storeProduct.identifier;
+        print('🔴 RevenueCat: Checking package "${package.identifier}"');
+        print('   - Package product ID: "$packageProductId"');
+        print('   - Match: ${packageProductId == productId}');
+        print('   - Case sensitive: ${packageProductId == productId}');
+        print('   - Length match: ${packageProductId.length == productId.length}');
+        
+        if (packageProductId == productId) {
           targetPackage = package;
-          print('✅ RevenueCat: Found matching package: ${package.identifier}');
+          print('✅ RevenueCat: ✅✅✅ FOUND MATCHING PACKAGE ✅✅✅');
+          print('✅ RevenueCat: Package identifier: ${package.identifier}');
+          print('✅ RevenueCat: Product ID: ${package.storeProduct.identifier}');
           break;
         }
       }
@@ -218,15 +274,26 @@ class RevenueCatService {
       }
       
       // Purchase using package
+      print('🔴 RevenueCat: ========== PURCHASING PACKAGE ==========');
+      print('🔴 RevenueCat: Timestamp: ${DateTime.now().toIso8601String()}');
       print('🔴 RevenueCat: Purchasing package: ${targetPackage.identifier}');
       print('🔴 RevenueCat: Package product ID: ${targetPackage.storeProduct.identifier}');
       print('🔴 RevenueCat: Package price: ${targetPackage.storeProduct.price}');
       print('🔴 RevenueCat: Package currency: ${targetPackage.storeProduct.currencyCode}');
+      print('🔴 RevenueCat: Package title: ${targetPackage.storeProduct.title}');
       
       try {
         print('🔴 RevenueCat: Calling Purchases.purchasePackage()...');
+        final purchaseStartTime = DateTime.now();
         final purchaseResult = await Purchases.purchasePackage(targetPackage);
+        final purchaseEndTime = DateTime.now();
+        final purchaseDuration = purchaseEndTime.difference(purchaseStartTime);
+        
+        print('🔴 RevenueCat: ========== PURCHASE RESULT ==========');
+        print('✅ RevenueCat: Purchase completed in ${purchaseDuration.inMilliseconds}ms');
         print('✅ RevenueCat: Purchase result received');
+        print('🔴 RevenueCat: Customer info user ID: ${purchaseResult.customerInfo.originalAppUserId}');
+        print('🔴 RevenueCat: Active entitlements: ${purchaseResult.customerInfo.entitlements.active.keys.toList()}');
         
         // Refresh customer info to ensure latest entitlement status
         print('🔴 RevenueCat: Refreshing customer info...');
