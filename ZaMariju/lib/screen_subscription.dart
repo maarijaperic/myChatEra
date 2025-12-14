@@ -336,10 +336,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 (p) => p.storeProduct.identifier == productId,
                 orElse: () => offerings.current!.availablePackages.first,
               );
-              errorDetails += 'Product available: ${package.storeProduct.isAvailable}. ';
-              if (!package.storeProduct.isAvailable) {
-                errorDetails += 'Make sure product is "Ready to Submit" in App Store Connect. ';
-              }
+              errorDetails += 'Product ID: ${package.storeProduct.identifier}, Price: ${package.storeProduct.price} ${package.storeProduct.currencyCode}. ';
+              errorDetails += 'Make sure product is "Ready to Submit" in App Store Connect. ';
             }
           } catch (e) {
             print('🔴 PREMIUM_DEBUG: Could not check offerings: $e');
@@ -348,7 +346,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
           print('🔴 PREMIUM_DEBUG: Could not get user info: $e');
         }
         
-        errorDetails += 'Make sure you are signed out from App Store and using Sandbox Test Account.';
+        errorDetails += '\n\n📋 KAKO DA POPRAVIŠ:\n';
+        errorDetails += '1. Settings → App Store → Sign Out (klikni na Apple ID)\n';
+        errorDetails += '2. App Store Connect → Users and Access → Sandbox Testers → Kreiraj test account\n';
+        errorDetails += '3. Kada klikneš kupovinu, pojaviće se Sandbox prozor - prijavi se tamo\n';
+        errorDetails += '4. NE prijavljuj se pre kupovine - Apple će automatski pokazati Sandbox prozor!';
         
         if (mounted) {
           setState(() {
@@ -358,7 +360,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             SnackBar(
               content: Text(errorDetails),
               backgroundColor: Colors.red,
-              duration: const Duration(seconds: 10),
+              duration: const Duration(seconds: 15),
             ),
           );
         }
