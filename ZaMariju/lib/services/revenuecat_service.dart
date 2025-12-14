@@ -129,19 +129,30 @@ class RevenueCatService {
     }
     
     try {
+      print('🔴 RevenueCat: ========== PURCHASE START ==========');
       print('🔴 RevenueCat: Attempting to purchase product: $productId');
+      
+      // Check current customer info
+      try {
+        final customerInfo = await Purchases.getCustomerInfo();
+        print('🔴 RevenueCat: Current user ID: ${customerInfo.originalAppUserId}');
+        print('🔴 RevenueCat: Active entitlements: ${customerInfo.entitlements.active.keys.toList()}');
+      } catch (e) {
+        print('⚠️ RevenueCat: Could not get customer info: $e');
+      }
       
       // First, try to get the product from offerings
       print('🔴 RevenueCat: Fetching offerings...');
       final offerings = await Purchases.getOfferings();
       
       if (offerings.current == null) {
-        print('❌ RevenueCat: No current offering found');
+        print('❌ RevenueCat: ❌ NO CURRENT OFFERING FOUND');
         print('🔴 RevenueCat: Available offerings: ${offerings.all.keys.toList()}');
-        print('❌ RevenueCat: This usually means:');
-        print('   1. No offerings configured in RevenueCat Dashboard');
-        print('   2. Products are not synced with RevenueCat');
-        print('   3. Products are not available in App Store Connect');
+        print('❌ RevenueCat: This means:');
+        print('   1. No Current Offering configured in RevenueCat Dashboard');
+        print('   2. Go to RevenueCat Dashboard → Offerings → Set Current Offering');
+        print('   3. Make sure products are synced (RevenueCat Dashboard → Products)');
+        print('   4. Make sure products are "Ready to Submit" in App Store Connect');
         return false;
       }
       
@@ -152,7 +163,7 @@ class RevenueCatService {
       // Check if products are available for purchase
       for (final package in offerings.current!.availablePackages) {
         final product = package.storeProduct;
-        print('🔴 RevenueCat: Product ${product.identifier} - available: ${product.isAvailable}, price: ${product.price} ${product.currencyCode}');
+        print('🔴 RevenueCat: Product ${product.identifier} - price: ${product.price} ${product.currencyCode}');
       }
       
       // Find the package with the matching product
@@ -167,12 +178,18 @@ class RevenueCatService {
       }
       
       if (targetPackage == null) {
-        print('❌ RevenueCat: Product $productId not found in offerings');
-        print('🔴 RevenueCat: Available products in packages: ${offerings.current!.availablePackages.map((p) => p.storeProduct.identifier).toList()}');
+        print('❌ RevenueCat: ❌ PRODUCT NOT FOUND IN OFFERINGS');
+        print('🔴 RevenueCat: Looking for product: $productId');
+        print('🔴 RevenueCat: Available products: ${offerings.current!.availablePackages.map((p) => p.storeProduct.identifier).toList()}');
+        print('❌ RevenueCat: This means:');
+        print('   1. Product $productId is not in Current Offering packages');
+        print('   2. Go to RevenueCat Dashboard → Offerings → Current Offering → Add Package');
+        print('   3. Make sure product is synced (RevenueCat Dashboard → Products)');
+        print('   4. Make sure product ID matches exactly: $productId');
+        
         // Fallback: try direct purchase
-        print('🔴 RevenueCat: Attempting direct purchase with productId: $productId');
-        print('🔴 RevenueCat: This is a fallback - product not found in offerings');
-        print('🔴 RevenueCat: Make sure product $productId exists in App Store Connect and is synced with RevenueCat');
+        print('🔴 RevenueCat: Attempting direct purchase as fallback...');
+        print('⚠️ RevenueCat: This might not work if product is not properly configured');
         try {
           final purchaseResult = await Purchases.purchaseProduct(productId);
           print('✅ RevenueCat: Direct purchase result received');
@@ -194,16 +211,6 @@ class RevenueCatService {
       print('🔴 RevenueCat: Package product ID: ${targetPackage.storeProduct.identifier}');
       print('🔴 RevenueCat: Package price: ${targetPackage.storeProduct.price}');
       print('🔴 RevenueCat: Package currency: ${targetPackage.storeProduct.currencyCode}');
-      print('🔴 RevenueCat: Package product available: ${targetPackage.storeProduct.isAvailable}');
-      
-      if (!targetPackage.storeProduct.isAvailable) {
-        print('❌ RevenueCat: Product is not available for purchase!');
-        print('❌ RevenueCat: This usually means:');
-        print('   1. Product is not "Ready to Submit" in App Store Connect');
-        print('   2. Product is not synced with RevenueCat');
-        print('   3. You need to sign out from App Store and use Sandbox Test Account');
-        return false;
-      }
       
       try {
         print('🔴 RevenueCat: Calling Purchases.purchasePackage()...');
@@ -349,10 +356,9 @@ class RevenueCatService {
       print('❌ RevenueCat: PurchasesError purchasing product: ${e.code} - ${e.message}');
       print('❌ RevenueCat: Error underlyingErrorMessage: ${e.underlyingErrorMessage}');
       print('❌ RevenueCat: Error readableErrorCode: ${e.readableErrorCode}');
-      print('❌ RevenueCat: Error userCancelled: ${e.userCancelled}');
       print('❌ RevenueCat: Full error details: ${e.toString()}');
       
-      if (e.code == PurchasesErrorCode.purchaseCancelledError || e.userCancelled == true) {
+      if (e.code == PurchasesErrorCode.purchaseCancelledError) {
         print('🔴 RevenueCat: User cancelled purchase');
       } else if (e.code == PurchasesErrorCode.productNotAvailableForPurchaseError) {
         print('❌ RevenueCat: Product not available in store');
