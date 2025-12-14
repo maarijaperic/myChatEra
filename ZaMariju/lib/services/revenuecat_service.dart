@@ -1,4 +1,6 @@
 import 'package:purchases_flutter/purchases_flutter.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 
 /// Service for managing RevenueCat subscriptions
 class RevenueCatService {
@@ -131,6 +133,15 @@ class RevenueCatService {
     try {
       print('🔴 RevenueCat: ========== PURCHASE START ==========');
       print('🔴 RevenueCat: Attempting to purchase product: $productId');
+      
+      // Important note for physical device vs simulator
+      print('🔴 RevenueCat: ⚠️ IMPORTANT:');
+      print('   - Simulator uses Products.storekit (local file)');
+      print('   - Physical device uses App Store Connect Sandbox');
+      print('   - If testing on PHYSICAL DEVICE:');
+      print('     1. Settings → App Store → Sign Out (OBVEZNO!)');
+      print('     2. App Store Connect → Sandbox Testers → Create test account');
+      print('     3. When purchase dialog appears, sign in with Sandbox Test Account');
       
       // Check current customer info
       try {
