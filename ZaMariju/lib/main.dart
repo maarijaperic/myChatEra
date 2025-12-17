@@ -36,6 +36,7 @@ import 'package:gpt_wrapped2/services/ai_analyzer.dart';
 import 'package:gpt_wrapped2/services/chat_analyzer.dart';
 import 'package:gpt_wrapped2/services/app_version_service.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gpt_wrapped2/services/revenuecat_service.dart';
 
 void main() async {
@@ -47,6 +48,14 @@ void main() async {
     await Firebase.initializeApp();
     print('✅ Firebase initialized successfully');
     print('🔵 Firebase apps count: ${Firebase.apps.length}');
+    
+    // Verify Firebase is working by checking Firestore
+    try {
+      final firestore = FirebaseFirestore.instance;
+      print('✅ Firebase Firestore is accessible');
+    } catch (e) {
+      print('⚠️ Warning: Firebase initialized but Firestore may not be accessible: $e');
+    }
   } catch (e, stackTrace) {
     print('❌ Error initializing Firebase: $e');
     print('❌ Firebase initialization stack trace: $stackTrace');

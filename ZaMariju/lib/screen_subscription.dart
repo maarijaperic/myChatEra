@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:gpt_wrapped2/services/revenuecat_service.dart';
+import 'package:gpt_wrapped2/services/analysis_tracker.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 
 class SubscriptionScreen extends StatefulWidget {
   final VoidCallback onSubscribe;
@@ -17,6 +19,7 @@ class SubscriptionScreen extends StatefulWidget {
 class _SubscriptionScreenState extends State<SubscriptionScreen> {
   int _selectedIndex = 1; // Default to monthly (middle option, best value)
   bool _isLoading = false;
+  String? _errorMessage; // Store error message to display
 
   @override
   Widget build(BuildContext context) {
@@ -136,6 +139,47 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                           ],
                         ),
                       ),
+                      
+                      // Error message display
+                      if (_errorMessage != null) ...[
+                        const SizedBox(height: 20),
+                        Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 20),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.red.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.red.withOpacity(0.3)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(Icons.error_outline, color: Colors.red, size: 20),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Error Details:',
+                                    style: GoogleFonts.inter(
+                                      color: Colors.red,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                _errorMessage!,
+                                style: GoogleFonts.inter(
+                                  color: Colors.red.shade700,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -235,6 +279,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     print('🔴 PREMIUM_DEBUG: _handlePurchase CALLED - Starting purchase flow');
     setState(() {
       _isLoading = true;
+      _errorMessage = null; // Clear previous error
     });
 
     try {
@@ -249,6 +294,21 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
       if (success) {
         print('🔴 PREMIUM_DEBUG: Purchase successful');
+        
+        // If one_time_purchase, increment purchase count in Firestore
+        if (productId == 'one_time_purchase') {
+          try {
+            final userId = await RevenueCatService.getUserId();
+            if (userId.isNotEmpty) {
+              await AnalysisTracker.incrementOneTimePurchase(userId);
+              print('🔴 PREMIUM_DEBUG: One-time purchase count incremented');
+            }
+          } catch (e) {
+            print('⚠️ PREMIUM_DEBUG: Error incrementing one-time purchase count: $e');
+            // Don't fail the purchase if this fails
+          }
+        }
+        
         if (mounted) {
           Navigator.pop(context);
           widget.onSubscribe();
@@ -256,12 +316,51 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       } else {
         print('🔴 PREMIUM_DEBUG: Purchase failed or cancelled');
         print('🔴 PREMIUM_DEBUG: Check RevenueCat logs above for details');
+        
+        // Try to get more details about why it failed
+        String errorDetails = 'Purchase failed. ';
+        try {
+          final userId = await RevenueCatService.getUserId();
+          print('🔴 PREMIUM_DEBUG: Current user ID: $userId');
+          final isPremium = await RevenueCatService.isPremium();
+          print('🔴 PREMIUM_DEBUG: Is premium: $isPremium');
+          final subscriptionType = await RevenueCatService.getSubscriptionType();
+          print('🔴 PREMIUM_DEBUG: Subscription type: $subscriptionType');
+          
+          // Get offerings to check product availability
+          try {
+            final offerings = await Purchases.getOfferings();
+            if (offerings.current != null) {
+              final productId = RevenueCatService.getProductId(_selectedIndex);
+              final package = offerings.current!.availablePackages.firstWhere(
+                (p) => p.storeProduct.identifier == productId,
+                orElse: () => offerings.current!.availablePackages.first,
+              );
+              errorDetails += 'Product ID: ${package.storeProduct.identifier}, Price: ${package.storeProduct.price} ${package.storeProduct.currencyCode}. ';
+              errorDetails += 'Make sure product is "Ready to Submit" in App Store Connect. ';
+            }
+          } catch (e) {
+            print('🔴 PREMIUM_DEBUG: Could not check offerings: $e');
+          }
+        } catch (e) {
+          print('🔴 PREMIUM_DEBUG: Could not get user info: $e');
+        }
+        
+        errorDetails += '\n\n📋 KAKO DA POPRAVIŠ:\n';
+        errorDetails += '1. Settings → App Store → Sign Out (klikni na Apple ID)\n';
+        errorDetails += '2. App Store Connect → Users and Access → Sandbox Testers → Kreiraj test account\n';
+        errorDetails += '3. Kada klikneš kupovinu, pojaviće se Sandbox prozor - prijavi se tamo\n';
+        errorDetails += '4. NE prijavljuj se pre kupovine - Apple će automatski pokazati Sandbox prozor!';
+        
         if (mounted) {
+          setState(() {
+            _errorMessage = errorDetails;
+          });
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Purchase cancelled or failed. Check console logs for details.'),
+            SnackBar(
+              content: Text(errorDetails),
               backgroundColor: Colors.red,
-              duration: Duration(seconds: 5),
+              duration: const Duration(seconds: 15),
             ),
           );
         }
