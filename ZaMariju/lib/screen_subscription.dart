@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:gpt_wrapped2/services/revenuecat_service.dart';
 import 'package:gpt_wrapped2/services/analysis_tracker.dart';
-import 'package:purchases_flutter/purchases_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SubscriptionScreen extends StatefulWidget {
   final VoidCallback onSubscribe;
@@ -187,6 +187,24 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               
               const SizedBox(height: 16),
               
+              // Subscription info and Terms/Privacy links (required by Apple for auto-renewable subscriptions)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  children: [
+                    // Subscription details (only for subscriptions, not one-time)
+                    if (_selectedIndex == 1 || _selectedIndex == 2) ...[
+                      _buildSubscriptionInfo(_selectedIndex),
+                      const SizedBox(height: 12),
+                    ],
+                    // Terms of Use and Privacy Policy links
+                    _buildTermsAndPrivacyLinks(),
+                  ],
+                ),
+              ),
+              
+              const SizedBox(height: 16),
+              
               // Continue/Purchase button
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -275,6 +293,180 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     }
   }
 
+  Widget _buildSubscriptionInfo(int index) {
+    String title;
+    String length;
+    String price;
+    
+    if (index == 1) {
+      title = 'Monthly Premium';
+      length = '1 Month';
+      price = '\$6.99/month';
+    } else if (index == 2) {
+      title = 'Yearly Premium';
+      length = '1 Year';
+      price = '\$39.99/year';
+    } else {
+      return const SizedBox.shrink();
+    }
+    
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.6),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: const Color(0xFFE5E5EA),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Subscription Details:',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF1C1C1E),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Title: $title',
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              color: const Color(0xFF8E8E93),
+            ),
+          ),
+          Text(
+            'Length: $length',
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              color: const Color(0xFF8E8E93),
+            ),
+          ),
+          Text(
+            'Price: $price',
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              color: const Color(0xFF8E8E93),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTermsAndPrivacyLinks() {
+    return Wrap(
+      alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 4,
+      runSpacing: 4,
+      children: [
+        Text(
+          'By continuing, you agree to our ',
+          textAlign: TextAlign.center,
+          style: GoogleFonts.inter(
+            fontSize: 11,
+            color: const Color(0xFF8E8E93),
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+        GestureDetector(
+          onTap: _openTermsOfUse,
+          child: Text(
+            'Terms of Use',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              color: const Color(0xFFFF6B9D),
+              fontWeight: FontWeight.w600,
+              decoration: TextDecoration.underline,
+            ),
+          ),
+        ),
+        Text(
+          ' and ',
+          textAlign: TextAlign.center,
+          style: GoogleFonts.inter(
+            fontSize: 11,
+            color: const Color(0xFF8E8E93),
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+        GestureDetector(
+          onTap: _openPrivacyPolicy,
+          child: Text(
+            'Privacy Policy',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              color: const Color(0xFFFF6B9D),
+              fontWeight: FontWeight.w600,
+              decoration: TextDecoration.underline,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _openTermsOfUse() async {
+    final url = Uri.parse('https://github.com/maarijaperic/myChatEra-legal/blob/main/TERMS_OF_SERVICE.md');
+    try {
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Could not open Terms of Use'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not open Terms of Use'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _openPrivacyPolicy() async {
+    final url = Uri.parse('https://github.com/maarijaperic/myChatEra-legal/blob/main/PRIVACY_POLICY.md');
+    try {
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Could not open Privacy Policy'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not open Privacy Policy'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _handlePurchase() async {
     print('🔴 PREMIUM_DEBUG: _handlePurchase CALLED - Starting purchase flow');
     setState(() {
@@ -317,63 +509,40 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         print('🔴 PREMIUM_DEBUG: Purchase failed or cancelled');
         print('🔴 PREMIUM_DEBUG: Check RevenueCat logs above for details');
         
-        // Try to get more details about why it failed
-        String errorDetails = 'Purchase failed. ';
-        try {
-          final userId = await RevenueCatService.getUserId();
-          print('🔴 PREMIUM_DEBUG: Current user ID: $userId');
-          final isPremium = await RevenueCatService.isPremium();
-          print('🔴 PREMIUM_DEBUG: Is premium: $isPremium');
-          final subscriptionType = await RevenueCatService.getSubscriptionType();
-          print('🔴 PREMIUM_DEBUG: Subscription type: $subscriptionType');
-          
-          // Get offerings to check product availability
-          try {
-            final offerings = await Purchases.getOfferings();
-            if (offerings.current != null) {
-              final productId = RevenueCatService.getProductId(_selectedIndex);
-              final package = offerings.current!.availablePackages.firstWhere(
-                (p) => p.storeProduct.identifier == productId,
-                orElse: () => offerings.current!.availablePackages.first,
-              );
-              errorDetails += 'Product ID: ${package.storeProduct.identifier}, Price: ${package.storeProduct.price} ${package.storeProduct.currencyCode}. ';
-              errorDetails += 'Make sure product is "Ready to Submit" in App Store Connect. ';
-            }
-          } catch (e) {
-            print('🔴 PREMIUM_DEBUG: Could not check offerings: $e');
-          }
-        } catch (e) {
-          print('🔴 PREMIUM_DEBUG: Could not get user info: $e');
-        }
+        // Don't show error message to user - purchase might have been cancelled
+        // which is a normal user action, not an error
+        // Apple review will handle actual purchase failures through their sandbox
         
-        errorDetails += '\n\n📋 KAKO DA POPRAVIŠ:\n';
-        errorDetails += '1. Settings → App Store → Sign Out (klikni na Apple ID)\n';
-        errorDetails += '2. App Store Connect → Users and Access → Sandbox Testers → Kreiraj test account\n';
-        errorDetails += '3. Kada klikneš kupovinu, pojaviće se Sandbox prozor - prijavi se tamo\n';
-        errorDetails += '4. NE prijavljuj se pre kupovine - Apple će automatski pokazati Sandbox prozor!';
-        
-        if (mounted) {
-          setState(() {
-            _errorMessage = errorDetails;
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(errorDetails),
-              backgroundColor: Colors.red,
-              duration: const Duration(seconds: 15),
-            ),
-          );
-        }
+        // Only show a simple message if there's a persistent error
+        // For now, we'll just reset the loading state silently
+        // The user can try again if needed
       }
     } catch (e, stackTrace) {
       print('🔴 PREMIUM_DEBUG: Purchase error: $e');
       print('🔴 PREMIUM_DEBUG: Stack trace: $stackTrace');
+      
+      // Only show user-friendly error messages, not technical details
+      String userMessage = 'Unable to complete purchase. Please try again.';
+      
+      // Check if it's a specific error type we can handle
+      if (e.toString().contains('network') || e.toString().contains('connection')) {
+        userMessage = 'Network error. Please check your connection and try again.';
+      } else if (e.toString().contains('cancelled') || e.toString().contains('canceled')) {
+        // Don't show error for user cancellation
+        print('🔴 PREMIUM_DEBUG: User cancelled purchase - not showing error');
+        return; // Exit early, don't show error
+      }
+      
       if (mounted) {
+        // Only show error message (not debug details)
+        setState(() {
+          _errorMessage = userMessage;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString()}'),
+            content: Text(userMessage),
             backgroundColor: Colors.red,
-            duration: const Duration(seconds: 5),
+            duration: const Duration(seconds: 4),
           ),
         );
       }
