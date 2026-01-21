@@ -4,6 +4,8 @@ workflows:
     max_build_duration: 120
     instance_type: mac_mini_m1
     working_directory: ZaMariju
+    integrations:
+      app_store_connect: app-store-connect
     environment:
       flutter: stable
       xcode: latest
