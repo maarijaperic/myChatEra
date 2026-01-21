@@ -516,29 +516,6 @@ class FreeWrappedNavigator extends StatelessWidget {
     final minutes = stats?.totalMinutes ?? 42;
     final messagesPerDay = stats?.messagesPerDay ?? 47;
     final streakDays = stats?.longestStreak ?? 14;
-    final actualPeakTime = stats?.peakTime ?? 'night';
-    final actualPeakHour = stats?.peakHour ?? 23;
-    
-    // Get time emoji and description based on actual peak time from stats
-    String timeEmoji;
-    String timeDescription;
-    switch (actualPeakTime) {
-      case 'morning':
-        timeEmoji = '🌅';
-        timeDescription = 'in the morning';
-        break;
-      case 'afternoon':
-        timeEmoji = '☀️';
-        timeDescription = 'in the afternoon';
-        break;
-      case 'evening':
-        timeEmoji = '🌆';
-        timeDescription = 'in the evening';
-        break;
-      default:
-        timeEmoji = '🌙';
-        timeDescription = 'at night';
-    }
 
     // Create screens list
     final List<Widget> screensList = [
@@ -546,88 +523,29 @@ class FreeWrappedNavigator extends StatelessWidget {
         DailyDoseScreen(
           messagesPerDay: messagesPerDay,
         ),
-        // Index 1 - Your Signature Word (Most Used Word)
+        // Index 1 - Top 5 Most Used Words
         MostUsedWordScreen(
-          mostUsedWord: () {
-            final word = stats?.mainTopic;
-            print('🔵 STATS_DEBUG: mainTopic = $word');
-            print('🔵 STATS_DEBUG: stats is null = ${stats == null}');
-            if (stats != null) {
-              print('🔵 STATS_DEBUG: totalMessages = ${stats!.totalMessages}');
-              print('🔵 STATS_DEBUG: totalConversations = ${stats!.totalConversations}');
-            }
-            // Only use fallback if stats is null OR word is truly null/empty
-            // Don't use fallback if stats exists but mainTopic is null - that means analysis didn't find a word
-            if (stats == null) {
-              print('🔵 STATS_DEBUG: stats is null, using fallback');
-              return 'literally';
-            }
-            // Check if word is null, empty, or the string "null"
-            if (word == null || word.isEmpty || word.toLowerCase() == 'null') {
-              print('🔵 STATS_DEBUG: mainTopic is null/empty/null string - recalculating from conversations');
-              // Try to calculate from parsedConversations if available
-              if (parsedConversations != null && parsedConversations!.isNotEmpty) {
-                final allMessages = <MessageData>[];
-                for (var conv in parsedConversations!) {
-                  allMessages.addAll(conv.messages);
-                }
-                if (allMessages.isNotEmpty) {
-                  final calculatedWord = ChatAnalyzer.getMostUsedWord(allMessages);
-                  if (calculatedWord != null && calculatedWord.isNotEmpty && calculatedWord.toLowerCase() != 'null') {
-                    print('🔵 STATS_DEBUG: Calculated word from conversations: $calculatedWord');
-                    return calculatedWord;
-                  } else {
-                    print('🔵 STATS_DEBUG: Calculated word is also null/empty/null string');
-                  }
-                } else {
-                  print('🔵 STATS_DEBUG: No messages found in parsedConversations');
-                }
-              } else {
-                print('🔵 STATS_DEBUG: parsedConversations is null or empty');
+          topWords: () {
+            if (parsedConversations != null && parsedConversations!.isNotEmpty) {
+              final allMessages = <MessageData>[];
+              for (var conv in parsedConversations!) {
+                allMessages.addAll(conv.messages);
               }
-              print('🔵 STATS_DEBUG: Using fallback after all attempts');
-              return 'literally';
-            }
-            // Ensure word is not the string "null"
-            if (word.toLowerCase() == 'null') {
-              print('🔵 STATS_DEBUG: Word is string "null", using fallback');
-              return 'literally';
-            }
-            return word;
-          }(),
-          wordCount: () {
-            final count = stats?.mostUsedWordCount;
-            print('🔵 STATS_DEBUG: mostUsedWordCount = $count');
-            // Only use fallback if stats is null
-            if (stats == null) {
-              return 247;
-            }
-            // If count is null or 0, try to calculate it
-            if (count == null || count == 0) {
-              if (parsedConversations != null && parsedConversations!.isNotEmpty) {
-                final allMessages = <MessageData>[];
-                for (var conv in parsedConversations!) {
-                  allMessages.addAll(conv.messages);
-                }
-                if (allMessages.isNotEmpty) {
-                  // Get word - prefer stats.mainTopic but recalculate if it's null or "null"
-                  var word = stats?.mainTopic;
-                  if (word == null || word.isEmpty || word.toLowerCase() == 'null') {
-                    word = ChatAnalyzer.getMostUsedWord(allMessages);
-                  }
-                  
-                  if (word != null && word.isNotEmpty && word.toLowerCase() != 'null') {
-                    final calculatedCount = ChatAnalyzer.getMostUsedWordCount(allMessages, word.toLowerCase());
-                    if (calculatedCount > 0) {
-                      print('🔵 STATS_DEBUG: Calculated count from conversations: $calculatedCount for word: $word');
-                      return calculatedCount;
-                    }
-                  }
+              if (allMessages.isNotEmpty) {
+                final topWords = ChatAnalyzer.getTop5MostUsedWords(allMessages);
+                if (topWords.isNotEmpty) {
+                  return topWords;
                 }
               }
-              return 247;
             }
-            return count;
+            // Fallback if no conversations available
+            return [
+              MapEntry('literally', 247),
+              MapEntry('actually', 189),
+              MapEntry('probably', 156),
+              MapEntry('definitely', 134),
+              MapEntry('absolutely', 112),
+            ];
           }(),
         ),
         // Index 2 - Your Chat Era
@@ -651,10 +569,24 @@ class FreeWrappedNavigator extends StatelessWidget {
         ),
         // Index 6 - GPT O'Clock (Your Peak Time)
         GptOClockScreen(
-          peakTime: actualPeakTime,
-          peakHour: actualPeakHour,
-          timeDescription: timeDescription,
-          timeEmoji: timeEmoji,
+          activityByPeriods: () {
+            if (parsedConversations != null && parsedConversations!.isNotEmpty) {
+              final allMessages = <MessageData>[];
+              for (var conv in parsedConversations!) {
+                allMessages.addAll(conv.messages);
+              }
+              if (allMessages.isNotEmpty) {
+                return ChatAnalyzer.getActivityByTimePeriods(allMessages);
+              }
+            }
+            // Fallback
+            return {
+              '8 AM': 150,
+              '12 PM': 200,
+              '6 PM': 180,
+              '2 AM': 120,
+            };
+          }(),
         ),
         // Index 7 - Unlock Premium
         TypeABPreviewScreen(

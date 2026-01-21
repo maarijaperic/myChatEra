@@ -1,12 +1,11 @@
 import 'package:purchases_flutter/purchases_flutter.dart';
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 
 /// Service for managing RevenueCat subscriptions
 class RevenueCatService {
-  static const String _oneTimeProductId = 'one_time_purchase';
-  static const String _monthlyProductId = 'monthly_subscription';
-  static const String _yearlyProductId = 'yearly_subscription';
+  static const String _oneTimeProductId = 'one_time_purchase_v2';
+  static const String _monthlyProductId = 'monthly_subscription_v2';
+  static const String _yearlyProductId = 'yearly_subscription_v2';
   static const String _entitlementId = 'premium';
 
 
@@ -23,7 +22,7 @@ class RevenueCatService {
         _isConfigured = false;
         return;
       }
-    await Purchases.setDebugLogsEnabled(true); // Set to false in production
+    await Purchases.setDebugLogsEnabled(kDebugMode); // Only enable in debug mode, not in production
     await Purchases.configure(
       PurchasesConfiguration(apiKey)
         ..appUserID = null, // RevenueCat will auto-generate

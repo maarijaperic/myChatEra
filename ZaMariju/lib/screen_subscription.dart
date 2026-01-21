@@ -488,7 +488,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         print('🔴 PREMIUM_DEBUG: Purchase successful');
         
         // If one_time_purchase, increment purchase count in Firestore
-        if (productId == 'one_time_purchase') {
+        if (productId == 'one_time_purchase_v2') {
           try {
             final userId = await RevenueCatService.getUserId();
             if (userId.isNotEmpty) {

@@ -179,6 +179,49 @@ class ChatAnalyzer {
     return peakHour;
   }
 
+  /// Get activity distribution by time periods (8 AM, 12 PM, 6 PM, 2 AM)
+  /// Returns map with time period labels and message counts
+  static Map<String, int> getActivityByTimePeriods(List<MessageData> messages) {
+    if (messages.isEmpty) {
+      return {
+        '8 AM': 0,
+        '12 PM': 0,
+        '6 PM': 0,
+        '2 AM': 0,
+      };
+    }
+
+    final periodCounts = <String, int>{
+      '8 AM': 0,
+      '12 PM': 0,
+      '6 PM': 0,
+      '2 AM': 0,
+    };
+
+    for (var message in messages) {
+      final hour = message.timestamp.hour;
+      
+      // 8 AM period: 6-10 AM
+      if (hour >= 6 && hour < 10) {
+        periodCounts['8 AM'] = (periodCounts['8 AM'] ?? 0) + 1;
+      }
+      // 12 PM period: 10 AM - 2 PM
+      else if (hour >= 10 && hour < 14) {
+        periodCounts['12 PM'] = (periodCounts['12 PM'] ?? 0) + 1;
+      }
+      // 6 PM period: 4 PM - 8 PM
+      else if (hour >= 16 && hour < 20) {
+        periodCounts['6 PM'] = (periodCounts['6 PM'] ?? 0) + 1;
+      }
+      // 2 AM period: 10 PM - 6 AM (night/early morning)
+      else {
+        periodCounts['2 AM'] = (periodCounts['2 AM'] ?? 0) + 1;
+      }
+    }
+
+    return periodCounts;
+  }
+
   /// Get the first user message (for "Where It All Began" screen)
   static String? _getFirstUserMessage(List<MessageData> messages) {
     for (var message in messages) {
@@ -360,6 +403,75 @@ class ChatAnalyzer {
     }
     
     return count;
+  }
+
+  /// Get top 5 most used words (minimum 5 letters each)
+  static List<MapEntry<String, int>> getTop5MostUsedWords(List<MessageData> messages) {
+    final wordCounts = <String, int>{};
+    
+    // Extended list of common words to ignore
+    final stopWords = {
+      'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
+      'of', 'with', 'by', 'from', 'as', 'is', 'was', 'are', 'were', 'be',
+      'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did', 'will',
+      'would', 'could', 'should', 'may', 'might', 'must', 'can', 'i', 'you',
+      'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them',
+      'my', 'your', 'his', 'hers', 'its', 'our', 'their', 'this', 'that',
+      'these', 'those', 'what', 'which', 'who', 'when', 'where', 'why', 'how',
+      'all', 'any', 'both', 'each', 'few', 'more', 'most', 'other', 'some',
+      'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too',
+      'very', 'just', 'now', 'then', 'here', 'there', 'about', 'into', 'through',
+      'during', 'before', 'after', 'above', 'below', 'up', 'down', 'out', 'off',
+      'over', 'under', 'again', 'further', 'once', 'also', 'back', 'well',
+      'get', 'got', 'go', 'went', 'come', 'came', 'see', 'saw', 'know', 'knew',
+      'think', 'thought', 'take', 'took', 'give', 'gave', 'make', 'made',
+      'say', 'said', 'tell', 'told', 'ask', 'asked', 'want', 'wanted', 'need',
+      'needed', 'try', 'tried', 'use', 'used', 'work', 'worked', 'help', 'helped',
+      'like', 'liked', 'look', 'looked', 'find', 'found', 'feel', 'felt',
+      'chat', 'gpt', 'chatgpt', 'ai', 'message', 'messages', 'conversation',
+      'conversations', 'thanks', 'thank', 'please', 'sorry', 'yeah', 'yes',
+    };
+
+    // Only analyze user messages
+    for (var message in messages) {
+      if (message.isUser && message.content.trim().isNotEmpty) {
+        // Split into words and count
+        final cleaned = message.content
+            .toLowerCase()
+            .replaceAll(RegExp(r'[^\w\s]'), ' '); // Remove punctuation
+        
+        final words = cleaned
+            .split(RegExp(r'\s+'))
+            .where((w) => w.isNotEmpty && w.length >= 5) // Minimum 5 letters
+            .toList();
+        
+        for (var word in words) {
+          // Only count meaningful words (not a stop word, not a number, minimum 5 letters)
+          if (!stopWords.contains(word) && 
+              !RegExp(r'^\d+$').hasMatch(word) &&
+              word.length >= 5) {
+            wordCounts[word] = (wordCounts[word] ?? 0) + 1;
+          }
+        }
+      }
+    }
+
+    if (wordCounts.isEmpty) {
+      return [];
+    }
+
+    // Sort by count descending and take top 5
+    final sortedWords = wordCounts.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    
+    // Capitalize first letter and return top 5
+    return sortedWords.take(5).map((entry) {
+      final word = entry.key;
+      final capitalizedWord = word.isNotEmpty 
+          ? word[0].toUpperCase() + word.substring(1)
+          : word;
+      return MapEntry(capitalizedWord, entry.value);
+    }).toList();
   }
 }
 

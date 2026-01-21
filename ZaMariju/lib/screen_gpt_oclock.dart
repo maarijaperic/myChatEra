@@ -7,17 +7,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:gpt_wrapped2/widgets/instagram_share_button.dart';
 
 class GptOClockScreen extends StatefulWidget {
-  final String peakTime; // 'night', 'morning', 'afternoon', 'lunch break', etc.
-  final int peakHour; // 0-23
-  final String timeDescription; // e.g., "at night", "morning", "lunch break"
-  final String timeEmoji; // 🌙, ☀️, 🌅, etc.
+  final Map<String, int> activityByPeriods; // Map of time periods to message counts
 
   const GptOClockScreen({
     super.key,
-    required this.peakTime,
-    required this.peakHour,
-    required this.timeDescription,
-    required this.timeEmoji,
+    required this.activityByPeriods, // {'8 AM': 150, '12 PM': 200, '6 PM': 180, '2 AM': 120}
   });
 
   @override
@@ -28,95 +22,42 @@ class _GptOClockScreenState extends State<GptOClockScreen>
     with TickerProviderStateMixin {
   late AnimationController _fadeController;
   late AnimationController _bubblesController;
+  late AnimationController _chartController;
   final GlobalKey _screenshotKey = GlobalKey();
 
-  String get _formattedHour {
-    final hour = widget.peakHour.clamp(0, 23);
-    final displayHour = hour % 12 == 0 ? 12 : hour % 12;
-    final suffix = hour >= 12 ? 'PM' : 'AM';
-    return '$displayHour:00 $suffix';
+  List<MapEntry<String, int>> get _sortedPeriods {
+    final periods = widget.activityByPeriods.entries.toList();
+    periods.sort((a, b) => b.value.compareTo(a.value));
+    return periods;
   }
 
-  String get _timePersona {
-    switch (widget.peakTime) {
-      case 'morning':
-        return 'Sunrise strategist';
-      case 'afternoon':
-        return 'Daylight decision-maker';
-      case 'evening':
-        return 'Golden-hour thinker';
-      case 'night':
-        return 'Moonlight mastermind';
-      default:
-        if (widget.peakHour >= 0 && widget.peakHour < 5) {
-          return 'Night-owl visionary';
-        }
-        if (widget.peakHour < 12) {
-          return 'Early-bird planner';
-        }
-        if (widget.peakHour < 18) {
-          return 'Peak-hour strategist';
-        }
-        return 'After-hours architect';
-    }
+  int get _maxCount {
+    if (widget.activityByPeriods.isEmpty) return 1;
+    return widget.activityByPeriods.values.reduce((a, b) => a > b ? a : b);
   }
 
-  // Get gradient colors based on peak time
-  List<Color> _getTimePeriodGradient() {
-    switch (widget.peakTime) {
-      case 'morning':
-        return [const Color(0xFFFFD700), const Color(0xFFFFE55C)]; // Gold/Yellow
-      case 'afternoon':
-        return [const Color(0xFFFF8C42), const Color(0xFFFFB366)]; // Orange
-      case 'evening':
-        return [const Color(0xFFFF6B9D), const Color(0xFFFF8FB1)]; // Pink
-      case 'night':
-        return [const Color(0xFF667eea), const Color(0xFF764ba2)]; // Purple
-      default:
-        if (widget.peakHour >= 0 && widget.peakHour < 5) {
-          return [const Color(0xFF4A5568), const Color(0xFF718096)]; // Dark gray
-        }
-        if (widget.peakHour < 12) {
-          return [const Color(0xFFFFD700), const Color(0xFFFFE55C)]; // Gold/Yellow
-        }
-        if (widget.peakHour < 18) {
-          return [const Color(0xFFFF8C42), const Color(0xFFFFB366)]; // Orange
-        }
-        return [const Color(0xFF667eea), const Color(0xFF764ba2)]; // Purple
-    }
+  String get _peakPeriod {
+    if (_sortedPeriods.isEmpty) return '8 AM';
+    return _sortedPeriods.first.key;
   }
 
-  List<Color> _getPersonaGradient() {
-    switch (widget.peakTime) {
-      case 'morning':
-        return [const Color(0xFFFFE55C), const Color(0xFFFFF4A3)]; // Light yellow
-      case 'afternoon':
-        return [const Color(0xFFFF6B35), const Color(0xFFFF8E53)]; // Orange
-      case 'evening':
-        return [const Color(0xFFFF4D6D), const Color(0xFFFF6B9D)]; // Pink
-      case 'night':
-        return [const Color(0xFF764ba2), const Color(0xFF9F7AEA)]; // Purple
+  String get _peakPeriodEmoji {
+    switch (_peakPeriod) {
+      case '8 AM':
+        return '🌅';
+      case '12 PM':
+        return '☀️';
+      case '6 PM':
+        return '🌆';
+      case '2 AM':
+        return '🌙';
       default:
-        if (widget.peakHour >= 0 && widget.peakHour < 5) {
-          return [const Color(0xFF718096), const Color(0xFFA0AEC0)]; // Gray
-        }
-        if (widget.peakHour < 12) {
-          return [const Color(0xFFFFE55C), const Color(0xFFFFF4A3)]; // Light yellow
-        }
-        if (widget.peakHour < 18) {
-          return [const Color(0xFFFF6B35), const Color(0xFFFF8E53)]; // Orange
-        }
-        return [const Color(0xFF764ba2), const Color(0xFF9F7AEA)]; // Purple
+        return '🕐';
     }
   }
 
   String get _shareText {
-    final hour = widget.peakHour.clamp(0, 23);
-    final displayHour = hour % 12 == 0 ? 12 : hour % 12;
-    final suffix = hour >= 12 ? 'PM' : 'AM';
-    final timeStr = '$displayHour:00 $suffix';
-    
-    return "My AI peak time is $timeStr ${widget.timeDescription}. ${_timePersona} mode activated! 🕐 #mychateraAI";
+    return "My AI peak time is $_peakPeriod $_peakPeriodEmoji. Most active when others are sleeping! 🕐 #mychateraAI";
   }
 
 
@@ -135,18 +76,26 @@ class _GptOClockScreenState extends State<GptOClockScreen>
       duration: const Duration(milliseconds: 3000),
     )..repeat();
     
+    _chartController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+    
     _startAnimations();
   }
 
   Future<void> _startAnimations() async {
     await Future.delayed(const Duration(milliseconds: 300));
     _fadeController.forward();
+    await Future.delayed(const Duration(milliseconds: 500));
+    _chartController.forward();
   }
 
   @override
   void dispose() {
     _fadeController.dispose();
     _bubblesController.dispose();
+    _chartController.dispose();
     super.dispose();
   }
 
@@ -220,7 +169,7 @@ class _GptOClockScreenState extends State<GptOClockScreen>
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'The time when your AI conversations peak.',
+                            'When you\'re most active with AI',
                             textAlign: TextAlign.center,
                             style: GoogleFonts.inter(
                               color: const Color(0xFF5C5C5E),
@@ -233,55 +182,20 @@ class _GptOClockScreenState extends State<GptOClockScreen>
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.03),
+                    SizedBox(height: screenHeight * 0.04),
                     
-                    // Hero Card (like Daily Dose with orange colors)
+                    // Activity Chart
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.2,
-                      child: _PeakTimeHeroCard(
-                        formattedHour: _formattedHour,
-                        timeDescription: widget.timeDescription,
-                        timePersona: _timePersona,
-                        timeEmoji: widget.timeEmoji,
+                      child: _ActivityChart(
+                        activityByPeriods: widget.activityByPeriods,
+                        maxCount: _maxCount,
+                        peakPeriod: _peakPeriod,
+                        peakEmoji: _peakPeriodEmoji,
+                        chartController: _chartController,
                         screenWidth: screenWidth,
-                      ),
-                    ),
-                    
-                    SizedBox(height: screenHeight * 0.03),
-                    
-                    // Highlight cards - 2 cards in one row (like Daily Dose)
-                    _AnimatedFade(
-                      controller: _fadeController,
-                      delay: 0.45,
-                      child: IntrinsicHeight(
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.only(right: 8),
-                                child: _PeakTimeHighlightCard(
-                                  icon: Icons.wb_sunny_rounded,
-                                  title: 'Time Period',
-                                  subtitle: widget.timeDescription,
-                                  gradient: _getTimePeriodGradient(),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.only(left: 8),
-                                child: _PeakTimeHighlightCard(
-                                  icon: Icons.person_outline_rounded,
-                                  title: 'Persona',
-                                  subtitle: _timePersona,
-                                  gradient: _getPersonaGradient(),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                        screenHeight: screenHeight,
                       ),
                     ),
                     
@@ -419,329 +333,221 @@ class _PeakTimeParticlesPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
 
-// Peak Time Hero Card (like Daily Dose with orange colors)
-class _PeakTimeHeroCard extends StatelessWidget {
-  final String formattedHour;
-  final String timeDescription;
-  final String timePersona;
-  final String timeEmoji;
+// Activity Chart Widget
+class _ActivityChart extends StatelessWidget {
+  final Map<String, int> activityByPeriods;
+  final int maxCount;
+  final String peakPeriod;
+  final String peakEmoji;
+  final AnimationController chartController;
   final double screenWidth;
+  final double screenHeight;
 
-  const _PeakTimeHeroCard({
-    required this.formattedHour,
-    required this.timeDescription,
-    required this.timePersona,
-    required this.timeEmoji,
+  const _ActivityChart({
+    required this.activityByPeriods,
+    required this.maxCount,
+    required this.peakPeriod,
+    required this.peakEmoji,
+    required this.chartController,
     required this.screenWidth,
+    required this.screenHeight,
   });
+
+  List<Color> _getPeriodGradient(String period) {
+    switch (period) {
+      case '8 AM':
+        return [const Color(0xFFFFD700), const Color(0xFFFFE55C)]; // Gold/Yellow
+      case '12 PM':
+        return [const Color(0xFFFF8C42), const Color(0xFFFFB366)]; // Orange
+      case '6 PM':
+        return [const Color(0xFFFF6B9D), const Color(0xFFFF8FB1)]; // Pink
+      case '2 AM':
+        return [const Color(0xFF667eea), const Color(0xFF764ba2)]; // Purple
+      default:
+        return [const Color(0xFF667eea), const Color(0xFF764ba2)];
+    }
+  }
+
+  String _getPeriodEmoji(String period) {
+    switch (period) {
+      case '8 AM':
+        return '🌅';
+      case '12 PM':
+        return '☀️';
+      case '6 PM':
+        return '🌆';
+      case '2 AM':
+        return '🌙';
+      default:
+        return '🕐';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final periods = ['8 AM', '12 PM', '6 PM', '2 AM'];
+    final chartHeight = (screenHeight * 0.25).clamp(180.0, 250.0);
+    
     return ClipRRect(
       borderRadius: BorderRadius.circular(28),
       child: BackdropFilter(
-        filter: ui.ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+        filter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
           width: double.infinity,
-          padding: EdgeInsets.all((screenWidth * 0.035).clamp(14.0, 18.0)),
+          padding: EdgeInsets.all((screenWidth * 0.06).clamp(20.0, 28.0)),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.78),
+            gradient: LinearGradient(
+              colors: [
+                Colors.white.withOpacity(0.85),
+                Colors.white.withOpacity(0.7),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
             borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: Colors.white.withOpacity(0.6), width: 1.2),
+            border: Border.all(color: Colors.white.withOpacity(0.5), width: 1),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFFF6B35).withOpacity(0.08),
+                color: const Color(0xFF8E8E93).withOpacity(0.1),
                 blurRadius: 24,
                 offset: const Offset(0, 12),
               ),
             ],
           ),
-          child: Stack(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Positioned(
-                right: -15,
-                top: -20,
-                child: Container(
-                  width: 100,
-                  height: 100,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      colors: [Color(0xFFFFE5D4), Color(0xFFFFD1A8)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                  ),
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              // Peak period header
+              Row(
                 children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: _PeakTimeHeroChip(label: 'Peak hour'),
-                      ),
-                      const SizedBox(width: 6),
-                      Flexible(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFF0E5),
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                          child: Text(
-                            timeEmoji,
-                            style: GoogleFonts.inter(
-                              color: const Color(0xFFFF6B35),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
                   Text(
-                    formattedHour,
-                    style: GoogleFonts.inter(
-                      color: const Color(0xFF1F1F21),
-                      fontSize: (screenWidth * 0.09).clamp(32.0, 40.0),
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -1,
-                    ),
+                    peakEmoji,
+                    style: const TextStyle(fontSize: 24),
                   ),
-                  const SizedBox(height: 3),
-                  Text(
-                    timeDescription,
-                    style: GoogleFonts.inter(
-                      color: const Color(0xFF6B6B6D),
-                      fontSize: (screenWidth * 0.032).clamp(12.0, 14.0),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Container(
-                    height: 10,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      color: const Color(0xFFFFD1A8).withOpacity(0.35),
-                    ),
-                    child: FractionallySizedBox(
-                      alignment: Alignment.centerLeft,
-                      widthFactor: 0.75,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFFF6B35), Color(0xFFFF8E53)],
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Peak: $peakPeriod',
+                          style: GoogleFonts.inter(
+                            color: const Color(0xFF1F1F21),
+                            fontSize: (screenWidth * 0.045).clamp(18.0, 22.0),
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
-                      ),
+                        Text(
+                          '${activityByPeriods[peakPeriod] ?? 0} messages',
+                          style: GoogleFonts.inter(
+                            color: const Color(0xFF636366),
+                            fontSize: (screenWidth * 0.032).clamp(13.0, 15.0),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _PeakTimeHeroStatCard(
-                          label: 'Period',
-                          value: timeDescription,
-                          icon: Icons.access_time_rounded,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _PeakTimeHeroStatCard(
-                          label: 'Persona',
-                          value: timePersona,
-                          icon: Icons.person_rounded,
-                        ),
-                      ),
-                    ],
                   ),
                 ],
+              ),
+              SizedBox(height: (screenHeight * 0.03).clamp(20.0, 28.0)),
+              
+              // Chart bars
+              SizedBox(
+                height: chartHeight,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: periods.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final period = entry.value;
+                    final count = activityByPeriods[period] ?? 0;
+                    final heightRatio = maxCount > 0 ? (count / maxCount) : 0.0;
+                    final isPeak = period == peakPeriod;
+                    
+                    return Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                          left: index > 0 ? 8 : 0,
+                          right: index < periods.length - 1 ? 8 : 0,
+                        ),
+                        child: AnimatedBuilder(
+                          animation: chartController,
+                          builder: (context, child) {
+                            final animatedHeight = heightRatio * chartController.value;
+                            
+                            return Column(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                // Bar
+                                Container(
+                                  width: double.infinity,
+                                  height: chartHeight * animatedHeight.clamp(0.05, 1.0),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.bottomCenter,
+                                      end: Alignment.topCenter,
+                                      colors: _getPeriodGradient(period),
+                                    ),
+                                    borderRadius: const BorderRadius.only(
+                                      topLeft: Radius.circular(8),
+                                      topRight: Radius.circular(8),
+                                    ),
+                                    boxShadow: isPeak
+                                        ? [
+                                            BoxShadow(
+                                              color: _getPeriodGradient(period).first.withOpacity(0.4),
+                                              blurRadius: 12,
+                                              offset: const Offset(0, -4),
+                                            ),
+                                          ]
+                                        : null,
+                                  ),
+                                  child: isPeak
+                                      ? Center(
+                                          child: Text(
+                                            _getPeriodEmoji(period),
+                                            style: const TextStyle(fontSize: 20),
+                                          ),
+                                        )
+                                      : null,
+                                ),
+                                SizedBox(height: (screenHeight * 0.01).clamp(8.0, 12.0)),
+                                // Time label
+                                Text(
+                                  period,
+                                  style: GoogleFonts.inter(
+                                    color: isPeak
+                                        ? const Color(0xFF1F1F21)
+                                        : const Color(0xFF8A8A8D),
+                                    fontSize: (screenWidth * 0.032).clamp(12.0, 14.0),
+                                    fontWeight: isPeak ? FontWeight.w700 : FontWeight.w500,
+                                  ),
+                                ),
+                                SizedBox(height: (screenHeight * 0.005).clamp(4.0, 6.0)),
+                                // Count label
+                                Text(
+                                  '$count',
+                                  style: GoogleFonts.inter(
+                                    color: isPeak
+                                        ? const Color(0xFF1F1F21)
+                                        : const Color(0xFF8A8A8D),
+                                    fontSize: (screenWidth * 0.028).clamp(11.0, 13.0),
+                                    fontWeight: isPeak ? FontWeight.w700 : FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _PeakTimeHeroChip extends StatelessWidget {
-  final String label;
-
-  const _PeakTimeHeroChip({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF0E5),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFFFD1A8)),
-      ),
-      child: Text(
-        label,
-        style: GoogleFonts.inter(
-          color: const Color(0xFFFF6B35),
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
-}
-
-class _PeakTimeHeroStatCard extends StatelessWidget {
-  final String label;
-  final String value;
-  final IconData icon;
-
-  const _PeakTimeHeroStatCard({
-    required this.label,
-    required this.value,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withOpacity(0.5)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFE5D4),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              icon,
-              color: const Color(0xFFFF6B35),
-              size: 18,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label.toUpperCase(),
-                  style: GoogleFonts.inter(
-                    color: const Color(0xFF8A8A8D),
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.8,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  value,
-                  style: GoogleFonts.inter(
-                    color: const Color(0xFF1F1F21),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// Highlight Card Widget (like Daily Dose)
-class _PeakTimeHighlightCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final List<Color> gradient;
-
-  const _PeakTimeHighlightCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.gradient,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: gradient,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(26),
-        boxShadow: [
-          BoxShadow(
-            color: gradient.last.withOpacity(0.25),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              icon,
-              color: Colors.white,
-              size: 20,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            title,
-            style: GoogleFonts.inter(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              height: 1.2,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Expanded(
-            child: Text(
-              subtitle,
-              style: GoogleFonts.inter(
-                color: Colors.white.withOpacity(0.85),
-                fontSize: 13,
-                fontWeight: FontWeight.w400,
-              ),
-              overflow: TextOverflow.ellipsis,
-              maxLines: 2,
-            ),
-          ),
-        ],
       ),
     );
   }
