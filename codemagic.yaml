@@ -14,112 +14,59 @@ workflows:
       - name: Get Flutter dependencies
         script: |
           echo "Current directory: $(pwd)"
-          echo "Running flutter pub get..."
           flutter pub get
       - name: Install CocoaPods dependencies
         script: |
-          cd ios
-          pod install
-      - name: Build IPA using xcodebuild with automatic provisioning
+          cd ios && pod install
+      - name: Set up code signing
         script: |
-          cd ios
+          keychain initialize
+          xcode-project use-profiles --archive-method app-store
+      - name: Build IPA
+        script: |
+          echo "🏗️ Building IPA..."
+          flutter build ipa --release \
+            --build-name=1.0.0 \
+            --build-number=8
           
-          # Create export options plist
-          cat > ExportOptions.plist <<EOF
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key>
-            <string>app-store</string>
-            <key>teamID</key>
-            <string>522DMZ83DM</string>
-            <key>signingStyle</key>
-            <string>automatic</string>
-            <key>uploadBitcode</key>
-            <false/>
-            <key>uploadSymbols</key>
-            <true/>
-          </dict>
-          </plist>
-          EOF
-          
-          # Build archive
-          xcodebuild -workspace Runner.xcworkspace \
-            -scheme Runner \
-            -configuration Release \
-            -archivePath build/Runner.xcarchive \
-            archive \
-            -allowProvisioningUpdates \
-            CODE_SIGN_STYLE="Automatic" \
-            DEVELOPMENT_TEAM="522DMZ83DM" \
-            PRODUCT_BUNDLE_IDENTIFIER="com.mychatera" \
-            PROVISIONING_PROFILE_SPECIFIER="" \
-            CODE_SIGN_IDENTITY="Apple Distribution"
-          
-          # Export IPA
-          xcodebuild -exportArchive \
-            -archivePath build/Runner.xcarchive \
-            -exportPath build/ios/ipa \
-            -exportOptionsPlist ExportOptions.plist
-          
-          # Verify IPA was created
           echo "📦 Looking for IPA file..."
-          find build/ios/ipa -name "*.ipa" -exec ls -lh {} \;
-          
-          # Copy to root build directory for artifacts
-          mkdir -p ../build/ios/ipa
-          if [ -f build/ios/ipa/*.ipa ]; then
-            cp build/ios/ipa/*.ipa ../build/ios/ipa/ 2>/dev/null || true
-            echo "✅ IPA copied to ../build/ios/ipa/"
-          else
-            echo "⚠️ IPA not found in build/ios/ipa/"
-          fi
-      - name: Upload to TestFlight
-        script: |
-          echo "🔍 Checking environment variables..."
-          echo "APP_STORE_CONNECT_KEY_IDENTIFIER: ${APP_STORE_CONNECT_KEY_IDENTIFIER:+SET}"
-          echo "APP_STORE_CONNECT_ISSUER_ID: ${APP_STORE_CONNECT_ISSUER_ID:+SET}"
-          echo "APP_STORE_CONNECT_PRIVATE_KEY: ${APP_STORE_CONNECT_PRIVATE_KEY:+SET}"
-          
-          # Check for alternative variable names
-          env | grep -i "app_store_connect" || true
-          
-          if [ -z "$APP_STORE_CONNECT_KEY_IDENTIFIER" ] || [ -z "$APP_STORE_CONNECT_ISSUER_ID" ] || [ -z "$APP_STORE_CONNECT_PRIVATE_KEY" ]; then
-            echo "⚠️ App Store Connect credentials not set - skipping upload"
-            echo "IPA will be available in artifacts for manual upload"
-            exit 0
-          fi
+          echo "Current directory: $(pwd)"
           
           # Find IPA file (check multiple locations)
-          IPA_FILE=$(find . -name "*.ipa" -type f | head -1)
-          if [ -z "$IPA_FILE" ]; then
-            echo "❌ IPA file not found anywhere"
-            echo "Searching in:"
-            find . -name "*.ipa" -o -name "*.app" 2>/dev/null | head -10
-            exit 1
+          IPA_FILE=$(find build/ios/ipa -name "*.ipa" -type f 2>/dev/null | head -1)
+          
+          if [ -n "$IPA_FILE" ]; then
+            echo "✅ Found IPA: $IPA_FILE"
+            ls -lh "$IPA_FILE"
+          else
+            echo "🔍 Searching for IPA files in all locations..."
+            find . -name "*.ipa" -type f 2>/dev/null | head -10
+            
+            # List build directory structure for debugging
+            echo "📁 Build directory structure:"
+            ls -la build/ios/ 2>/dev/null || echo "build/ios/ not found"
+            ls -la build/ios/ipa/ 2>/dev/null || echo "build/ios/ipa/ not found"
+            
+            # Try to find any IPA
+            IPA_FILE=$(find . -name "*.ipa" -type f 2>/dev/null | head -1)
+            if [ -n "$IPA_FILE" ]; then
+              echo "✅ Found IPA at: $IPA_FILE"
+              # Copy to expected location for artifacts
+              mkdir -p build/ios/ipa
+              cp "$IPA_FILE" build/ios/ipa/Runner.ipa
+              echo "✅ Copied IPA to build/ios/ipa/Runner.ipa"
+            else
+              echo "❌ IPA file not found!"
+              exit 1
+            fi
           fi
-          echo "✅ Found IPA: $IPA_FILE"
-          
-          echo "📤 Uploading $IPA_FILE to TestFlight..."
-          
-          # Create temporary key file
-          KEY_FILE=$(mktemp)
-          echo "$APP_STORE_CONNECT_PRIVATE_KEY" > "$KEY_FILE"
-          
-          # Upload using xcrun altool
-          xcrun altool --upload-app \
-            --type ios \
-            --file "$IPA_FILE" \
-            --apiKey "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
-            --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID" \
-            --verbose || {
-            echo "❌ Upload failed"
-            rm -f "$KEY_FILE"
-            exit 1
-          }
-          
-          rm -f "$KEY_FILE"
-          echo "✅ Successfully uploaded to TestFlight!"
     artifacts:
       - build/ios/ipa/*.ipa
+      - build/ios/ipa/Runner.ipa
+    publishing:
+      app_store_connect:
+        auth:
+          key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+          issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+          key: $APP_STORE_CONNECT_PRIVATE_KEY
+        submit_to_testflight: true
