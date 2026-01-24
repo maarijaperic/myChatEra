@@ -10,6 +10,8 @@ workflows:
       cocoapods: default
       groups:
         - app_store_credentials
+    integrations:
+      app_store_connect: app_store_credentials
     scripts:
       - name: Get Flutter dependencies
         script: |
@@ -65,8 +67,5 @@ workflows:
       - build/ios/ipa/Runner.ipa
     publishing:
       app_store_connect:
-        auth:
-          key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
-          issuer_id: $APP_STORE_CONNECT_ISSUER_ID
-          key: $APP_STORE_CONNECT_PRIVATE_KEY
+        auth: integration
         submit_to_testflight: true
