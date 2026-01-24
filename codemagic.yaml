@@ -8,6 +8,8 @@ workflows:
       flutter: stable
       xcode: latest
       cocoapods: default
+      groups:
+        - app_store_credentials
     scripts:
       - name: Get Flutter dependencies
         script: |
