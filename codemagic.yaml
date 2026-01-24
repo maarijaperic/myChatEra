@@ -4,8 +4,6 @@ workflows:
     max_build_duration: 120
     instance_type: mac_mini_m1
     working_directory: ZaMariju
-    integrations:
-      app_store_connect: app-store-connect
     environment:
       flutter: stable
       xcode: latest
@@ -70,5 +68,8 @@ workflows:
           success: true
           failure: false
       app_store_connect:
-        auth: integration
+        auth:
+          key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+          issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+          key: $APP_STORE_CONNECT_PRIVATE_KEY
         submit_to_testflight: true
