@@ -21,22 +21,9 @@ workflows:
       - name: Build IPA using xcodebuild with automatic provisioning
         script: |
           cd ios
-          xcodebuild -workspace Runner.xcworkspace \
-            -scheme Runner \
-            -configuration Release \
-            -archivePath build/Runner.xcarchive \
-            archive \
-            -allowProvisioningUpdates \
-            CODE_SIGN_STYLE="Automatic" \
-            DEVELOPMENT_TEAM="522DMZ83DM" \
-            PRODUCT_BUNDLE_IDENTIFIER="com.mychatera" \
-            PROVISIONING_PROFILE_SPECIFIER="" \
-            CODE_SIGN_IDENTITY="Apple Distribution"
           
-          xcodebuild -exportArchive \
-            -archivePath build/Runner.xcarchive \
-            -exportPath ../build/ios/ipa \
-            -exportOptionsPlist /dev/stdin <<EOF
+          # Create export options plist
+          cat > ExportOptions.plist <<EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
@@ -55,9 +42,37 @@ workflows:
           </plist>
           EOF
           
-          # Copy IPA to expected location
+          # Build archive
+          xcodebuild -workspace Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Release \
+            -archivePath build/Runner.xcarchive \
+            archive \
+            -allowProvisioningUpdates \
+            CODE_SIGN_STYLE="Automatic" \
+            DEVELOPMENT_TEAM="522DMZ83DM" \
+            PRODUCT_BUNDLE_IDENTIFIER="com.mychatera" \
+            PROVISIONING_PROFILE_SPECIFIER="" \
+            CODE_SIGN_IDENTITY="Apple Distribution"
+          
+          # Export IPA
+          xcodebuild -exportArchive \
+            -archivePath build/Runner.xcarchive \
+            -exportPath build/ios/ipa \
+            -exportOptionsPlist ExportOptions.plist
+          
+          # Verify IPA was created
+          echo "📦 Looking for IPA file..."
+          find build/ios/ipa -name "*.ipa" -exec ls -lh {} \;
+          
+          # Copy to root build directory for artifacts
           mkdir -p ../build/ios/ipa
-          cp build/Runner.xcarchive/Products/Applications/Runner.app ../build/ios/ipa/ || true
+          if [ -f build/ios/ipa/*.ipa ]; then
+            cp build/ios/ipa/*.ipa ../build/ios/ipa/ 2>/dev/null || true
+            echo "✅ IPA copied to ../build/ios/ipa/"
+          else
+            echo "⚠️ IPA not found in build/ios/ipa/"
+          fi
       - name: Upload to TestFlight
         script: |
           if [ -z "$APP_STORE_CONNECT_KEY_IDENTIFIER" ] || [ -z "$APP_STORE_CONNECT_ISSUER_ID" ] || [ -z "$APP_STORE_CONNECT_PRIVATE_KEY" ]; then
@@ -66,12 +81,15 @@ workflows:
             exit 0
           fi
           
-          # Find IPA file
-          IPA_FILE=$(find build/ios/ipa -name "*.ipa" | head -1)
+          # Find IPA file (check multiple locations)
+          IPA_FILE=$(find . -name "*.ipa" -type f | head -1)
           if [ -z "$IPA_FILE" ]; then
-            echo "❌ IPA file not found"
+            echo "❌ IPA file not found anywhere"
+            echo "Searching in:"
+            find . -name "*.ipa" -o -name "*.app" 2>/dev/null | head -10
             exit 1
           fi
+          echo "✅ Found IPA: $IPA_FILE"
           
           echo "📤 Uploading $IPA_FILE to TestFlight..."
           
