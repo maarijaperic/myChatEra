@@ -75,6 +75,14 @@ workflows:
           fi
       - name: Upload to TestFlight
         script: |
+          echo "🔍 Checking environment variables..."
+          echo "APP_STORE_CONNECT_KEY_IDENTIFIER: ${APP_STORE_CONNECT_KEY_IDENTIFIER:+SET}"
+          echo "APP_STORE_CONNECT_ISSUER_ID: ${APP_STORE_CONNECT_ISSUER_ID:+SET}"
+          echo "APP_STORE_CONNECT_PRIVATE_KEY: ${APP_STORE_CONNECT_PRIVATE_KEY:+SET}"
+          
+          # Check for alternative variable names
+          env | grep -i "app_store_connect" || true
+          
           if [ -z "$APP_STORE_CONNECT_KEY_IDENTIFIER" ] || [ -z "$APP_STORE_CONNECT_ISSUER_ID" ] || [ -z "$APP_STORE_CONNECT_PRIVATE_KEY" ]; then
             echo "⚠️ App Store Connect credentials not set - skipping upload"
             echo "IPA will be available in artifacts for manual upload"
