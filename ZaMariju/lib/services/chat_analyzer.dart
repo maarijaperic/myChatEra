@@ -405,10 +405,13 @@ class ChatAnalyzer {
     return count;
   }
 
-  /// Get top 5 most used words (minimum 5 letters each)
+  /// Get top 5 most used words (minimum 5 letters each). Only real words (letters only, no metadata keys).
   static List<MapEntry<String, int>> getTop5MostUsedWords(List<MessageData> messages) {
     final wordCounts = <String, int>{};
     
+    // Only count words that look like real words: letters only (optional hyphen), no underscores
+    final realWordPattern = RegExp(r'^[a-zA-Z\-]+$');
+
     // Extended list of common words to ignore
     final stopWords = {
       'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
@@ -432,6 +435,22 @@ class ChatAnalyzer {
       'conversations', 'thanks', 'thank', 'please', 'sorry', 'yeah', 'yes',
     };
 
+    // Blocklist: metadata, JSON keys, technical/UI words, and AI model names (not real chat vocabulary)
+    final blocklist = {
+      'watermarked_asset_pointer', 'image_asset_pointer', 'content_type',
+      'asset_pointer', 'pointer', 'content', 'parts', 'text', 'author', 'role',
+      'height', 'width', 'length', 'size', 'color', 'padding', 'margin', 'border',
+      'image', 'images', 'button', 'screen', 'widget', 'value', 'values', 'type',
+      'types', 'data', 'string', 'number', 'object', 'array', 'index', 'pixel',
+      'pixels', 'style', 'font', 'layout', 'right', 'left', 'thing', 'things',
+      'something', 'nothing', 'really', 'actually', 'probably', 'maybe', 'every',
+      'first', 'second', 'third', 'fourth', 'fifth', 'single', 'double', 'table',
+      'column', 'row', 'title', 'label', 'input', 'click', 'touch', 'scroll',
+      'fovea', 'metadata', 'dalle', 'dall', 'gpt4', 'gpt3', 'openai', 'claude',
+      'model', 'models', 'prompt', 'prompts', 'response', 'responses', 'token',
+      'tokens', 'api', 'json', 'html', 'css', 'javascript', 'python', 'code',
+    };
+
     // Only analyze user messages
     for (var message in messages) {
       if (message.isUser && message.content.trim().isNotEmpty) {
@@ -446,10 +465,13 @@ class ChatAnalyzer {
             .toList();
         
         for (var word in words) {
-          // Only count meaningful words (not a stop word, not a number, minimum 5 letters)
-          if (!stopWords.contains(word) && 
+          // Only count real words: no underscores, no numbers, not stop word, not metadata
+          if (!stopWords.contains(word) &&
               !RegExp(r'^\d+$').hasMatch(word) &&
-              word.length >= 5) {
+              word.length >= 5 &&
+              realWordPattern.hasMatch(word) &&
+              !word.contains('_') &&
+              !blocklist.contains(word)) {
             wordCounts[word] = (wordCounts[word] ?? 0) + 1;
           }
         }

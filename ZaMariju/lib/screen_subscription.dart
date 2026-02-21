@@ -205,7 +205,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               
               const SizedBox(height: 16),
               
-              // Continue/Purchase button
+              // Continue/Purchase button (stays pink while loading)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: GestureDetector(
@@ -215,25 +215,20 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 18),
                     decoration: BoxDecoration(
-                      gradient: _isLoading
-                          ? null
-                          : const LinearGradient(
-                              colors: [
-                                Color(0xFFFF6B9D),
-                                Color(0xFFFF8E9E),
-                              ],
-                            ),
-                      color: _isLoading ? Colors.grey : null,
+                      gradient: const LinearGradient(
+                        colors: [
+                          Color(0xFFFF6B9D),
+                          Color(0xFFFF8E9E),
+                        ],
+                      ),
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: _isLoading
-                          ? null
-                          : [
-                              BoxShadow(
-                                color: const Color(0xFFFF6B9D).withOpacity(0.4),
-                                blurRadius: 20,
-                                offset: const Offset(0, 10),
-                              ),
-                            ],
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFFF6B9D).withOpacity(0.4),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
                     ),
                     child: _isLoading
                         ? const SizedBox(
@@ -479,6 +474,65 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       final productId = RevenueCatService.getProductId(_selectedIndex);
       print('🔴 PREMIUM_DEBUG: Purchasing product: $productId');
       print('🔴 PREMIUM_DEBUG: Selected index: $_selectedIndex');
+      
+      // Check if user already has an active subscription for this product
+      final currentSubscriptionType = await RevenueCatService.getSubscriptionType();
+      print('🔴 PREMIUM_DEBUG: Current subscription type: $currentSubscriptionType');
+      
+      // Prevent purchasing same subscription type if already active
+      // Allow upgrade from monthly to yearly, but prevent duplicate purchases
+      if (productId == 'monthly_subscription_v2') {
+        if (currentSubscriptionType == 'monthly') {
+          if (mounted) {
+            setState(() {
+              _isLoading = false;
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('You already have an active monthly subscription. You can manage it in Settings.'),
+                backgroundColor: Colors.orange,
+                duration: Duration(seconds: 4),
+              ),
+            );
+          }
+          return;
+        }
+        if (currentSubscriptionType == 'yearly') {
+          if (mounted) {
+            setState(() {
+              _isLoading = false;
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('You already have a yearly subscription (better value!). You can manage it in Settings.'),
+                backgroundColor: Colors.orange,
+                duration: Duration(seconds: 4),
+              ),
+            );
+          }
+          return;
+        }
+      }
+      
+      if (productId == 'yearly_subscription_v2') {
+        if (currentSubscriptionType == 'yearly') {
+          if (mounted) {
+            setState(() {
+              _isLoading = false;
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('You already have an active yearly subscription. You can manage it in Settings.'),
+                backgroundColor: Colors.orange,
+                duration: Duration(seconds: 4),
+              ),
+            );
+          }
+          return;
+        }
+        // Allow upgrade from monthly to yearly - this is fine
+      }
+      
       print('🔴 PREMIUM_DEBUG: About to call RevenueCatService.purchaseProduct()');
 
       final success = await RevenueCatService.purchaseProduct(productId);

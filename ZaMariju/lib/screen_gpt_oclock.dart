@@ -452,98 +452,122 @@ class _ActivityChart extends StatelessWidget {
               ),
               SizedBox(height: (screenHeight * 0.03).clamp(20.0, 28.0)),
               
-              // Chart bars
-              SizedBox(
-                height: chartHeight,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: periods.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final period = entry.value;
-                    final count = activityByPeriods[period] ?? 0;
-                    final heightRatio = maxCount > 0 ? (count / maxCount) : 0.0;
-                    final isPeak = period == peakPeriod;
-                    
-                    return Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.only(
-                          left: index > 0 ? 8 : 0,
-                          right: index < periods.length - 1 ? 8 : 0,
-                        ),
-                        child: AnimatedBuilder(
-                          animation: chartController,
-                          builder: (context, child) {
-                            final animatedHeight = heightRatio * chartController.value;
-                            
-                            return Column(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                // Bar
-                                Container(
-                                  width: double.infinity,
-                                  height: chartHeight * animatedHeight.clamp(0.05, 1.0),
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      begin: Alignment.bottomCenter,
-                                      end: Alignment.topCenter,
-                                      colors: _getPeriodGradient(period),
+              // Chart: bars grow from bottom, then one row of labels on same baseline
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Bars only – same height area, bars aligned at bottom
+                  SizedBox(
+                    height: chartHeight,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: periods.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final period = entry.value;
+                        final count = activityByPeriods[period] ?? 0;
+                        final heightRatio = maxCount > 0 ? (count / maxCount) : 0.0;
+                        final isPeak = period == peakPeriod;
+                        return Expanded(
+                          child: Padding(
+                            padding: EdgeInsets.only(
+                              left: index > 0 ? 6 : 0,
+                              right: index < periods.length - 1 ? 6 : 0,
+                            ),
+                            child: AnimatedBuilder(
+                              animation: chartController,
+                              builder: (context, child) {
+                                final animatedRatio = heightRatio * chartController.value;
+                                final barHeight = chartHeight * animatedRatio.clamp(0.05, 1.0);
+                                return Column(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  mainAxisSize: MainAxisSize.max,
+                                  children: [
+                                    Container(
+                                      height: barHeight,
+                                      width: double.infinity,
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          begin: Alignment.bottomCenter,
+                                          end: Alignment.topCenter,
+                                          colors: _getPeriodGradient(period),
+                                        ),
+                                        borderRadius: const BorderRadius.only(
+                                          topLeft: Radius.circular(8),
+                                          topRight: Radius.circular(8),
+                                        ),
+                                        boxShadow: isPeak
+                                            ? [
+                                                BoxShadow(
+                                                  color: _getPeriodGradient(period).first.withOpacity(0.4),
+                                                  blurRadius: 12,
+                                                  offset: const Offset(0, -4),
+                                                ),
+                                              ]
+                                            : null,
+                                      ),
+                                      child: isPeak
+                                          ? Center(
+                                              child: Text(
+                                                _getPeriodEmoji(period),
+                                                style: const TextStyle(fontSize: 20),
+                                              ),
+                                            )
+                                          : null,
                                     ),
-                                    borderRadius: const BorderRadius.only(
-                                      topLeft: Radius.circular(8),
-                                      topRight: Radius.circular(8),
-                                    ),
-                                    boxShadow: isPeak
-                                        ? [
-                                            BoxShadow(
-                                              color: _getPeriodGradient(period).first.withOpacity(0.4),
-                                              blurRadius: 12,
-                                              offset: const Offset(0, -4),
-                                            ),
-                                          ]
-                                        : null,
-                                  ),
-                                  child: isPeak
-                                      ? Center(
-                                          child: Text(
-                                            _getPeriodEmoji(period),
-                                            style: const TextStyle(fontSize: 20),
-                                          ),
-                                        )
-                                      : null,
+                                  ],
+                                );
+                              },
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  // One row: all time labels (8 AM, 12 PM, …) on same line
+                  SizedBox(height: (screenHeight * 0.012).clamp(8.0, 14.0)),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: periods.asMap().entries.map((entry) {
+                      final period = entry.value;
+                      final count = activityByPeriods[period] ?? 0;
+                      final isPeak = period == peakPeriod;
+                      return Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                period,
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.inter(
+                                  color: isPeak
+                                      ? const Color(0xFF1F1F21)
+                                      : const Color(0xFF8A8A8D),
+                                  fontSize: (screenWidth * 0.032).clamp(12.0, 14.0),
+                                  fontWeight: isPeak ? FontWeight.w700 : FontWeight.w500,
                                 ),
-                                SizedBox(height: (screenHeight * 0.01).clamp(8.0, 12.0)),
-                                // Time label
-                                Text(
-                                  period,
-                                  style: GoogleFonts.inter(
-                                    color: isPeak
-                                        ? const Color(0xFF1F1F21)
-                                        : const Color(0xFF8A8A8D),
-                                    fontSize: (screenWidth * 0.032).clamp(12.0, 14.0),
-                                    fontWeight: isPeak ? FontWeight.w700 : FontWeight.w500,
-                                  ),
+                              ),
+                              SizedBox(height: (screenHeight * 0.004).clamp(2.0, 4.0)),
+                              Text(
+                                '$count',
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.inter(
+                                  color: isPeak
+                                      ? const Color(0xFF1F1F21)
+                                      : const Color(0xFF8A8A8D),
+                                  fontSize: (screenWidth * 0.028).clamp(11.0, 13.0),
+                                  fontWeight: isPeak ? FontWeight.w700 : FontWeight.w500,
                                 ),
-                                SizedBox(height: (screenHeight * 0.005).clamp(4.0, 6.0)),
-                                // Count label
-                                Text(
-                                  '$count',
-                                  style: GoogleFonts.inter(
-                                    color: isPeak
-                                        ? const Color(0xFF1F1F21)
-                                        : const Color(0xFF8A8A8D),
-                                    fontSize: (screenWidth * 0.028).clamp(11.0, 13.0),
-                                    fontWeight: isPeak ? FontWeight.w700 : FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  }).toList(),
-                ),
+                      );
+                    }).toList(),
+                  ),
+                ],
               ),
             ],
           ),

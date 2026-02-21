@@ -11,7 +11,7 @@
 	<key>provisioningProfiles</key>
 	<dict>
 		<key>com.mychatera</key>
-		<string>MyChatEraAI Distribution</string>
+		<string>MyChatEraAI DIstribution2</string>
 	</dict>
 	<key>signingCertificate</key>
 	<string>Apple Distribution</string>

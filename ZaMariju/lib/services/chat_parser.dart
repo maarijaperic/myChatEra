@@ -131,7 +131,19 @@ class ChatParser {
     if (content is Map) {
       final parts = content['parts'];
       if (parts is List && parts.isNotEmpty) {
-        messageText = parts.first?.toString() ?? '';
+        // Only use text from parts: skip image/asset objects (watermarked_asset_pointer, etc.)
+        final textBits = <String>[];
+        for (final part in parts) {
+          if (part is String && part.trim().isNotEmpty) {
+            textBits.add(part);
+          } else if (part is Map) {
+            final text = part['text'];
+            if (text != null && text.toString().trim().isNotEmpty) {
+              textBits.add(text.toString());
+            }
+          }
+        }
+        messageText = textBits.join(' ');
       } else if (content['text'] != null) {
         messageText = content['text'].toString();
       }

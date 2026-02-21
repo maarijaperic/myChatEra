@@ -21,11 +21,8 @@ class MostUsedWordScreen extends StatefulWidget {
 class _MostUsedWordScreenState extends State<MostUsedWordScreen>
     with TickerProviderStateMixin {
   late AnimationController _fadeController;
-  late AnimationController _counterController;
   late AnimationController _bubblesController;
   final GlobalKey _screenshotKey = GlobalKey();
-  
-  List<int> _displayedCounts = [0, 0, 0, 0, 0];
 
   List<MapEntry<String, int>> get _topWords {
     return widget.topWords.take(5).toList();
@@ -47,11 +44,6 @@ class _MostUsedWordScreenState extends State<MostUsedWordScreen>
       duration: const Duration(milliseconds: 1500),
     );
     
-    _counterController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2000),
-    );
-    
     _bubblesController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 3000),
@@ -63,25 +55,11 @@ class _MostUsedWordScreenState extends State<MostUsedWordScreen>
   Future<void> _startAnimations() async {
     await Future.delayed(const Duration(milliseconds: 300));
     _fadeController.forward();
-    
-    await Future.delayed(const Duration(milliseconds: 800));
-    _counterController.forward();
-    
-    // Animate counters for all words
-    _counterController.addListener(() {
-      setState(() {
-        for (int i = 0; i < _topWords.length && i < 5; i++) {
-          final count = _topWords[i].value;
-          _displayedCounts[i] = (count * _counterController.value).round();
-        }
-      });
-    });
   }
 
   @override
   void dispose() {
     _fadeController.dispose();
-    _counterController.dispose();
     _bubblesController.dispose();
     super.dispose();
   }
@@ -96,19 +74,19 @@ class _MostUsedWordScreenState extends State<MostUsedWordScreen>
         key: _screenshotKey,
         child: Stack(
           children: [
-            // Pastel brown gradient background
+            // Soft pastel lavender background – clean & modern
             Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Color(0xFFF5E6D3), // Very light pastel brown
-                    Color(0xFFE8D5C4), // Light pastel brown
-                    Color(0xFFDCC9B5), // Soft pastel brown
-                    Color(0xFFD0BDA6), // Pastel brown
+                    Color(0xFFF5F3FF), // Very light lavender
+                    Color(0xFFEDE9FE), // Light lavender
+                    Color(0xFFE9E0FA), // Soft lavender
+                    Color(0xFFDDD6FE), // Pastel violet
                   ],
-                  stops: [0.0, 0.3, 0.7, 1.0],
+                  stops: [0.0, 0.35, 0.7, 1.0],
                 ),
               ),
             ),
@@ -136,27 +114,41 @@ class _MostUsedWordScreenState extends State<MostUsedWordScreen>
                   child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    SizedBox(height: screenHeight * 0.03),
+                    SizedBox(height: screenHeight * 0.02),
                     
                     // Main headline
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.0,
-                      child: Text(
-                        'Top 5 Most Used Words',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.inter(
-                          color: const Color(0xFF1F1F21),
-                          fontSize: (screenWidth * 0.08).clamp(28.0, 36.0),
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.2,
-                        ),
+                      child: Column(
+                        children: [
+                          Text(
+                            'Top 5 Most Used Words',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.inter(
+                              color: const Color(0xFF1F1F21),
+                              fontSize: (screenWidth * 0.078).clamp(26.0, 34.0),
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.2,
+                            ),
+                          ),
+                          SizedBox(height: screenHeight * 0.008),
+                          Text(
+                            'Your vocabulary in your AI chats',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.inter(
+                              color: const Color(0xFF6B7280),
+                              fontSize: (screenWidth * 0.038).clamp(14.0, 16.0),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.045),
+                    SizedBox(height: screenHeight * 0.04),
                     
-                    // Top 5 Words List
+                    // Top 5 Words List - beautiful gradient cards
                     _AnimatedFade(
                       controller: _fadeController,
                       delay: 0.2,
@@ -166,92 +158,93 @@ class _MostUsedWordScreenState extends State<MostUsedWordScreen>
                           final wordEntry = entry.value;
                           final word = wordEntry.key;
                           
+                          // Different gradient for each word card
+                          final gradients = [
+                            [const Color(0xFF7C3AED), const Color(0xFF8B5CF6)], // Purple
+                            [const Color(0xFFEC4899), const Color(0xFFF472B6)], // Pink
+                            [const Color(0xFF06B6D4), const Color(0xFF22D3EE)], // Cyan
+                            [const Color(0xFF10B981), const Color(0xFF34D399)], // Emerald
+                            [const Color(0xFFF59E0B), const Color(0xFFFBBF24)], // Amber
+                          ];
+                          final gradient = gradients[index % gradients.length];
+                          
                           return Padding(
                             padding: EdgeInsets.only(bottom: index < _topWords.length - 1 ? 16 : 0),
                             child: ClipRRect(
-                              borderRadius: BorderRadius.circular((screenWidth * 0.06).clamp(20.0, 28.0)),
+                              borderRadius: BorderRadius.circular(24),
                               child: BackdropFilter(
                                 filter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
                                 child: Container(
                                   width: double.infinity,
-                                  padding: EdgeInsets.all((screenWidth * 0.05).clamp(18.0, 24.0)),
+                                  padding: EdgeInsets.all((screenWidth * 0.05).clamp(20.0, 24.0)),
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
                                       colors: [
-                                        Colors.white.withOpacity(0.8),
-                                        Colors.white.withOpacity(0.6),
+                                        Colors.white.withOpacity(0.9),
+                                        Colors.white.withOpacity(0.7),
                                       ],
                                       begin: Alignment.topLeft,
                                       end: Alignment.bottomRight,
                                     ),
-                                    borderRadius: BorderRadius.circular((screenWidth * 0.06).clamp(20.0, 28.0)),
-                                    border: Border.all(color: Colors.white.withOpacity(0.5), width: 1),
+                                    borderRadius: BorderRadius.circular(24),
+                                    border: Border.all(
+                                      color: gradient.first.withOpacity(0.2),
+                                      width: 1.5,
+                                    ),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: const Color(0xFF8E8E93).withOpacity(0.1),
+                                        color: gradient.last.withOpacity(0.15),
                                         blurRadius: 20,
-                                        offset: const Offset(0, 10),
+                                        offset: const Offset(0, 8),
                                       ),
                                     ],
                                   ),
                                   child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment: MainAxisAlignment.start,
                                     crossAxisAlignment: CrossAxisAlignment.center,
                                     children: [
-                                      // Rank number
+                                      // Rank number with gradient background
                                       Container(
-                                        width: 40,
-                                        height: 40,
+                                        width: 48,
+                                        height: 48,
                                         decoration: BoxDecoration(
                                           gradient: LinearGradient(
-                                            colors: [
-                                              const Color(0xFFFF6B35).withOpacity(0.9),
-                                              const Color(0xFFFF6B35).withOpacity(0.7),
-                                            ],
+                                            colors: gradient,
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
                                           ),
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius: BorderRadius.circular(14),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: gradient.last.withOpacity(0.4),
+                                              blurRadius: 8,
+                                              offset: const Offset(0, 4),
+                                            ),
+                                          ],
                                         ),
                                         child: Center(
                                           child: Text(
                                             '${index + 1}',
                                             style: GoogleFonts.inter(
                                               color: Colors.white,
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.w700,
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.w800,
                                             ),
                                           ),
                                         ),
                                       ),
-                                      const SizedBox(width: 16),
-                                      // Word
+                                      SizedBox(width: screenWidth * 0.045),
+                                      // Word with larger, bolder text
                                       Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              word,
-                                              style: GoogleFonts.inter(
-                                                color: const Color(0xFF1F1F21),
-                                                fontSize: (screenWidth * 0.05).clamp(18.0, 24.0),
-                                                fontWeight: FontWeight.w700,
-                                                letterSpacing: -0.3,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 4),
-                                            AnimatedBuilder(
-                                              animation: _counterController,
-                                              builder: (context, child) {
-                                                return Text(
-                                                  '${_displayedCounts[index]} times',
-                                                  style: GoogleFonts.inter(
-                                                    color: const Color(0xFF636366),
-                                                    fontSize: (screenWidth * 0.035).clamp(13.0, 15.0),
-                                                    fontWeight: FontWeight.w500,
-                                                  ),
-                                                );
-                                              },
-                                            ),
-                                          ],
+                                        child: Text(
+                                          word,
+                                          style: GoogleFonts.inter(
+                                            color: const Color(0xFF1F1F21),
+                                            fontSize: (screenWidth * 0.06).clamp(20.0, 26.0),
+                                            fontWeight: FontWeight.w700,
+                                            letterSpacing: -0.3,
+                                            height: 1.2,
+                                          ),
                                         ),
                                       ),
                                     ],
@@ -273,7 +266,7 @@ class _MostUsedWordScreenState extends State<MostUsedWordScreen>
                       child: SmallShareToStoryButton(
                         shareText: _shareText,
                         screenshotKey: _screenshotKey,
-                        accentGradient: const [Color(0xFF8B6F47), Color(0xFFA0826D)],
+                        accentGradient: const [Color(0xFF7C3AED), Color(0xFF8B5CF6)],
                       ),
                     ),
                     
