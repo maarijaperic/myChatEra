@@ -75,6 +75,7 @@ class FreeSummaryScreen extends StatelessWidget {
       eyebrow: 'Your chat era',
       headline: 'You sent *${_formatNumber(totalMessages)}* messages to AI',
       accent: WrappedColors.pinkDeep,
+      countUpHeadline: true,
       bottom: _ContinueButton(
         onTap: () => CardNavigator.of(context)?.goToNext(),
       ),
@@ -93,14 +94,19 @@ class FreeSummaryScreen extends StatelessWidget {
             children: [
               SizedBox(
                 height: 64,
-                child: Row(
+                child: WrappedReveal(
+                  duration: const Duration(milliseconds: 1500),
+                  builder: (context, t) => Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     for (var h = 0; h < 24; h++) ...[
                       if (h > 0) const SizedBox(width: 3),
                       Expanded(
                         child: FractionallySizedBox(
-                          heightFactor: 0.12 + 0.88 * _barFraction(h),
+                          heightFactor: (0.12 + 0.88 * _barFraction(h)) *
+                              Curves.easeOutBack.transform(
+                                ((t - h * 0.016) / 0.6).clamp(0.0, 1.0),
+                              ).clamp(0.02, 1.2),
                           alignment: Alignment.bottomCenter,
                           child: Container(
                             decoration: BoxDecoration(
@@ -119,6 +125,7 @@ class FreeSummaryScreen extends StatelessWidget {
                       ),
                     ],
                   ],
+                ),
                 ),
               ),
               const SizedBox(height: 8),
@@ -201,7 +208,7 @@ class _RhythmStat extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          CountUpText(
             value,
             style: GoogleFonts.inter(
               color: color,
@@ -224,11 +231,13 @@ class _RhythmStat extends StatelessWidget {
             const SizedBox(height: 8),
             ClipRRect(
               borderRadius: BorderRadius.circular(3),
-              child: LinearProgressIndicator(
-                value: progress!.clamp(0.0, 1.0),
-                minHeight: 5,
-                backgroundColor: color.withOpacity(0.15),
-                valueColor: AlwaysStoppedAnimation<Color>(color),
+              child: WrappedReveal(
+                builder: (context, t) => LinearProgressIndicator(
+                  value: progress!.clamp(0.0, 1.0) * Curves.easeOutCubic.transform(t),
+                  minHeight: 5,
+                  backgroundColor: color.withOpacity(0.15),
+                  valueColor: AlwaysStoppedAnimation<Color>(color),
+                ),
               ),
             ),
             const SizedBox(height: 4),

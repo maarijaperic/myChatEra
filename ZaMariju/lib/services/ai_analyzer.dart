@@ -170,13 +170,15 @@ Provide:
 2. Zodiac sign with emoji (e.g., "Scorpio ♏")
 3. Zodiac emoji only (e.g., "🦂")
 4. Fun explanation (2-3 sentences, use "you" and be witty)
+5. Element mix: how strongly each element (Fire, Water, Earth, Air) shows in their chats, as whole-number percentages that add up to 100. The element of the chosen sign must be the highest.
 
 Respond ONLY with valid JSON in this exact format:
 {
   "zodiacName": "Scorpio",
   "zodiacSign": "Scorpio ♏",
   "zodiacEmoji": "🦂",
-  "explanation": "Based on your chats, you're giving major Scorpio energy 🦂✨ Intense conversations? Check. Deep questions at 3 AM? Check. Reading between every single line? That's so you. GPT says you're the friend who turns small talk into therapy sessions. Mysterious vibes only. 💅"
+  "explanation": "Based on your chats, you're giving major Scorpio energy 🦂✨ Intense conversations? Check. Deep questions at 3 AM? Check. Reading between every single line? That's so you. GPT says you're the friend who turns small talk into therapy sessions. Mysterious vibes only. 💅",
+  "elements": {"Water": 45, "Fire": 22, "Air": 18, "Earth": 15}
 }
 ''';
 
@@ -199,14 +201,16 @@ Provide:
 1. Personality type: "INTROVERT", "EXTROVERT", or "AMBIVERT"
 2. Introvert percentage (0-100)
 3. Extrovert percentage (0-100)
-4. Explanation (2-3 sentences)
+4. Explanation (2-3 sentences). Wrap the 2-3 most important key phrases in *single asterisks* so they can be highlighted.
+5. Traits: exactly 4 short social-energy traits (1-3 words each, Title Case) that describe them
 
 Respond ONLY with valid JSON in this exact format:
 {
   "personalityType": "AMBIVERT",
   "introvertPercentage": 55,
   "extrovertPercentage": 45,
-  "explanation": "According to your conversations, ChatGPT detected that you have a balanced personality. You are an ambivert: you enjoy both moments of solitary reflection and social interactions. You have the ability to adapt to different situations, being introspective when you need to process information and sociable when you want to share ideas."
+  "explanation": "According to your conversations, you have a *balanced personality*. You enjoy both *moments of solitary reflection* and *social interactions*, adapting to whatever the situation needs.",
+  "traits": ["Deep Talks", "Recharges Solo", "Selective Circle", "Great Listener"]
 }
 ''';
 
@@ -230,13 +234,17 @@ Provide:
 2. Advice category (one word: RELATIONSHIPS, CAREER, HEALTH, TECH, PERSONAL, etc.)
 3. Advice emoji (relevant emoji)
 4. Explanation (2-3 sentences)
+5. Roast: one funny, playful line (max 2 sentences, ends with an emoji) teasing WHY they keep asking about this
+6. Topics: their top 4 advice topics (1-2 words each, Title Case) as whole-number percentages that add up to 100, highest first
 
 Respond ONLY with valid JSON in this exact format:
 {
   "mostAskedAdvice": "How to improve my personal relationships",
   "adviceCategory": "RELATIONSHIPS",
   "adviceEmoji": "💕",
-  "explanation": "According to the analysis of your conversations, you have sought advice about personal relationships more than any other topic. This shows that you value human connections and always seek to improve the way you relate to others. Your curiosity to better understand social dynamics is admirable."
+  "explanation": "According to the analysis of your conversations, you have sought advice about personal relationships more than any other topic. This shows that you value human connections and always seek to improve the way you relate to others. Your curiosity to better understand social dynamics is admirable.",
+  "roast": "You've asked how to fix your relationships so many times that ChatGPT is basically your couples therapist, except it's just you on the couch. 💀",
+  "topics": {"Relationships": 42, "Career": 26, "Self-growth": 19, "Health": 13}
 }
 ''';
 
@@ -266,12 +274,14 @@ Provide:
 1. Love language name
 2. Love language emoji
 3. Fun explanation (2-3 sentences, witty and casual)
+4. Percentages: how much each of the 5 love languages shows, as whole numbers that add up to 100 (the main one highest). Use the exact 5 names above as keys.
 
 Respond ONLY with valid JSON in this exact format:
 {
   "loveLanguage": "Words of Affirmation",
   "languageEmoji": "💬",
-  "explanation": "Based on your chats, GPT noticed you light up when validated. You seek reassurance, ask follow-up questions to make sure you're understood, and appreciate detailed explanations. You love when GPT acknowledges your ideas and reflects them back. Basically, you're the type who needs to hear 'You're doing great!' even from an AI. And honestly? You are. 💕"
+  "explanation": "Based on your chats, GPT noticed you light up when validated. You seek reassurance, ask follow-up questions to make sure you're understood, and appreciate detailed explanations. You love when GPT acknowledges your ideas and reflects them back. Basically, you're the type who needs to hear 'You're doing great!' even from an AI. And honestly? You are. 💕",
+  "percentages": {"Words of Affirmation": 38, "Quality Time": 24, "Acts of Service": 16, "Physical Touch": 12, "Receiving Gifts": 10}
 }
 ''';
 
@@ -295,13 +305,15 @@ Provide:
 2. MBTI emoji
 3. Personality name (e.g., "The Enthusiast")
 4. Explanation (2-3 sentences)
+5. Dimensions: for each of the 4 letters of their type, how strongly they lean to that letter (whole number 51-95)
 
 Respond ONLY with valid JSON in this exact format:
 {
   "mbtiType": "ENFP",
   "mbtiEmoji": "🎭",
   "personalityName": "The Enthusiast",
-  "explanation": "According to the analysis of your conversations, ChatGPT detected that you are an ENFP (Extroverted, Intuitive, Feeling, Perceiving). You are an enthusiastic, creative and sociable person who is motivated by possibilities. You have a great ability to connect with others and always seek new experiences and challenges. Your positive energy and your ability to inspire others are your greatest strengths."
+  "explanation": "According to the analysis of your conversations, ChatGPT detected that you are an ENFP (Extroverted, Intuitive, Feeling, Perceiving). You are an enthusiastic, creative and sociable person who is motivated by possibilities. You have a great ability to connect with others and always seek new experiences and challenges. Your positive energy and your ability to inspire others are your greatest strengths.",
+  "dimensions": {"E": 68, "N": 74, "F": 61, "P": 57}
 }
 ''';
 
@@ -358,12 +370,18 @@ Provide:
 1. Movie title (string) - must be a real, well-known movie
 2. Release year (integer between 1950 and 2025)
 3. Fun explanation (3-4 sentences, cinematic tone, direct "you" language, references how the chats match the movie's themes)
+4. Life rating: how you'd rate the user's life as a movie, IMDb style (number 6.0-9.8 with one decimal)
+5. Genres: 2 genres of the movie
+6. Scores: how much of each of these is in the user's life story, whole numbers 0-100: "Drama", "Plot twists", "Comedy", "Romance"
 
 Respond ONLY with valid JSON in this exact format:
 {
   "movieTitle": "The Pursuit of Happyness",
   "releaseYear": 2006,
-  "explanation": "Based on your conversations, GPT detected a relentless drive for self-improvement and asking deep questions about life. Like Chris Gardner in the movie, you are constantly searching for answers, optimizing your life, and never giving up on personal growth. Your chats are basically a journey of someone trying to figure it all out - one prompt at a time. Inspiring, honestly."
+  "explanation": "Based on your conversations, GPT detected a relentless drive for self-improvement and asking deep questions about life. Like Chris Gardner in the movie, you are constantly searching for answers, optimizing your life, and never giving up on personal growth. Your chats are basically a journey of someone trying to figure it all out - one prompt at a time. Inspiring, honestly.",
+  "lifeRating": 8.6,
+  "genres": ["Drama", "Biography"],
+  "scores": {"Drama": 82, "Plot twists": 71, "Comedy": 54, "Romance": 38}
 }
 ''';
 
@@ -424,13 +442,17 @@ Provide:
 2. Artist name (string) - the performer/band
 3. Release year (integer between 1960 and 2025)
 4. Fun explanation (3-4 sentences, musical tone, direct "you" language, references how the chats match the song's themes and lyrics)
+5. Vibe: how the user's chats score on "Energy", "Mood" and "Danceability" (whole numbers 0-100)
+6. Song duration in seconds (integer, approximate is fine)
 
 Respond ONLY with valid JSON in this exact format:
 {
   "songTitle": "Don't Stop Believin'",
   "artist": "Journey",
   "releaseYear": 1981,
-  "explanation": "Based on your conversations, GPT detected an optimistic and persistent personality. Like this classic anthem, you keep pushing forward, asking questions, and never giving up on your goals. Your chats are the soundtrack of someone who believes in the journey, not just the destination. You're basically living your own version of this song - always searching, always moving forward."
+  "explanation": "Based on your conversations, GPT detected an optimistic and persistent personality. Like this classic anthem, you keep pushing forward, asking questions, and never giving up on your goals. Your chats are the soundtrack of someone who believes in the journey, not just the destination. You're basically living your own version of this song - always searching, always moving forward.",
+  "vibe": {"Energy": 78, "Mood": 84, "Danceability": 61},
+  "durationSeconds": 251
 }
 ''';
 
@@ -469,8 +491,8 @@ Respond ONLY with valid JSON in this exact format:
     return await _callOpenAI(prompt);
   }
   
-  /// Generate a roast
-  static Future<String> generateRoast(
+  /// Generate a roast: {roast, heat, meters}
+  static Future<Map<String, dynamic>> generateRoast(
     List<MessageData> userMessages,
   ) async {
     final messagesSample = _getSampleMessages(userMessages, maxCount: 40);
@@ -488,11 +510,19 @@ Write a roast that is:
 - Uses "you" and emojis
 - Playfully calls them out
 
-Respond ONLY with the roast text, no JSON, no extra formatting.
+Also provide:
+- heat: how brutal the roast is, whole number 60-98
+- meters: exactly 4 of their funniest chat habits (1-3 words each, Title Case) scored 0-100
+
+Respond ONLY with valid JSON in this exact format:
+{
+  "roast": "You ask ChatGPT for life advice at 3 AM like it's your therapist, career coach, and life guru all in one. 💀😂",
+  "heat": 87,
+  "meters": {"3 AM Questions": 92, "Overthinking": 85, "Needs Validation": 71, "Procrastination": 64}
+}
 ''';
 
-    final result = await _callOpenAI(prompt, expectJson: false);
-    return result['text'] ?? 'You ask ChatGPT everything. Like... everything. 💀';
+    return await _callOpenAI(prompt);
   }
   
   /// Analyze monthly topics from conversations (for Monthly Obsessions)

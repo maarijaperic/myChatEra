@@ -615,6 +615,7 @@ class _PremiumWrappedNavigator extends StatelessWidget {
           personalityName: insights.personalityName,
           explanation: insights.mbtiExplanation,
           subtitle: 'Your personality is unique, like a work of art 🎨',
+          dimensions: insights.mbtiDimensions,
         ),
         // Index 1 - Type A/B Personality
         TypeABPersonalityScreen(
@@ -641,6 +642,7 @@ class _PremiumWrappedNavigator extends StatelessWidget {
           zodiacName: insights.zodiacName,
           explanation: insights.zodiacExplanation,
           subtitle: 'The stars don\'t lie... and neither does AI! ⭐',
+          elements: insights.zodiacElements,
         ),
         SongTitleScreen(
           question: 'What song title represents your life according to AI?',
@@ -649,6 +651,8 @@ class _PremiumWrappedNavigator extends StatelessWidget {
           releaseYear: insights.songYear,
           explanation: insights.songExplanation,
           subtitle: 'Your life has a soundtrack 🎵✨',
+          vibe: insights.songVibe,
+          durationSeconds: insights.songDurationSeconds,
         ),
         IntrovertExtrovertScreen(
           question: 'Are you an introvert or extrovert according to AI?',
@@ -657,6 +661,7 @@ class _PremiumWrappedNavigator extends StatelessWidget {
           extrovertPercentage: insights.extrovertPercentage,
           explanation: insights.introExtroExplanation,
           subtitle: _introExtroSubtitle(insights.introExtroType),
+          traits: insights.introExtroTraits,
         ),
         AdviceMostAskedScreen(
           question: 'What advice have you asked AI for the most?',
@@ -665,6 +670,8 @@ class _PremiumWrappedNavigator extends StatelessWidget {
           adviceEmoji: insights.adviceEmoji,
           explanation: insights.adviceExplanation,
           subtitle: 'Wisdom is knowing what to ask 💡',
+          roast: insights.adviceRoast,
+          topics: insights.adviceTopics,
         ),
         MovieTitleScreen(
           question: 'What movie title represents your life according to AI?',
@@ -672,11 +679,16 @@ class _PremiumWrappedNavigator extends StatelessWidget {
           releaseYear: insights.movieYear,
           explanation: insights.movieExplanation,
           subtitle: 'Plot twist: Your chats are cinema-worthy 🍿✨',
+          rating: insights.movieRating,
+          genres: insights.movieGenres,
+          scores: insights.movieScores,
         ),
         RoastMeScreen(
           question: 'Roast me based on our previous interactions',
           roastText: insights.roastText,
           subtitle: 'Can you handle the heat? 🔥😂',
+          heat: insights.roastHeat,
+          meters: insights.roastMeters,
         ),
         LoveLanguageScreen(
           question: 'What\'s your love language according to AI?',
@@ -684,7 +696,9 @@ class _PremiumWrappedNavigator extends StatelessWidget {
           languageEmoji: insights.languageEmoji,
           explanation: insights.loveLanguageExplanation,
           subtitle: 'Love is spoken in many languages 💕',
-          loveLanguagePercentages: _loveLanguageDistribution(insights.loveLanguage),
+          loveLanguagePercentages: insights.loveLanguagePercentages.length >= 3
+              ? insights.loveLanguagePercentages
+              : _loveLanguageDistribution(insights.loveLanguage),
         ),
         PastLifePersonaScreen(
           question: 'Who were you in a past life according to AI?',
@@ -772,18 +786,11 @@ class _PremiumWrappedNavigator extends StatelessWidget {
       orElse: () => defaultOrder.first,
     );
 
-    final distribution = <String, int>{};
-    for (final lang in defaultOrder) {
-      distribution[lang] = lang == primaryKey ? 40 : 15;
-    }
-
-    final total = distribution.values.reduce((a, b) => a + b);
-    if (total != 100) {
-      final diff = 100 - total;
-      distribution[primaryKey] = (distribution[primaryKey]! + diff).clamp(0, 100);
-    }
-
-    return distribution;
+    const shares = [38, 24, 16, 12, 10];
+    final ordered = [primaryKey, ...defaultOrder.where((lang) => lang != primaryKey)];
+    return {
+      for (var i = 0; i < ordered.length; i++) ordered[i]: shares[i],
+    };
   }
 
 }

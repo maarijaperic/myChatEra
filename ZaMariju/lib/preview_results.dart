@@ -48,6 +48,7 @@ void main() {
             personalityName: insights.personalityName,
             explanation: insights.mbtiExplanation,
             subtitle: '',
+            dimensions: insights.mbtiDimensions,
           ),
           TypeABPersonalityScreen(
             question: '',
@@ -73,6 +74,7 @@ void main() {
             zodiacName: insights.zodiacName,
             explanation: insights.zodiacExplanation,
             subtitle: 'The stars don\'t lie... and neither does AI! ⭐',
+            elements: insights.zodiacElements,
           ),
           SongTitleScreen(
             songTitle: insights.songTitle,
@@ -80,6 +82,8 @@ void main() {
             releaseYear: insights.songYear,
             explanation: insights.songExplanation,
             subtitle: 'Your life has a soundtrack 🎵✨',
+            vibe: insights.songVibe,
+            durationSeconds: insights.songDurationSeconds,
           ),
           IntrovertExtrovertScreen(
             question: '',
@@ -88,6 +92,7 @@ void main() {
             extrovertPercentage: insights.extrovertPercentage,
             explanation: insights.introExtroExplanation,
             subtitle: 'The best of both worlds 🌗',
+            traits: insights.introExtroTraits,
           ),
           AdviceMostAskedScreen(
             question: '',
@@ -96,17 +101,24 @@ void main() {
             adviceEmoji: insights.adviceEmoji,
             explanation: insights.adviceExplanation,
             subtitle: 'Wisdom is knowing what to ask 💡',
+            roast: insights.adviceRoast,
+            topics: insights.adviceTopics,
           ),
           MovieTitleScreen(
             movieTitle: insights.movieTitle,
             releaseYear: insights.movieYear,
             explanation: insights.movieExplanation,
             subtitle: 'Plot twist: Your chats are cinema-worthy 🍿✨',
+            rating: insights.movieRating,
+            genres: insights.movieGenres,
+            scores: insights.movieScores,
           ),
           RoastMeScreen(
             question: '',
             roastText: insights.roastText,
             subtitle: 'Can you handle the heat? 🔥😂',
+            heat: insights.roastHeat,
+            meters: insights.roastMeters,
           ),
           LoveLanguageScreen(
             question: '',
@@ -114,13 +126,7 @@ void main() {
             languageEmoji: insights.languageEmoji,
             explanation: insights.loveLanguageExplanation,
             subtitle: 'Love is spoken in many languages 💕',
-            loveLanguagePercentages: const {
-              'Words of Affirmation': 40,
-              'Quality Time': 25,
-              'Acts of Service': 15,
-              'Physical Touch': 12,
-              'Gifts': 8,
-            },
+            loveLanguagePercentages: insights.loveLanguagePercentages,
           ),
           PastLifePersonaScreen(
             question: '',
@@ -148,7 +154,7 @@ void main() {
           ),
           SocialSharingScreen(premiumInsights: insights),
         ],
-        startIndex: 0,
+        startIndex: 2,
       ),
     ),
   );

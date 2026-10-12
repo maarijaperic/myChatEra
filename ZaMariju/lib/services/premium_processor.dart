@@ -62,6 +62,21 @@ class PremiumInsights {
   final int songYear;
   final String songExplanation;
 
+  // Chart data (empty when the AI didn't return it; screens fall back)
+  final Map<String, int> mbtiDimensions;
+  final Map<String, int> zodiacElements;
+  final List<String> introExtroTraits;
+  final String adviceRoast;
+  final Map<String, int> adviceTopics;
+  final Map<String, int> loveLanguagePercentages;
+  final int roastHeat;
+  final Map<String, int> roastMeters;
+  final double movieRating;
+  final List<String> movieGenres;
+  final Map<String, int> movieScores;
+  final Map<String, int> songVibe;
+  final int songDurationSeconds;
+
   PremiumInsights({
     required this.personalityType,
     required this.typeAPercentage,
@@ -100,7 +115,35 @@ class PremiumInsights {
     required this.songArtist,
     required this.songYear,
     required this.songExplanation,
+    this.mbtiDimensions = const {},
+    this.zodiacElements = const {},
+    this.introExtroTraits = const [],
+    this.adviceRoast = '',
+    this.adviceTopics = const {},
+    this.loveLanguagePercentages = const {},
+    this.roastHeat = 0,
+    this.roastMeters = const {},
+    this.movieRating = 0,
+    this.movieGenres = const [],
+    this.movieScores = const {},
+    this.songVibe = const {},
+    this.songDurationSeconds = 0,
   });
+}
+
+Map<String, int> _intMap(dynamic value) {
+  if (value is! Map) return const {};
+  final result = <String, int>{};
+  value.forEach((key, v) {
+    final parsed = v is num ? v.round() : int.tryParse('$v');
+    if (parsed != null) result['$key'] = parsed.clamp(0, 100);
+  });
+  return result;
+}
+
+List<String> _stringList(dynamic value) {
+  if (value is! List) return const [];
+  return value.map((e) => '$e'.trim()).where((e) => e.isNotEmpty).toList();
 }
 
 /// Process premium insights using AI
@@ -167,8 +210,11 @@ class PremiumProcessor {
       
       // 8. Generate Roast
       onProgress?.call('Generating roast...');
-      final roastText = await AIAnalyzer.generateRoast(userMessages);
-      print('Premium debug — roastText: $roastText');
+      final roastResult = await AIAnalyzer.generateRoast(userMessages);
+      final roastText = '${roastResult['roast'] ?? ''}'.trim().isNotEmpty
+          ? '${roastResult['roast']}'.trim()
+          : 'You ask ChatGPT everything. Like... everything. 💀';
+      print('Premium debug — roastResult: $roastResult');
 
       // 9. Determine movie title
       onProgress?.call('Matching your movie title...');
@@ -241,6 +287,19 @@ class PremiumProcessor {
         songArtist: songResult['artist'] ?? 'Journey',
         songYear: int.tryParse('${songResult['releaseYear']}') ?? 1981,
         songExplanation: songResult['explanation'] ?? 'Based on your conversations, GPT detected an optimistic and persistent personality. Like this classic anthem, you keep pushing forward, asking questions, and never giving up on your goals. Your chats are the soundtrack of someone who believes in the journey, not just the destination.',
+        mbtiDimensions: _intMap(mbtiResult['dimensions']),
+        zodiacElements: _intMap(zodiacResult['elements']),
+        introExtroTraits: _stringList(introExtroResult['traits']),
+        adviceRoast: '${adviceResult['roast'] ?? ''}'.trim(),
+        adviceTopics: _intMap(adviceResult['topics']),
+        loveLanguagePercentages: _intMap(loveLanguageResult['percentages']),
+        roastHeat: (num.tryParse('${roastResult['heat']}') ?? 0).round().clamp(0, 100),
+        roastMeters: _intMap(roastResult['meters']),
+        movieRating: (double.tryParse('${movieResult['lifeRating']}') ?? 0).clamp(0.0, 10.0),
+        movieGenres: _stringList(movieResult['genres']),
+        movieScores: _intMap(movieResult['scores']),
+        songVibe: _intMap(songResult['vibe']),
+        songDurationSeconds: int.tryParse('${songResult['durationSeconds']}') ?? 0,
       );
       
       print('🔴 PREMIUM_DEBUG: Created PremiumInsights - personalityType: ${insights.personalityType}, mbtiType: ${insights.mbtiType}, zodiacName: ${insights.zodiacName}');
@@ -281,7 +340,7 @@ class PremiumProcessor {
       introExtroType: 'AMBIVERT',
       introvertPercentage: 55,
       extrovertPercentage: 45,
-      introExtroExplanation: 'According to your conversations, ChatGPT detected that you have a balanced personality. You are an ambivert: you enjoy both moments of solitary reflection and social interactions.',
+      introExtroExplanation: 'According to your conversations, you have a *balanced personality*. You enjoy both *moments of solitary reflection* and *social interactions*, switching modes depending on your mood.',
       mostAskedAdvice: 'How to improve my personal relationships',
       adviceCategory: 'RELATIONSHIPS',
       adviceEmoji: '💕',
@@ -305,6 +364,25 @@ class PremiumProcessor {
       songArtist: 'Journey',
       songYear: 1981,
       songExplanation: 'Based on your conversations, GPT detected an optimistic and persistent personality. Like this classic anthem, you keep pushing forward, asking questions, and never giving up on your goals. Your chats are the soundtrack of someone who believes in the journey, not just the destination.',
+      mbtiDimensions: const {'E': 68, 'N': 74, 'F': 61, 'P': 57},
+      zodiacElements: const {'Water': 45, 'Fire': 22, 'Air': 18, 'Earth': 15},
+      introExtroTraits: const ['Deep talks', 'Recharges solo', 'Selective circle', 'Great listener'],
+      adviceRoast: 'You\'ve asked how to fix your relationships so many times that ChatGPT is basically your couples therapist, except it\'s just you on the couch. 💀',
+      adviceTopics: const {'Relationships': 42, 'Career': 26, 'Self-growth': 19, 'Health': 13},
+      loveLanguagePercentages: const {
+        'Words of Affirmation': 38,
+        'Quality Time': 24,
+        'Acts of Service': 16,
+        'Physical Touch': 12,
+        'Receiving Gifts': 10,
+      },
+      roastHeat: 87,
+      roastMeters: const {'3 AM questions': 92, 'Overthinking': 85, 'Needs validation': 71, 'Procrastination': 64},
+      movieRating: 8.6,
+      movieGenres: const ['Drama', 'Biography'],
+      movieScores: const {'Drama': 82, 'Plot twists': 71, 'Comedy': 54, 'Romance': 38},
+      songVibe: const {'Energy': 78, 'Mood': 84, 'Danceability': 61},
+      songDurationSeconds: 251,
     );
   }
 }

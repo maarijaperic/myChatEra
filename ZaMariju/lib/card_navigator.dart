@@ -170,7 +170,9 @@ class CardNavigatorState extends State<CardNavigator>
           ),
 
           // Tap zones for navigation (left and right)
-          // Limited to center area of screen to avoid interfering with buttons
+          // Limited to center area of screen to avoid interfering with buttons.
+          // Childless translucent detectors let drags fall through to the
+          // screen's scroll view, so the zones only claim taps.
           if (_shouldEnableTapZones())
             Positioned(
               top: MediaQuery.of(context).size.height * 0.2, // Start at 20% from top
@@ -185,7 +187,7 @@ class CardNavigatorState extends State<CardNavigator>
                     child: GestureDetector(
                       onTap: _goToPrevious,
                       behavior: HitTestBehavior.translucent,
-                      child: Container(color: Colors.transparent),
+                      child: const SizedBox.expand(),
                     ),
                   ),
                   // Right tap zone (67% of screen width) - Go Next
@@ -196,7 +198,7 @@ class CardNavigatorState extends State<CardNavigator>
                         ? GestureDetector(
                       onTap: _goToNext,
                       behavior: HitTestBehavior.translucent,
-                      child: Container(color: Colors.transparent),
+                      child: const SizedBox.expand(),
                           )
                         : Container(), // Empty container - no tap zone
                   ),
@@ -213,7 +215,7 @@ class CardNavigatorState extends State<CardNavigator>
               child: GestureDetector(
                 onTap: _goToPrevious,
                 behavior: HitTestBehavior.translucent,
-                child: Container(color: Colors.transparent),
+                child: const SizedBox.expand(),
               ),
             ),
 
