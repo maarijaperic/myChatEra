@@ -28,6 +28,21 @@
       "productID" : "one_time_purchase_v2",
       "referenceName" : "One-Time Purchase",
       "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "9.99",
+      "familyShareable" : false,
+      "internalID" : "B2C3D4E5",
+      "localizations" : [
+        {
+          "description" : "Three full premium analyses",
+          "displayName" : "3 Analyses Pack",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "analysis_pack_3",
+      "referenceName" : "3 Analyses Pack",
+      "type" : "Consumable"
     }
   ],
   "settings" : {
