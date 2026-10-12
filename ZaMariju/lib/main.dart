@@ -1,17 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:gpt_wrapped2/screen_splash.dart';
-import 'package:gpt_wrapped2/screen_intro_app.dart';
 import 'package:gpt_wrapped2/screen_welcome.dart';
+import 'package:gpt_wrapped2/screen_free_summary.dart';
 import 'package:gpt_wrapped2/card_navigator.dart';
-import 'package:gpt_wrapped2/screen_chat_era.dart';
-import 'package:gpt_wrapped2/screen_daily_dose.dart';
-import 'package:gpt_wrapped2/screen_most_used_word.dart';
-import 'package:gpt_wrapped2/screen_chat_days_tracker.dart';
-import 'package:gpt_wrapped2/screen_gpt_oclock.dart';
 import 'package:gpt_wrapped2/screen_type_ab_preview.dart';
-import 'package:gpt_wrapped2/screen_chat_streak.dart';
-import 'package:gpt_wrapped2/screen_curiosity_index.dart';
 import 'package:gpt_wrapped2/screen_type_ab_personality.dart';
 import 'package:gpt_wrapped2/screen_red_green_flags.dart';
 import 'package:gpt_wrapped2/screen_guess_zodiac.dart';
@@ -33,7 +26,6 @@ import 'package:gpt_wrapped2/screen_premium_analyzing.dart';
 import 'package:gpt_wrapped2/models/chat_data.dart';
 import 'package:gpt_wrapped2/services/premium_processor.dart';
 import 'package:gpt_wrapped2/services/ai_analyzer.dart';
-import 'package:gpt_wrapped2/services/chat_analyzer.dart';
 import 'package:gpt_wrapped2/services/app_version_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -255,23 +247,9 @@ class _GPTWrappedHomeState extends State<GPTWrappedHome> {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
               builder: (context) {
-                print('🔵 Navigating to IntroAppScreen');
-                return IntroAppScreen(
-                  onContinue: (introContext) {
-                    print('🔵 IntroAppScreen onContinue called with context');
-                    // Use the context from IntroAppScreen for navigation
-                    Navigator.of(introContext).pushReplacement(
-                      MaterialPageRoute(
-                        builder: (context) {
-                          print('🔵 Navigating to WelcomeScreen');
-                          return WelcomeScreen(
-                            onGetStarted: _onLoginSuccess,
-                          );
-                        },
-                      ),
-                    );
-                    print('🔵 Navigation to WelcomeScreen completed');
-                  },
+                print('🔵 Navigating to WelcomeScreen');
+                return WelcomeScreen(
+                  onGetStarted: _onLoginSuccess,
                 );
               },
             ),
@@ -487,14 +465,6 @@ class FreeWrappedNavigator extends StatelessWidget {
       print('🔴 PREMIUM_DEBUG: WARNING - parsedConversations is NULL in build!');
     }
     
-    // Generate monthly topics from conversations
-    final monthlyTopicsJanJun = parsedConversations != null && parsedConversations!.isNotEmpty
-        ? AIAnalyzer.analyzeMonthlyTopics(parsedConversations!, startMonth: 1)
-        : null;
-    final monthlyTopicsJulDec = parsedConversations != null && parsedConversations!.isNotEmpty
-        ? AIAnalyzer.analyzeMonthlyTopics(parsedConversations!, startMonth: 7)
-        : null;
-    
     // Debug: Log stats to verify they're being passed correctly
     print('🔵 FREEWRAPPED_DEBUG: stats is null = ${stats == null}');
     if (stats != null) {
@@ -509,86 +479,29 @@ class FreeWrappedNavigator extends StatelessWidget {
       print('🔵 FREEWRAPPED_DEBUG: stats.totalMessages = ${stats!.totalMessages}');
       print('🔵 FREEWRAPPED_DEBUG: stats.totalConversations = ${stats!.totalConversations}');
     }
-    
-    // Use real stats if available, otherwise use demo data
-    // IMPORTANT: Only use fallback values if stats is null, not if individual fields are null
-    final hours = stats?.totalHours ?? 127;
-    final minutes = stats?.totalMinutes ?? 42;
-    final messagesPerDay = stats?.messagesPerDay ?? 47;
-    final streakDays = stats?.longestStreak ?? 14;
 
-    // Create screens list
+    final hourlyActivity = List<int>.filled(24, 0);
+    for (final conv in parsedConversations ?? const <ConversationData>[]) {
+      hourlyActivity[conv.createTime.hour]++;
+    }
+
+    // Demo values are only used when no stats were passed in
     final List<Widget> screensList = [
-        // Index 0 - Daily Dose
-        DailyDoseScreen(
-          messagesPerDay: messagesPerDay,
-        ),
-        // Index 1 - Top 5 Most Used Words
-        MostUsedWordScreen(
-          topWords: () {
-            if (parsedConversations != null && parsedConversations!.isNotEmpty) {
-              final allMessages = <MessageData>[];
-              for (var conv in parsedConversations!) {
-                allMessages.addAll(conv.messages);
-              }
-              if (allMessages.isNotEmpty) {
-                final topWords = ChatAnalyzer.getTop5MostUsedWords(allMessages);
-                if (topWords.isNotEmpty) {
-                  return topWords;
-                }
-              }
-            }
-            // Fallback if no conversations available
-            return [
-              MapEntry('literally', 247),
-              MapEntry('actually', 189),
-              MapEntry('probably', 156),
-              MapEntry('definitely', 134),
-              MapEntry('absolutely', 112),
-            ];
-          }(),
-        ),
-        // Index 2 - Your Chat Era
-        ChatEraScreen(
-          totalHours: hours,
-          totalMinutes: minutes,
-        ),
-        // Index 3 - Chat Days Tracker
-        ChatDaysTrackerScreen(
-          totalDays: stats?.totalDays ?? 102,
+        // Index 0 - Free snapshot (the only free results screen)
+        FreeSummaryScreen(
+          totalMessages: stats?.totalMessages ?? 3412,
+          totalConversations: stats?.totalConversations ?? 186,
+          totalHours: stats?.totalHours ?? 127,
+          totalMinutes: stats?.totalMinutes ?? 42,
+          messagesPerDay: stats?.messagesPerDay ?? 47,
+          longestStreak: stats?.longestStreak ?? 14,
+          activeDays: stats?.totalDays ?? 102,
           yearPercentage: stats?.yearPercentage ?? 28,
+          peakTime: stats?.peakTime ?? 'night',
+          peakHour: stats?.peakHour ?? 23,
+          hourlyActivity: hourlyActivity,
         ),
-        // Index 4 - Your Longest Chat Streak
-        ChatStreakScreen(
-          streakDays: streakDays,
-        ),
-        // Index 5 - Speed of Response (Average Response Time)
-        CuriosityIndexScreen(
-          averageResponseTime: stats?.averageResponseTime ?? 3.2,
-          speedLabel: stats?.speedLabel ?? 'thoughtful',
-        ),
-        // Index 6 - GPT O'Clock (Your Peak Time)
-        GptOClockScreen(
-          activityByPeriods: () {
-            if (parsedConversations != null && parsedConversations!.isNotEmpty) {
-              final allMessages = <MessageData>[];
-              for (var conv in parsedConversations!) {
-                allMessages.addAll(conv.messages);
-              }
-              if (allMessages.isNotEmpty) {
-                return ChatAnalyzer.getActivityByTimePeriods(allMessages);
-              }
-            }
-            // Fallback
-            return {
-              '8 AM': 150,
-              '12 PM': 200,
-              '6 PM': 180,
-              '2 AM': 120,
-            };
-          }(),
-        ),
-        // Index 7 - Unlock Premium
+        // Index 1 - Unlock Premium
         TypeABPreviewScreen(
           onSubscribe: () {
             print('🔴 PREMIUM_DEBUG: TypeABPreviewScreen onSubscribe clicked');
@@ -642,117 +555,6 @@ class FreeWrappedNavigator extends StatelessWidget {
             _handlePremiumTap(context, conversationsWithMessages);
           },
         ),
-        // Index 8 - MBTI Personality
-        MBTIPersonalityScreen(
-          question: 'What is your MBTI personality type according to AI?',
-          mbtiType: premiumInsights?.mbtiType ?? 'ENFP',
-          mbtiEmoji: premiumInsights?.mbtiEmoji ?? '🎭',
-          personalityName: premiumInsights?.personalityName ?? 'The Enthusiast',
-          explanation: premiumInsights?.mbtiExplanation ?? 'According to the analysis of your conversations, AI detected that you are an ENFP (Extroverted, Intuitive, Feeling, Perceiving). You are an enthusiastic, creative and sociable person who is motivated by possibilities. You have a great ability to connect with others and always seek new experiences and challenges. Your positive energy and your ability to inspire others are your greatest strengths.',
-          subtitle: 'Your personality is unique, like a work of art 🎨',
-        ),
-        // Index 9 - Type A vs Type B Personality
-        TypeABPersonalityScreen(
-          question: 'Are you Type A or Type B according to AI?',
-          personalityType: premiumInsights?.personalityType ?? 'TYPE A',
-          typeEmoji: _getTypeEmoji(premiumInsights?.personalityType ?? 'TYPE A'),
-          typeAPercentage: premiumInsights?.typeAPercentage ?? 70,
-          typeBPercentage: premiumInsights?.typeBPercentage ?? 30,
-          explanation: premiumInsights?.typeExplanation ?? 'Based on your conversations, GPT detected strong Type A traits. You\'re ambitious, organized, and impatient—probably asking follow-up questions before the first answer even finishes. You multitask like a pro, demand efficiency, and low-key stress about everything. But hey, at least you get stuff done. 💪',
-          subtitle: _getPersonalitySubtitle(premiumInsights?.personalityType ?? 'TYPE A'),
-        ),
-        // Index 10 - Red Green Flags
-        RedGreenFlagsScreen(
-          question: 'What are your red and green flags according to AI?',
-          greenFlagTitle: 'Green Flags 🟢',
-          redFlagTitle: 'Red Flags 🔴',
-          greenFlags: premiumInsights?.greenFlags.isNotEmpty == true 
-              ? premiumInsights!.greenFlags 
-              : [], // Empty list - user needs to subscribe for premium insights
-          redFlags: premiumInsights?.redFlags.isNotEmpty == true 
-              ? premiumInsights!.redFlags 
-              : [], // Empty list - user needs to subscribe for premium insights
-          subtitle: 'Self-love also includes recognizing our areas for improvement 💚❤️',
-        ),
-        // Index 11 - Guess Zodiac
-        GuessZodiacScreen(
-          question: 'What is your zodiac sign according to AI?',
-          zodiacSign: premiumInsights?.zodiacSign ?? 'Scorpio ♏',
-          zodiacEmoji: premiumInsights?.zodiacEmoji ?? '🦂',
-          zodiacName: premiumInsights?.zodiacName ?? 'Scorpio',
-          explanation: premiumInsights?.zodiacExplanation ?? 'Based on your chats, you\'re giving major Scorpio energy 🦂✨ Intense conversations? Check. Deep questions at 3 AM? Check. Reading between every single line? That\'s so you. GPT says you\'re the friend who turns small talk into therapy sessions. Mysterious vibes only. 💅',
-          subtitle: 'The stars don\'t lie... and neither does AI! ⭐',
-        ),
-        // Index 12 - Song Title
-        SongTitleScreen(
-          question: 'What song title represents your life according to AI?',
-          songTitle: premiumInsights?.songTitle ?? 'Don\'t Stop Believin\'',
-          artist: premiumInsights?.songArtist ?? 'Journey',
-          releaseYear: premiumInsights?.songYear ?? 1981,
-          explanation: premiumInsights?.songExplanation ?? 'Based on your conversations, GPT detected an optimistic and persistent personality. Like this classic anthem, you keep pushing forward, asking questions, and never giving up on your goals.',
-          subtitle: 'Your life has a soundtrack 🎵✨',
-        ),
-        // Index 13 - Introvert Extrovert
-        IntrovertExtrovertScreen(
-          question: 'Are you an introvert or extrovert according to AI?',
-          personalityType: premiumInsights?.introExtroType ?? 'AMBIVERT',
-          introvertPercentage: premiumInsights?.introvertPercentage ?? 55,
-          extrovertPercentage: premiumInsights?.extrovertPercentage ?? 45,
-          explanation: premiumInsights?.introExtroExplanation ?? 'According to your conversations, AI detected that you have a balanced personality. You are an ambivert: you enjoy both moments of solitary reflection and social interactions. You have the ability to adapt to different situations, being introspective when you need to process information and sociable when you want to share ideas.',
-          subtitle: _getIntroExtroSubtitle(premiumInsights?.introExtroType ?? 'AMBIVERT'),
-        ),
-        // Index 14 - Advice Most Asked
-        AdviceMostAskedScreen(
-          question: 'What advice have you asked AI for the most?',
-          mostAskedAdvice: premiumInsights?.mostAskedAdvice ?? 'How to improve my personal relationships',
-          adviceCategory: premiumInsights?.adviceCategory ?? 'RELATIONSHIPS',
-          adviceEmoji: premiumInsights?.adviceEmoji ?? '💕',
-          explanation: premiumInsights?.adviceExplanation ?? 'According to the analysis of your conversations, you have sought advice about personal relationships more than any other topic. This shows that you value human connections and always seek to improve the way you relate to others. Your curiosity to better understand social dynamics is admirable.',
-          subtitle: 'Wisdom is knowing what to ask 💡',
-        ),
-        // Index 15 - Love Language
-        LoveLanguageScreen(
-          question: 'What\'s your love language according to AI?',
-          loveLanguage: premiumInsights?.loveLanguage ?? 'Words of Affirmation',
-          languageEmoji: premiumInsights?.languageEmoji ?? '💬',
-          explanation: premiumInsights?.loveLanguageExplanation ?? 'Based on your chats, GPT noticed you light up when validated. You seek reassurance, ask follow-up questions to make sure you\'re understood, and appreciate detailed explanations. You love when GPT acknowledges your ideas and reflects them back. Basically, you\'re the type who needs to hear "You\'re doing great!" even from an AI. And honestly? You are. 💕',
-          subtitle: 'Love is spoken in many languages 💕',
-          loveLanguagePercentages: _getLoveLanguageDistribution(premiumInsights?.loveLanguage ?? 'Words of Affirmation'),
-        ),
-        // Index 16 - Past Life Persona (Last premium screen)
-        PastLifePersonaScreen(
-          question: 'Who were you in a past life according to AI?',
-          personaTitle: premiumInsights?.personaTitle ?? 'Renaissance Philosopher-Artist',
-          personaEmoji: premiumInsights?.personaEmoji ?? '🎨',
-          era: premiumInsights?.era ?? '15TH CENTURY FLORENCE',
-          description: premiumInsights?.personaDescription ?? 'You were a Renaissance thinker who questioned everything and created beauty from chaos. Your conversations reveal a mind that blends logic with creativity, always seeking deeper meaning. Like Da Vinci, you jump between disciplines—art, science, philosophy—never satisfied with surface-level answers. You probably had a dramatic scarf and too many unfinished projects.',
-          subtitle: 'History echoes in who we are today ✨',
-        ),
-        // Index 17 - Your 2025 in Wrapped
-        WrappedStatsScreen(
-          question: 'Your 2025 in Wrapped',
-          statNumber: 2025,
-          unit: 'YEAR',
-          poeticMessage: 'Get ready for another year of growth, discovery, and countless conversations with an AI that will know you even better! Here\'s to asking even more interesting questions! 🎉',
-          monthlyTopics: monthlyTopicsJanJun,
-        ),
-        // Index 18 - Your GPT Wrapped
-        ComparisonStatsScreen(
-          question: 'Your GPT Wrapped',
-          firstName: 'You',
-          firstValue: 127,
-          firstEmoji: '👤',
-          secondName: 'AI',
-          secondValue: 89,
-          secondEmoji: '🤖',
-          poeticMessage: 'You\'ve created a beautiful partnership with AI this year. While others see AI as a tool, you\'ve made it your conversation partner, creative collaborator, and digital confidant. Here\'s to many more meaningful exchanges! 🌟',
-          monthlyTopics: monthlyTopicsJulDec,
-        ),
-        // Index 19 - Share with People
-        SocialSharingScreen(
-          stats: stats,
-          premiumInsights: premiumInsights,
-        ),
     ];
     
     // Debug: Log screen count
@@ -764,68 +566,6 @@ class FreeWrappedNavigator extends StatelessWidget {
       startIndex: 0,
       premiumStartIndex: null, // Allow navigation to all screens including Share with People
     );
-  }
-
-  String _getTypeEmoji(String type) {
-    switch (type.toUpperCase()) {
-      case 'TYPE A':
-        return '⚡';
-      case 'TYPE B':
-        return '🌊';
-      default:
-        return '🌟';
-    }
-  }
-
-  String _getPersonalitySubtitle(String type) {
-    switch (type.toUpperCase()) {
-      case 'TYPE A':
-        return 'You sprint through life with unstoppable energy ⚡';
-      case 'TYPE B':
-        return 'You flow through life with chill confidence 🌈';
-      default:
-        return 'Knowing yourself is the first step to growth 🌟';
-    }
-  }
-
-  String _getIntroExtroSubtitle(String type) {
-    switch (type.toUpperCase()) {
-      case 'INTROVERT':
-        return 'Your quiet power lights up deep conversations 🌙';
-      case 'EXTROVERT':
-        return 'Your social battery charges the room 🔋';
-      default:
-        return 'The perfect balance between introspection and sociability 🧠💬';
-    }
-  }
-
-  Map<String, int> _getLoveLanguageDistribution(String primary) {
-    final defaultOrder = [
-      'Words of Affirmation',
-      'Quality Time',
-      'Acts of Service',
-      'Physical Touch',
-      'Receiving Gifts',
-    ];
-
-    final normalizedPrimary = primary.trim().toLowerCase();
-    final primaryKey = defaultOrder.firstWhere(
-      (lang) => lang.toLowerCase() == normalizedPrimary,
-      orElse: () => defaultOrder.first,
-    );
-
-    final distribution = <String, int>{};
-    for (final lang in defaultOrder) {
-      distribution[lang] = lang == primaryKey ? 40 : 15;
-    }
-
-    final total = distribution.values.reduce((a, b) => a + b);
-    if (total != 100) {
-      final diff = 100 - total;
-      distribution[primaryKey] = (distribution[primaryKey]! + diff).clamp(0, 100);
-    }
-
-    return distribution;
   }
 }
 

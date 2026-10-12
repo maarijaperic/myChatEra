@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:gpt_wrapped2/widgets/wrapped_ui.dart';
 import 'dart:async';
 import 'package:gpt_wrapped2/models/chat_data.dart';
 import 'package:gpt_wrapped2/services/premium_processor.dart';
@@ -210,103 +210,14 @@ class _PremiumAnalyzingScreenState extends State<PremiumAnalyzingScreen>
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-
-    return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFFAFAFA), // Off white
-              Color(0xFFF5F5F5), // Light gray
-              Color(0xFFF0F0F0), // Soft gray
-              Color(0xFFEBEBEB), // Medium gray
-            ],
-            stops: [0.0, 0.35, 0.65, 1.0],
-          ),
-        ),
-        child: SafeArea(
-          child: FadeTransition(
-            opacity: _fadeController,
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 40.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Status text
-                    Text(
-                      'Analyzing Premium Insights',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.inter(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1C1C1E),
-                        letterSpacing: -0.5,
-                      ),
-                    ),
-
-                    const SizedBox(height: 40),
-
-                    // Progress bar container
-                    Container(
-                      width: screenWidth * 0.7,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.3),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Stack(
-                        children: [
-                          // Animated progress fill
-                          AnimatedContainer(
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeOut,
-                            width: (screenWidth * 0.7) * _progress,
-                            height: 6,
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [
-                                  Color(0xFFFF6B9D),
-                                  Color(0xFFFFB4A2),
-                                ],
-                              ),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Current step text
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 300),
-                      child: Text(
-                        _statusText,
-                        key: ValueKey<String>(_statusText),
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.inter(
-                          fontSize: 16,
-                          color: const Color(0xFF8E8E93),
-                          fontWeight: FontWeight.w500,
-                          letterSpacing: -0.2,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
+    return FadeTransition(
+      opacity: _fadeController,
+      child: AnalyzingView(
+        title: 'Analyzing Premium Insights',
+        status: _statusText,
+        progress: _progress,
+        emoji: '🔮',
       ),
     );
   }
 }
-

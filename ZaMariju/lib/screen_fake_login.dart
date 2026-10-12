@@ -5,7 +5,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:archive/archive.dart';
 import 'package:gpt_wrapped2/services/chat_parser.dart';
-import 'package:gpt_wrapped2/models/chat_data.dart';
+import 'package:gpt_wrapped2/widgets/wrapped_ui.dart';
 import 'package:gpt_wrapped2/screen_analyzing_loading.dart';
 import 'package:gpt_wrapped2/main.dart' show FreeWrappedNavigator;
 
@@ -84,9 +84,9 @@ class _FakeLoginScreenState extends State<FakeLoginScreen>
         final file = File(result.files.single.path!);
         setState(() {
           _selectedFile = file;
-          _statusMessage = 'File selected: ${result.files.single.name}';
-          _isLoading = false;
+          _statusMessage = 'Reading ${result.files.single.name}...';
         });
+        await _importAndContinue();
       } else {
         setState(() {
           _statusMessage = 'No file selected';
@@ -257,200 +257,111 @@ class _FakeLoginScreenState extends State<FakeLoginScreen>
     }
   }
 
+  static const _pink = WrappedColors.pinkDeep;
+  static const _ink = Color(0xFF1C1C1E);
+  static const _muted = Color(0xFF8E8E93);
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
+    final horizontalPadding = (screenWidth * 0.08).clamp(24.0, 40.0);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
         elevation: 0,
+        scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF1F1F21)),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text(
-          'Import Your Chat',
-          style: GoogleFonts.inter(
-            color: const Color(0xFF1F1F21),
-            fontWeight: FontWeight.w600,
-          ),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: _ink, size: 20),
+          onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
         ),
       ),
-      body: SafeArea(
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: SlideTransition(
-            position: _slideAnimation,
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
+      body: Container(
+        decoration: const BoxDecoration(gradient: WrappedColors.background),
+        child: SafeArea(
+          child: FadeTransition(
+            opacity: _fadeAnimation,
+            child: SlideTransition(
+              position: _slideAnimation,
               child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: (screenWidth * 0.08).clamp(24.0, 40.0),
-                ),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minHeight: screenHeight - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom - kToolbarHeight,
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Instructions Card
-                      Container(
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFF0F8), // Light pink background
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: const Color(0xFFFF006E).withOpacity(0.2),
-                            width: 1,
-                          ),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(24.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.info_outline,
-                                    color: const Color(0xFFFF006E),
-                                    size: 28,
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    'How to Import',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w700,
-                                      color: const Color(0xFF000000), // Pure black for better contrast
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 24),
-                              _buildInstructionStep('1', 'Go to ChatGPT Settings'),
-                              const SizedBox(height: 16),
-                              _buildInstructionStep('2', 'Navigate to "Data Controls"'),
-                              const SizedBox(height: 16),
-                              _buildInstructionStep('3', 'Click "Export Data"'),
-                              const SizedBox(height: 16),
-                              _buildInstructionStep('4', 'Download the conversations.json file (or ZIP archive)'),
-                              const SizedBox(height: 16),
-                              _buildInstructionStep('5', 'Select the file below to continue'),
-                            ],
+                padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: kToolbarHeight + screenHeight * 0.01),
+                    Text(
+                      'IMPORT',
+                      style: GoogleFonts.inter(
+                        color: _muted,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1.6,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    HighlightText(
+                      'Bring your\n*ChatGPT* chats',
+                      accent: WrappedColors.pinkDeep,
+                      style: GoogleFonts.inter(
+                        fontSize: (screenWidth * 0.085).clamp(30.0, 38.0),
+                        fontWeight: FontWeight.w800,
+                        color: _ink,
+                        letterSpacing: -1.0,
+                        height: 1.1,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    _highlightedText(
+                      'Your data comes from the **ChatGPT** app. It only takes a couple of minutes.',
+                      baseStyle: GoogleFonts.inter(
+                        fontSize: 16,
+                        color: _muted,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: -0.2,
+                        height: 1.4,
+                      ),
+                    ),
+                    SizedBox(height: screenHeight * 0.03),
+                    SectionCard(
+                      padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
+                      child: Column(
+                        children: [
+                          _buildInstructionStep(1, 'Open the **ChatGPT** app and go to **Settings**'),
+                          _buildInstructionStep(2, 'Tap **Data Controls**, then **Export Data**'),
+                          _buildInstructionStep(3, 'Open the **email** from ChatGPT and download the **ZIP file**'),
+                          _buildInstructionStep(4, 'Come back here and **upload the file**', isLast: true),
+                        ],
+                      ),
+                    ),
+                    const Spacer(),
+                    if (_isLoading && _statusMessage.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 14),
+                        child: Center(
+                          child: Text(
+                            _statusMessage,
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.inter(fontSize: 14, color: _muted, fontWeight: FontWeight.w500),
                           ),
                         ),
                       ),
-
-                      const SizedBox(height: 32),
-
-                      // File Picker Button
-                      SizedBox(
-                        width: double.infinity,
-                        height: (screenHeight * 0.07).clamp(56.0, 70.0),
-                        child: ElevatedButton.icon(
-                          onPressed: _isLoading ? null : () async {
-                            await _pickFile();
-                            if (_selectedFile != null && mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('File selected: ${_selectedFile!.path.split(Platform.pathSeparator).last}'),
-                                  backgroundColor: Colors.green,
-                                  duration: const Duration(seconds: 2),
-                                ),
-                              );
-                            }
-                          },
-                          icon: Icon(
-                            _selectedFile != null ? Icons.check_circle : Icons.upload_file,
-                            color: Colors.white,
-                            size: 22,
-                          ),
-                          label: Text(
-                            _selectedFile != null 
-                                ? 'File Selected: ${_selectedFile!.path.split(Platform.pathSeparator).last}'
-                                : 'Select File',
-                            style: GoogleFonts.inter(
-                              fontSize: (screenWidth * 0.04).clamp(14.0, 18.0),
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF1F1F21),
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(
-                                (screenWidth * 0.04).clamp(16.0, 24.0),
-                              ),
-                            ),
-                            padding: EdgeInsets.symmetric(
-                              vertical: (screenHeight * 0.02).clamp(16.0, 20.0),
-                            ),
-                          ),
-                        ),
+                    WrappedPillButton(
+                      label: 'Upload ZIP file',
+                      icon: Icons.upload_rounded,
+                      loading: _isLoading,
+                      onTap: _pickFile,
+                    ),
+                    const SizedBox(height: 10),
+                    Center(
+                      child: Text(
+                        'You can also upload conversations.json',
+                        style: GoogleFonts.inter(fontSize: 12.5, color: const Color(0xFFAEAEB2)),
                       ),
-
-                      if (_selectedFile != null) ...[
-                        const SizedBox(height: 24),
-                        // Continue Button
-                        SizedBox(
-                          width: double.infinity,
-                          height: (screenHeight * 0.07).clamp(56.0, 70.0),
-                          child: ElevatedButton(
-                            onPressed: _isLoading ? null : _importAndContinue,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFFF006E),
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                  (screenWidth * 0.04).clamp(16.0, 24.0),
-                                ),
-                              ),
-                              padding: EdgeInsets.symmetric(
-                                vertical: (screenHeight * 0.02).clamp(16.0, 20.0),
-                              ),
-                            ),
-                            child: _isLoading
-                                ? SizedBox(
-                                    height: 20,
-                                    width: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white,
-                                      ),
-                                    ),
-                                  )
-                                : Text(
-                                    'Continue',
-                                    style: GoogleFonts.inter(
-                                      fontSize: (screenWidth * 0.045).clamp(16.0, 20.0),
-                                      fontWeight: FontWeight.w600,
-                                      letterSpacing: 0.3,
-                                    ),
-                                  ),
-                          ),
-                        ),
-                      ],
-
-                      if (_statusMessage.isNotEmpty) ...[
-                        const SizedBox(height: 16),
-                        Text(
-                          _statusMessage,
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
+                    ),
+                    SizedBox(height: screenHeight * 0.04),
+                  ],
                 ),
               ),
             ),
@@ -460,50 +371,65 @@ class _FakeLoginScreenState extends State<FakeLoginScreen>
     );
   }
 
-  Widget _buildInstructionStep(String number, String text) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Simple number with circle
-        Container(
-          width: 24,
-          height: 24,
-          decoration: BoxDecoration(
-            color: const Color(0xFFFF006E).withOpacity(0.1),
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: const Color(0xFFFF006E),
-              width: 2,
+  /// Renders text where **marked** parts are highlighted in the accent color.
+  Widget _highlightedText(String text, {required TextStyle baseStyle}) {
+    final parts = text.split('**');
+    return Text.rich(
+      TextSpan(
+        style: baseStyle,
+        children: [
+          for (var i = 0; i < parts.length; i++)
+            TextSpan(
+              text: parts[i],
+              style: i.isOdd ? const TextStyle(color: _pink, fontWeight: FontWeight.w700) : null,
             ),
-          ),
-          child: Center(
-            child: Text(
-              number,
-              style: GoogleFonts.inter(
-                color: const Color(0xFFFF006E),
-                fontWeight: FontWeight.w700,
-                fontSize: 12,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInstructionStep(int number, String text, {bool isLast = false}) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: isLast ? 0 : 18),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: WrappedColors.pink.withOpacity(0.16),
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                '$number',
+                style: GoogleFonts.inter(
+                  color: WrappedColors.pinkDeep,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 14,
+                ),
               ),
             ),
           ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Text(
-            text,
-            style: GoogleFonts.inter(
-              fontSize: 15,
-              color: const Color(0xFF000000), // Pure black for better contrast
-              fontWeight: FontWeight.w600, // Slightly bolder
-              height: 1.4,
+          const SizedBox(width: 14),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: _highlightedText(
+                text,
+                baseStyle: GoogleFonts.inter(
+                  fontSize: 17,
+                  color: _ink,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: -0.3,
+                  height: 1.35,
+                ),
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
-
-
-
-

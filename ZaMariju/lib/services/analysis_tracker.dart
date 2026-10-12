@@ -278,8 +278,8 @@ class AnalysisTracker {
     }
   }
   
-  /// Increment one-time purchase count (called when user purchases one_time_purchase)
-  static Future<void> incrementOneTimePurchase(String userId) async {
+  /// Add purchased analyses to the user's balance (1 for a single analysis, 3 for the pack)
+  static Future<void> incrementOneTimePurchase(String userId, {int count = 1}) async {
     try {
       final firebaseReady = await _ensureFirebaseInitialized();
       if (!firebaseReady) {
@@ -293,11 +293,11 @@ class AnalysisTracker {
       
       await _firestore.collection(_collectionName).doc(userId).set({
         'userId': userId,
-        'oneTimePurchases': currentPurchases + 1, // Increment purchase count
+        'oneTimePurchases': currentPurchases + count,
         'lastUpdated': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
       
-      print('AnalysisTracker: One-time purchase count incremented for user $userId (purchases: ${currentPurchases + 1})');
+      print('AnalysisTracker: One-time purchase count incremented for user $userId (purchases: ${currentPurchases + count})');
     } catch (e) {
       print('Error incrementing one-time purchase count: $e');
     }

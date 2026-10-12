@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:gpt_wrapped2/services/revenuecat_service.dart';
 import 'package:gpt_wrapped2/services/analysis_tracker.dart';
+import 'package:gpt_wrapped2/widgets/wrapped_ui.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class SubscriptionScreen extends StatefulWidget {
@@ -17,7 +18,13 @@ class SubscriptionScreen extends StatefulWidget {
 }
 
 class _SubscriptionScreenState extends State<SubscriptionScreen> {
-  int _selectedIndex = 1; // Default to monthly (middle option, best value)
+  static const _accent = Color(0xFFEC8AAE);
+  static const _accentGradient = LinearGradient(
+    colors: [Color(0xFFEC8AAE), Color(0xFFF3A9C4)],
+  );
+  static const _shareBullet = 'Analyze your friends\' chats too';
+
+  int _selectedIndex = 1; // Default to the 3-analysis pack (best value)
   bool _isLoading = false;
   String? _errorMessage; // Store error message to display
 
@@ -39,17 +46,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             Positioned.fill(
               child: IgnorePointer(
                 child: Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Color(0xFFFAFAFA), // Off white
-                        Color(0xFFF5F5F5), // Light gray
-                        Color(0xFFF0F0F0), // Soft gray
-                      ],
-                    ),
-                  ),
+                  decoration: const BoxDecoration(gradient: WrappedColors.background),
                 ),
               ),
             ),
@@ -71,19 +68,30 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Title
+                      const GlowOrb(emoji: '💎', color: WrappedColors.pink, size: 120),
                       Text(
-                        'Choose Your Plan',
+                        'PREMIUM',
+                        style: GoogleFonts.inter(
+                          color: WrappedColors.muted,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 1.6,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      HighlightText(
+                        'Choose your *plan*',
+                        accent: WrappedColors.pinkDeep,
                         textAlign: TextAlign.center,
                         style: GoogleFonts.inter(
-                          color: const Color(0xFF1C1C1E),
+                          color: WrappedColors.ink,
                           fontSize: 34,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.5,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -1.0,
                         ),
                       ),
                       
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 10),
                       
                       Text(
                         'Unlock all premium insights',
@@ -104,36 +112,23 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // One-time option
                             Expanded(
                               child: _buildSubscriptionBox(
                                 index: 0,
-                                title: 'One Time',
-                                price: '\$3.99',
+                                title: 'One Analysis',
+                                price: '\$4.99',
                                 period: 'once',
                                 badge: null,
                               ),
                             ),
-                            const SizedBox(width: 6),
-                            // Monthly option (best value, in the middle)
+                            const SizedBox(width: 10),
                             Expanded(
                               child: _buildSubscriptionBox(
                                 index: 1,
-                                title: 'Monthly',
-                                price: '\$6.99',
-                                period: '/mo',
+                                title: '3 Analyses',
+                                price: '\$9.99',
+                                period: 'pack',
                                 badge: 'BEST VALUE',
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            // Yearly option
-                            Expanded(
-                              child: _buildSubscriptionBox(
-                                index: 2,
-                                title: 'Yearly',
-                                price: '\$39.99',
-                                period: '/yr',
-                                badge: 'Future versions',
                               ),
                             ),
                           ],
@@ -187,20 +182,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               
               const SizedBox(height: 16),
               
-              // Subscription info and Terms/Privacy links (required by Apple for auto-renewable subscriptions)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  children: [
-                    // Subscription details (only for subscriptions, not one-time)
-                    if (_selectedIndex == 1 || _selectedIndex == 2) ...[
-                      _buildSubscriptionInfo(_selectedIndex),
-                      const SizedBox(height: 12),
-                    ],
-                    // Terms of Use and Privacy Policy links
-                    _buildTermsAndPrivacyLinks(),
-                  ],
-                ),
+                child: _buildTermsAndPrivacyLinks(),
               ),
               
               const SizedBox(height: 16),
@@ -208,48 +192,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               // Continue/Purchase button (stays pink while loading)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: GestureDetector(
-                  onTap: _isLoading ? null : _handlePurchase,
-                  behavior: HitTestBehavior.opaque,
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 18),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [
-                          Color(0xFFFF6B9D),
-                          Color(0xFFFF8E9E),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFFFF6B9D).withOpacity(0.4),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                            ),
-                          )
-                        : Text(
-                            'Continue',
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.inter(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: -0.3,
-                            ),
-                          ),
-                  ),
+                child: WrappedPillButton(
+                  label: 'Continue',
+                  color: _accent,
+                  loading: _isLoading,
+                  onTap: _handlePurchase,
                 ),
               ),
               
@@ -265,92 +212,22 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
   List<String> _getBulletPoints(int index) {
     switch (index) {
-      case 0: // One-time
+      case 0: // Single analysis
         return [
           'All premium insights',
-          'Single payment only',
-          'One analysis',
+          '1 full analysis',
+          'One-time payment',
         ];
-      case 1: // Monthly (best value)
+      case 1: // 3-analysis pack (best value)
         return [
           'All premium insights',
-          '5 analyses per month',
-          'Cancel anytime',
-        ];
-      case 2: // Yearly
-        return [
-          'All premium insights',
-          '5 analyses per month',
-          'Billed once per year',
+          '3 full analyses',
+          _shareBullet,
+          'Only \$3.33 each',
         ];
       default:
         return [];
     }
-  }
-
-  Widget _buildSubscriptionInfo(int index) {
-    String title;
-    String length;
-    String price;
-    
-    if (index == 1) {
-      title = 'Monthly Premium';
-      length = '1 Month';
-      price = '\$6.99/month';
-    } else if (index == 2) {
-      title = 'Yearly Premium';
-      length = '1 Year';
-      price = '\$39.99/year';
-    } else {
-      return const SizedBox.shrink();
-    }
-    
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.6),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const Color(0xFFE5E5EA),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Subscription Details:',
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF1C1C1E),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Title: $title',
-            style: GoogleFonts.inter(
-              fontSize: 11,
-              color: const Color(0xFF8E8E93),
-            ),
-          ),
-          Text(
-            'Length: $length',
-            style: GoogleFonts.inter(
-              fontSize: 11,
-              color: const Color(0xFF8E8E93),
-            ),
-          ),
-          Text(
-            'Price: $price',
-            style: GoogleFonts.inter(
-              fontSize: 11,
-              color: const Color(0xFF8E8E93),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   Widget _buildTermsAndPrivacyLinks() {
@@ -376,7 +253,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             textAlign: TextAlign.center,
             style: GoogleFonts.inter(
               fontSize: 11,
-              color: const Color(0xFFFF6B9D),
+              color: _accent,
               fontWeight: FontWeight.w600,
               decoration: TextDecoration.underline,
             ),
@@ -398,7 +275,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             textAlign: TextAlign.center,
             style: GoogleFonts.inter(
               fontSize: 11,
-              color: const Color(0xFFFF6B9D),
+              color: _accent,
               fontWeight: FontWeight.w600,
               decoration: TextDecoration.underline,
             ),
@@ -475,64 +352,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       print('🔴 PREMIUM_DEBUG: Purchasing product: $productId');
       print('🔴 PREMIUM_DEBUG: Selected index: $_selectedIndex');
       
-      // Check if user already has an active subscription for this product
-      final currentSubscriptionType = await RevenueCatService.getSubscriptionType();
-      print('🔴 PREMIUM_DEBUG: Current subscription type: $currentSubscriptionType');
-      
-      // Prevent purchasing same subscription type if already active
-      // Allow upgrade from monthly to yearly, but prevent duplicate purchases
-      if (productId == 'monthly_subscription_v2') {
-        if (currentSubscriptionType == 'monthly') {
-          if (mounted) {
-            setState(() {
-              _isLoading = false;
-            });
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('You already have an active monthly subscription. You can manage it in Settings.'),
-                backgroundColor: Colors.orange,
-                duration: Duration(seconds: 4),
-              ),
-            );
-          }
-          return;
-        }
-        if (currentSubscriptionType == 'yearly') {
-          if (mounted) {
-            setState(() {
-              _isLoading = false;
-            });
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('You already have a yearly subscription (better value!). You can manage it in Settings.'),
-                backgroundColor: Colors.orange,
-                duration: Duration(seconds: 4),
-              ),
-            );
-          }
-          return;
-        }
-      }
-      
-      if (productId == 'yearly_subscription_v2') {
-        if (currentSubscriptionType == 'yearly') {
-          if (mounted) {
-            setState(() {
-              _isLoading = false;
-            });
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('You already have an active yearly subscription. You can manage it in Settings.'),
-                backgroundColor: Colors.orange,
-                duration: Duration(seconds: 4),
-              ),
-            );
-          }
-          return;
-        }
-        // Allow upgrade from monthly to yearly - this is fine
-      }
-      
       print('🔴 PREMIUM_DEBUG: About to call RevenueCatService.purchaseProduct()');
 
       final success = await RevenueCatService.purchaseProduct(productId);
@@ -541,12 +360,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       if (success) {
         print('🔴 PREMIUM_DEBUG: Purchase successful');
         
-        // If one_time_purchase, increment purchase count in Firestore
-        if (productId == 'one_time_purchase_v2') {
+        final purchasedAnalyses = RevenueCatService.analysesForProduct(productId);
+        if (purchasedAnalyses > 0) {
           try {
             final userId = await RevenueCatService.getUserId();
             if (userId.isNotEmpty) {
-              await AnalysisTracker.incrementOneTimePurchase(userId);
+              await AnalysisTracker.incrementOneTimePurchase(userId, count: purchasedAnalyses);
               print('🔴 PREMIUM_DEBUG: One-time purchase count incremented');
             }
           } catch (e) {
@@ -618,192 +437,163 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   }) {
     final isSelected = _selectedIndex == index;
     final bullets = _getBulletPoints(index);
-    
+
     return GestureDetector(
       onTap: () {
         setState(() {
           _selectedIndex = index;
         });
       },
-      child: Container(
-        decoration: BoxDecoration(
-          color: isSelected
-              ? Colors.white
-              : Colors.white.withOpacity(0.7),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected
-                ? const Color(0xFFFF6B9D)
-                : Colors.transparent,
-            width: 3,
-          ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: const Color(0xFFFF6B9D).withOpacity(0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ]
-              : [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-        ),
-        child: Stack(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(10),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Badge and Title
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: isSelected ? Colors.white : Colors.white.withOpacity(0.7),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isSelected ? _accent : Colors.transparent,
+                width: 2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: isSelected
+                      ? _accent.withOpacity(0.18)
+                      : Colors.black.withOpacity(0.06),
+                  blurRadius: isSelected ? 18 : 10,
+                  offset: Offset(0, isSelected ? 8 : 4),
+                ),
+              ],
+            ),
+            child: Stack(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Expanded(
+                      Padding(
+                        padding: const EdgeInsets.only(right: 28),
                         child: Text(
                           title,
                           style: GoogleFonts.inter(
                             color: const Color(0xFF1C1C1E),
-                            fontSize: 12,
+                            fontSize: 15,
                             fontWeight: FontWeight.w700,
                             letterSpacing: -0.2,
                           ),
-                          overflow: TextOverflow.ellipsis,
                           maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      if (badge != null)
-                        Flexible(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [
-                                  Color(0xFFFF6B9D),
-                                  Color(0xFFFF8E9E),
-                                ],
-                              ),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              badge,
-                              style: GoogleFonts.inter(
-                                color: Colors.white,
-                                fontSize: 7,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.1,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  
-                  const SizedBox(height: 6),
-                  
-                  // Price
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        price,
-                        style: GoogleFonts.inter(
-                          color: const Color(0xFFFF6B9D),
-                          fontSize: 20,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                      const SizedBox(width: 2),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Text(
-                          period,
-                          style: GoogleFonts.inter(
-                            color: const Color(0xFF8E8E93),
-                            fontSize: 9,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: -0.1,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  
-                  const SizedBox(height: 8),
-                  
-                  // Bullet points
-                  ...bullets.map((bullet) => Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '• ',
-                          style: GoogleFonts.inter(
-                            color: const Color(0xFF1C1C1E).withOpacity(0.8),
-                            fontSize: 9,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        Expanded(
-                          child: Text(
-                            bullet,
+                      const SizedBox(height: 10),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            price,
                             style: GoogleFonts.inter(
-                              color: const Color(0xFF8E8E93),
-                              fontSize: 8,
-                              fontWeight: FontWeight.w500,
-                              height: 1.2,
-                              letterSpacing: -0.1,
+                              color: const Color(0xFF1C1C1E),
+                              fontSize: 28,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.5,
                             ),
-                            overflow: TextOverflow.visible,
-                            maxLines: 2,
                           ),
-                        ),
-                      ],
-                    ),
-                  )),
-                ],
-              ),
-            ),
-            
-            // Checkmark for selected
-            if (isSelected)
-              Positioned(
-                top: 12,
-                right: 12,
-                child: Container(
-                  width: 24,
-                  height: 24,
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Color(0xFFFF6B9D),
-                        Color(0xFFFF8E9E),
-                      ],
-                    ),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.check,
-                    color: Colors.white,
-                    size: 16,
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8, left: 4),
+                            child: Text(
+                              period,
+                              style: GoogleFonts.inter(
+                                color: const Color(0xFF8E8E93),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      ...bullets.map((bullet) => _buildBullet(bullet)),
+                    ],
                   ),
                 ),
+                if (isSelected)
+                  Positioned(
+                    top: 12,
+                    right: 12,
+                    child: Container(
+                      width: 24,
+                      height: 24,
+                      decoration: const BoxDecoration(
+                        gradient: _accentGradient,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.check, color: Colors.white, size: 16),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          if (badge != null) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+              decoration: BoxDecoration(
+                color: _accent.withOpacity(0.14),
+                borderRadius: BorderRadius.circular(20),
               ),
+              child: Text(
+                badge,
+                style: GoogleFonts.inter(
+                  color: const Color(0xFFC75A85),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.6,
+                ),
+              ),
+            ),
           ],
-        ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBullet(String bullet) {
+    final highlighted = bullet == _shareBullet;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 1, right: 4),
+            child: highlighted
+                ? const Icon(Icons.people_alt_rounded, size: 13, color: _accent)
+                : Text(
+                    '•',
+                    style: GoogleFonts.inter(
+                      color: const Color(0xFF1C1C1E).withOpacity(0.8),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+          ),
+          Expanded(
+            child: Text(
+              bullet,
+              style: GoogleFonts.inter(
+                color: highlighted ? const Color(0xFFC75A85) : const Color(0xFF8E8E93),
+                fontSize: 12,
+                fontWeight: highlighted ? FontWeight.w700 : FontWeight.w500,
+                height: 1.25,
+                letterSpacing: -0.1,
+              ),
+              maxLines: 3,
+            ),
+          ),
+        ],
       ),
     );
   }

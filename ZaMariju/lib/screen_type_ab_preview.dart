@@ -1,8 +1,9 @@
-import 'dart:ui' as ui;
 import 'dart:math';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:gpt_wrapped2/card_navigator.dart';
+import 'package:gpt_wrapped2/widgets/wrapped_ui.dart';
 
 class TypeABPreviewScreen extends StatefulWidget {
   final VoidCallback onSubscribe;
@@ -98,17 +99,29 @@ class _TypeABPreviewScreenState extends State<TypeABPreviewScreen>
           
           // Main content
           SafeArea(
-            child: SingleChildScrollView(
+            child: Column(
+              children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 12, top: 26),
+                    child: _BackButton(
+                      onTap: () => CardNavigator.of(context)?.goToPrevious(),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Center(
+                  child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               child: Padding(
                 padding: EdgeInsets.symmetric(
                   horizontal: (screenWidth * 0.06).clamp(20.0, 24.0),
-                  vertical: (screenHeight * 0.025).clamp(16.0, 20.0),
+                  vertical: 4,
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    SizedBox(height: screenHeight * 0.03),
                     
                     // Header
                     _AnimatedFade(
@@ -116,36 +129,45 @@ class _TypeABPreviewScreenState extends State<TypeABPreviewScreen>
                       delay: 0.0,
                       child: Column(
                         children: [
+                          const GlowOrb(emoji: '💎', color: WrappedColors.pink, size: 120),
                           Text(
-                            'Unlock Premium Insights',
-                            textAlign: TextAlign.center,
+                            'PREMIUM',
                             style: GoogleFonts.inter(
-                              color: const Color(0xFF1F1F21),
-                              fontSize: (screenWidth * 0.08).clamp(28.0, 36.0),
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: -0.2,
+                              color: WrappedColors.muted,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 1.6,
                             ),
                           ),
                           const SizedBox(height: 8),
+                          HighlightText(
+                            'Unlock your\n*Premium* insights',
+                            accent: WrappedColors.pinkDeep,
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.inter(
+                              color: WrappedColors.ink,
+                              fontSize: (screenWidth * 0.075).clamp(26.0, 32.0),
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -1.0,
+                              height: 1.1,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
                           Text(
                             'Discover your personality, zodiac, love language, and more.',
                             textAlign: TextAlign.center,
                             style: GoogleFonts.inter(
-                              color: const Color(0xFF636366),
+                              color: const Color(0xFF8E8E93),
                               fontSize: (screenWidth * 0.04).clamp(14.0, 16.0),
-                              fontWeight: FontWeight.w400,
-                              letterSpacing: 0.2,
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: -0.2,
                             ),
                           ),
-                          SizedBox(height: screenHeight * 0.02),
-                          
-                          // Preview Hero Card (smaller)
-                          _PreviewHeroCard(screenWidth: screenWidth),
                         ],
                       ),
                     ),
                     
-                    SizedBox(height: screenHeight * 0.02),
+                    SizedBox(height: screenHeight * 0.03),
                     
                     // Premium Features Grid
                     _AnimatedFade(
@@ -154,13 +176,13 @@ class _TypeABPreviewScreenState extends State<TypeABPreviewScreen>
                       child: Column(
                         children: [
                           Text(
-                            'What\'s Inside',
+                            'What\'s inside',
                             textAlign: TextAlign.center,
                             style: GoogleFonts.inter(
-                              color: const Color(0xFF1F1F21),
-                              fontSize: (screenWidth * 0.042).clamp(16.0, 20.0),
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 0.3,
+                              color: WrappedColors.ink,
+                              fontSize: 17,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.4,
                             ),
                           ),
                           SizedBox(height: (screenHeight * 0.012).clamp(10.0, 14.0)),
@@ -195,15 +217,15 @@ class _TypeABPreviewScreenState extends State<TypeABPreviewScreen>
                               ),
                             ],
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 16),
                           Text(
-                            'And many more!',
+                            '...and many more',
                             textAlign: TextAlign.center,
                             style: GoogleFonts.inter(
                               color: const Color(0xFF8E8E93),
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              letterSpacing: 0.2,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: -0.2,
                             ),
                           ),
                         ],
@@ -212,127 +234,44 @@ class _TypeABPreviewScreenState extends State<TypeABPreviewScreen>
                     
                     SizedBox(height: screenHeight * 0.02),
                     
-                    // Unlock Button Section
-                    _AnimatedFade(
-                      controller: _fadeController,
-                      delay: 0.4,
-                      child: GestureDetector(
-                        onTap: _showSubscriptionScreen,
-                        child: Container(
-                          width: double.infinity,
-                          padding: EdgeInsets.symmetric(
-                            horizontal: (screenWidth * 0.045).clamp(14.0, 18.0),
-                            vertical: (screenHeight * 0.017).clamp(12.0, 14.0),
-                          ),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [
-                                Color(0xFFFF6B9D),
-                                Color(0xFFFF8E9E),
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(22),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFFFF6B9D).withOpacity(0.35),
-                                blurRadius: 16,
-                                offset: const Offset(0, 8),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                width: 36,
-                                height: 36,
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.25),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: const Icon(
-                                  CupertinoIcons.lock_open_fill,
-                                  color: Colors.white,
-                                  size: 18,
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Unlock Premium',
-                                    style: GoogleFonts.inter(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w700,
-                                      letterSpacing: -0.3,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    'Tap to choose your plan',
-                                    style: GoogleFonts.inter(
-                                      color: Colors.white.withOpacity(0.9),
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const Spacer(),
-                              const Icon(
-                                CupertinoIcons.chevron_forward,
-                                color: Colors.white,
-                                size: 16,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    
-                    SizedBox(height: screenHeight * 0.02),
-                    
-                    // Message Card
-                    _AnimatedFade(
-                      controller: _fadeController,
-                      delay: 0.6,
-                      child: Container(
-                        padding: EdgeInsets.all((screenWidth * 0.045).clamp(16.0, 18.0)),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(22),
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFFFFFFF), Color(0xFFF6F7FF)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.06),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Text(
-                          'Get personalized insights about your personality, relationships, and communication style based on your AI conversations. 🌟',
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.inter(
-                            color: const Color(0xFF555555),
-                            fontSize: (screenWidth * 0.034).clamp(12.0, 14.0),
-                            fontWeight: FontWeight.w400,
-                            height: 1.4,
-                            letterSpacing: 0.2,
-                          ),
-                        ),
-                      ),
-                    ),
-                    
-                    SizedBox(height: screenHeight * 0.03),
                   ],
                 ),
               ),
+            ),
+                  ),
+                ),
+                // Unlock Button Section (pinned to the bottom, outside the back-tap zone)
+                Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    (screenWidth * 0.06).clamp(20.0, 24.0),
+                    8,
+                    (screenWidth * 0.06).clamp(20.0, 24.0),
+                    12,
+                  ),
+                  child: _AnimatedFade(
+                      controller: _fadeController,
+                      delay: 0.4,
+                      child: WrappedPillButton(
+                        label: 'Unlock Premium',
+                        icon: CupertinoIcons.lock_open_fill,
+                        color: WrappedColors.pinkDeep,
+                        onTap: _showSubscriptionScreen,
+                      ),
+                    ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Text(
+                    'One-time payment · No subscription',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.inter(
+                      color: const Color(0xFF8E8E93),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -341,155 +280,35 @@ class _TypeABPreviewScreenState extends State<TypeABPreviewScreen>
   }
 }
 
-// Preview Hero Card (blurred preview content)
-class _PreviewHeroCard extends StatelessWidget {
-  final double screenWidth;
+class _BackButton extends StatelessWidget {
+  final VoidCallback onTap;
 
-  const _PreviewHeroCard({required this.screenWidth});
+  const _BackButton({required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final isLargeScreen = screenWidth > 600;
-    final cardPadding = (screenWidth * 0.03).clamp(12.0, isLargeScreen ? 20.0 : 16.0);
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular((screenWidth * 0.055).clamp(20.0, 26.0)),
-      child: Stack(
-        children: [
-          // Blurred backdrop
-          BackdropFilter(
-            filter: ui.ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-            child: Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(cardPadding),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.white.withOpacity(0.75),
-                    Colors.white.withOpacity(0.55),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                border: Border.all(color: Colors.white.withOpacity(0.4), width: 1),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF8E8E93).withOpacity(0.12),
-                    blurRadius: 24,
-                    offset: const Offset(0, 12),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFF6B9D).withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Text(
-                          'Preview',
-                          style: GoogleFonts.inter(
-                            color: const Color(0xFFFF6B9D),
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.06),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(CupertinoIcons.lock_fill, size: 11, color: Color(0xFF8E8E93)),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Locked',
-                              style: GoogleFonts.inter(
-                                color: const Color(0xFF8E8E93),
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: (screenWidth * 0.018).clamp(6.0, 10.0)),
-                  Text(
-                    'What advice have you asked AI for the most?',
-                    style: GoogleFonts.inter(
-                      color: const Color(0xFF1F1F21),
-                      fontSize: (screenWidth * 0.032).clamp(12.0, isLargeScreen ? 16.0 : 14.0),
-                      fontWeight: FontWeight.w700,
-                      height: 1.2,
-                    ),
-                  ),
-                  SizedBox(height: (screenWidth * 0.018).clamp(6.0, 10.0)),
-                  // Center the relationship box
-                  Center(
-                    child: Container(
-                      padding: EdgeInsets.all((screenWidth * 0.018).clamp(5.0, 7.0)),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF2D2D2D), Color(0xFF434343)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.15),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          const Text(
-                            '💕',
-                            style: TextStyle(fontSize: 18),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'RELATIONSHIPS',
-                            style: GoogleFonts.inter(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 1.0,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'How to improve my personal relationships',
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.inter(
-                              color: Colors.white.withOpacity(0.9),
-                              fontSize: 9,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        width: 38,
+        height: 38,
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.8),
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
-          ),
-        ],
+          ],
+        ),
+        child: const Icon(
+          CupertinoIcons.chevron_back,
+          color: Color(0xFF1F1F21),
+          size: 18,
+        ),
       ),
     );
   }
@@ -636,7 +455,7 @@ class _SubtleParticlesPainter extends CustomPainter {
       canvas.drawCircle(
         Offset(x, y),
         dotSize,
-        paint..color = Colors.white.withOpacity(float * 0.4),
+        paint..color = Colors.white.withOpacity((float * 0.4).clamp(0.0, 1.0)),
       );
     }
   }

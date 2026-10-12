@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:gpt_wrapped2/screen_login.dart';
 import 'package:gpt_wrapped2/screen_fake_login.dart';
 import 'package:gpt_wrapped2/services/app_version_service.dart';
+import 'package:gpt_wrapped2/widgets/wrapped_ui.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // Set to true to force fake login for testing (bypasses backend check)
@@ -256,160 +257,129 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     final isLargeScreen = screenWidth > 600;
+    final horizontalPadding = (screenWidth * 0.08).clamp(24.0, 40.0);
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: SlideTransition(
-            position: _slideAnimation,
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
+      body: Container(
+        decoration: const BoxDecoration(gradient: WrappedColors.background),
+        child: SafeArea(
+          child: FadeTransition(
+            opacity: _fadeAnimation,
+            child: SlideTransition(
+              position: _slideAnimation,
               child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: (screenWidth * 0.08).clamp(24.0, 40.0),
-                ),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minHeight: screenHeight - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom,
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SizedBox(height: screenHeight * 0.1),
-                      
-                      // Logo
-                      Container(
-                        width: 140,
-                        height: 140,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(35),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFFFF6B9D).withOpacity(0.15),
-                              blurRadius: 30,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
-                        ),
-                        child: _buildLogo(),
-                      ),
-                      
-                      SizedBox(height: screenHeight * 0.06),
-                      
-                      // Get Your Wrapped Button - wrapped in GestureDetector to catch all taps
-                      GestureDetector(
-                        onTap: _handleGetStarted,
-                        behavior: HitTestBehavior.opaque,
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: (screenHeight * 0.07).clamp(56.0, 70.0),
-                          child: ElevatedButton(
-                            onPressed: _handleGetStarted,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF1F1F21),
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                  (screenWidth * 0.04).clamp(16.0, 24.0),
+                padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 220,
+                            height: 220,
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                Container(
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    gradient: RadialGradient(
+                                      colors: [
+                                        WrappedColors.pink.withOpacity(0.4),
+                                        WrappedColors.purple.withOpacity(0.12),
+                                        WrappedColors.purple.withOpacity(0.0),
+                                      ],
+                                      stops: const [0.0, 0.55, 1.0],
+                                    ),
+                                  ),
                                 ),
-                              ),
-                              padding: EdgeInsets.symmetric(
-                                vertical: (screenHeight * 0.02).clamp(16.0, 20.0),
-                              ),
+                                SizedBox(width: 128, height: 128, child: _buildLogo()),
+                              ],
                             ),
-                            child: Text(
-                              'Get Your Wrapped',
-                              style: GoogleFonts.inter(
-                                fontSize: (screenWidth * 0.045).clamp(16.0, isLargeScreen ? 22.0 : 20.0),
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 0.3,
-                              ),
+                          ),
+                          SizedBox(height: screenHeight * 0.02),
+                          HighlightText(
+                            'Your AI chats,\n*Wrapped.*',
+                            accent: WrappedColors.pinkDeep,
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.inter(
+                              color: WrappedColors.ink,
+                              fontSize: (screenWidth * 0.1).clamp(34.0, isLargeScreen ? 52.0 : 42.0),
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -1.2,
+                              height: 1.08,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'See your personality analysis based on your chats with ChatGPT.',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.inter(
+                              color: const Color(0xFF8E8E93),
+                              fontSize: (screenWidth * 0.042).clamp(16.0, isLargeScreen ? 20.0 : 17.0),
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: -0.2,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    WrappedPillButton(
+                      label: 'Get Your Wrapped',
+                      icon: Icons.auto_awesome_rounded,
+                      onTap: _handleGetStarted,
+                    ),
+                    const SizedBox(height: 16),
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 4,
+                      runSpacing: 2,
+                      children: [
+                        Text(
+                          'By continuing you agree to our',
+                          style: GoogleFonts.inter(
+                            fontSize: 11.5,
+                            color: const Color(0xFFAEAEB2),
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: _openTerms,
+                          child: Text(
+                            'Terms',
+                            style: GoogleFonts.inter(
+                              fontSize: 11.5,
+                              color: const Color(0xFF636366),
+                              fontWeight: FontWeight.w600,
+                              decoration: TextDecoration.underline,
                             ),
                           ),
                         ),
-                      ),
-                      
-                      SizedBox(height: screenHeight * 0.02),
-                      
-                      // Navigation hint
-                      Text(
-                        'Swipe right for next, left for previous screen',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.inter(
-                          fontSize: (screenWidth * 0.032).clamp(12.0, 14.0),
-                          fontWeight: FontWeight.w400,
-                          color: const Color(0xFF8E8E93),
-                          letterSpacing: 0.2,
+                        Text(
+                          'and',
+                          style: GoogleFonts.inter(
+                            fontSize: 11.5,
+                            color: const Color(0xFFAEAEB2),
+                          ),
                         ),
-                      ),
-                      
-                      SizedBox(height: screenHeight * 0.03),
-                      
-                      // Terms and Privacy Policy
-                      Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: (screenWidth * 0.05).clamp(16.0, 24.0),
+                        GestureDetector(
+                          onTap: _openPrivacy,
+                          child: Text(
+                            'Privacy Policy',
+                            style: GoogleFonts.inter(
+                              fontSize: 11.5,
+                              color: const Color(0xFF636366),
+                              fontWeight: FontWeight.w600,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
                         ),
-                        child: Wrap(
-                          alignment: WrapAlignment.center,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          spacing: 4,
-                          runSpacing: 4,
-                          children: [
-                            Text(
-                              'By clicking continue you agree with the',
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.inter(
-                                fontSize: (screenWidth * 0.032).clamp(11.0, 13.0),
-                                color: const Color(0xFF8E8E93),
-                                fontWeight: FontWeight.w400,
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: _openTerms,
-                              child: Text(
-                                'Terms of Usage',
-                                textAlign: TextAlign.center,
-                                style: GoogleFonts.inter(
-                                  fontSize: (screenWidth * 0.032).clamp(11.0, 13.0),
-                                  color: const Color(0xFF1F1F21),
-                                  fontWeight: FontWeight.w600,
-                                  decoration: TextDecoration.underline,
-                                ),
-                              ),
-                            ),
-                            Text(
-                              'and',
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.inter(
-                                fontSize: (screenWidth * 0.032).clamp(11.0, 13.0),
-                                color: const Color(0xFF8E8E93),
-                                fontWeight: FontWeight.w400,
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: _openPrivacy,
-                              child: Text(
-                                'Privacy Policy',
-                                textAlign: TextAlign.center,
-                                style: GoogleFonts.inter(
-                                  fontSize: (screenWidth * 0.032).clamp(11.0, 13.0),
-                                  color: const Color(0xFF1F1F21),
-                                  fontWeight: FontWeight.w600,
-                                  decoration: TextDecoration.underline,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      
-                      SizedBox(height: screenHeight * 0.1),
-                    ],
-                  ),
+                      ],
+                    ),
+                    SizedBox(height: screenHeight * 0.07),
+                  ],
                 ),
               ),
             ),
@@ -419,4 +389,3 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     );
   }
 }
-

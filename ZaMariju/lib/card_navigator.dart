@@ -110,6 +110,10 @@ class CardNavigatorState extends State<CardNavigator>
     }
   }
 
+  void goToNext() => _goToNext();
+
+  void goToPrevious() => _goToPrevious();
+
   /// Navigate to a specific screen index
   Future<void> goToIndex(int index) async {
     print('🔵 CardNavigator: goToIndex called with index=$index, currentIndex=$_currentIndex, totalScreens=${widget.screens.length}');
@@ -273,11 +277,12 @@ class CardNavigatorState extends State<CardNavigator>
   }
 
   bool _shouldEnableLeftTapZoneOnly() {
-    // Enable only left tap zone on SocialSharingScreen (to go back)
+    // Enable only left tap zone (to go back) on screens where the right side holds buttons
     final currentScreen = widget.screens[_currentIndex];
     final screenType = currentScreen.runtimeType.toString();
     
-    return screenType == 'SocialSharingScreen';
+    return screenType == 'SocialSharingScreen' ||
+        (screenType == 'TypeABPreviewScreen' && _currentIndex > 0);
   }
 
   int _getTotalScreensInCurrentSection() {

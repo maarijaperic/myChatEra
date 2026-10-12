@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 /// Service for managing RevenueCat subscriptions
 class RevenueCatService {
   static const String _oneTimeProductId = 'one_time_purchase_v2';
+  static const String _analysisPackProductId = 'analysis_pack_3';
+  // Monthly/yearly are no longer sold, but existing subscribers keep access
   static const String _monthlyProductId = 'monthly_subscription_v2';
   static const String _yearlyProductId = 'yearly_subscription_v2';
   static const String _entitlementId = 'premium';
@@ -88,7 +90,7 @@ class RevenueCatService {
           break; // Yearly has highest priority
         } else if (pid == _monthlyProductId && foundType != 'yearly') {
           foundType = 'monthly';
-        } else if (pid == _oneTimeProductId && foundType == null) {
+        } else if (_isCreditProduct(pid) && foundType == null) {
           foundType = 'one_time';
         }
       }
@@ -99,7 +101,7 @@ class RevenueCatService {
       }
       
       // Fallback to original logic
-      if (productId == _oneTimeProductId) return 'one_time';
+      if (_isCreditProduct(productId)) return 'one_time';
       if (productId == _monthlyProductId) return 'monthly';
       if (productId == _yearlyProductId) return 'yearly';
       
@@ -506,17 +508,18 @@ class RevenueCatService {
     }
   }
 
-  /// Get product ID based on subscription type
+  /// Get product ID for the paywall option (0 = single analysis, 1 = 3-analysis pack)
   static String getProductId(int selectedIndex) {
-    switch (selectedIndex) {
-      case 0:
-        return _oneTimeProductId;
-      case 1:
-        return _monthlyProductId;
-      case 2:
-        return _yearlyProductId;
-      default:
-        return _monthlyProductId;
-    }
+    return selectedIndex == 1 ? _analysisPackProductId : _oneTimeProductId;
   }
+
+  /// Number of analyses a purchase of [productId] adds to the user's balance
+  static int analysesForProduct(String productId) {
+    if (productId == _analysisPackProductId) return 3;
+    if (productId == _oneTimeProductId) return 1;
+    return 0;
+  }
+
+  static bool _isCreditProduct(String productId) =>
+      productId == _oneTimeProductId || productId == _analysisPackProductId;
 }
